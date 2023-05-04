@@ -1,2 +1,2 @@
 # tools_page
-JavaScript Tool page
+JavaScript で作ったツール
