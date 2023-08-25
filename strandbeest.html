@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ストランドビースト</title>
+    <title>テオヤンセン機構</title>
 </head>
 <body>
-	<h1>ストランドビースト</h1>
+	<h1>テオヤンセン機構</h1>
     <canvas id="myCanvas" width="250" height="150" style="width:100%;height:auto;max-width:500px;"></canvas>
-   <p> <button id="start">start</button><br/>
-    <button id="stop">stop</button></p>
+   <p style="width:100%;max-width:500px;"><input id="myRange" style="width:100%;" type="range" min="-180" max="360" value="0" step="10"/></p>
+   <p style="width:100%;max-width:500px;display:flex;justify-content:space-between;"><span>-180</span><span>0</span><span>180</span><span>360</span></p>
     <script>
 		'use strict';
 		// ホーリーナンバー
@@ -32,8 +32,8 @@
 		const canvas = document.getElementById('myCanvas'),
 		  ctx = canvas.getContext('2d');
 		
-		// アニメーションの制御用
-		let animationId, angle = 0;
+		// 制御用
+		let angle = 0;
 		
 		// 点の位置
 		const points = {
@@ -48,7 +48,7 @@
 		};
 		points.M0 = {x: points.A0.x + number.a, y: points.A0.y - number.l };
 		
-		// 点Aと点Bの座標と辺AC,BCの長さから点Cを求める
+		//点Aと点Bの座標と辺AC,BCの長さから点Cを求める。ただし点Cは時計回りに最初の点
 		function triangle (pointA, pointB, AC, BC) {
 			const dx = pointB.x - pointA.x,
 			dy = pointB.y - pointA.y,
@@ -57,18 +57,11 @@
 			const cosA = (AB ** 2 + AC ** 2 - BC ** 2) / (2 * AC * AB),
 			sinA = Math.sqrt(1 - cosA ** 2);
 
-			const pointC = {}
-			pointC.x = (cosA * dx - sinA * dy) * AC / AB + pointA.x
-			pointC.y = (sinA * dx + cosA * dy) * AC / AB + pointA.y
+			const pointC = {
+				x: (cosA * dx - sinA * dy) * AC / AB + pointA.x,
+				y: (sinA * dx + cosA * dy) * AC / AB + pointA.y,
+			}
 			return pointC;
-		}
-		// 線分ABを描画
-		function drawLine(pointA, pointB) {
-			ctx.beginPath();
-			ctx.moveTo(pointA.x, pointA.y);
-			ctx.lineTo(pointB.x, pointB.y);
-			ctx.closePath();
-			ctx.stroke();
 		}
 		// 機構を描画
 		function drawFrame(angle){
@@ -78,38 +71,33 @@
 			points.D1 = triangle(points.B1, points.A0, number.e, number.d);
 			points.F1 = triangle(points.D1, points.C1, number.f, number.g);
 			points.H1 = triangle(points.F1, points.C1, number.h, number.i);
-			drawLine(points.M0, points.M1);
-			drawLine(points.M1, points.B1);
-			drawLine(points.A0, points.B1);
-			drawLine(points.M1, points.C1);
-			drawLine(points.A0, points.C1);
-			drawLine(points.A0, points.D1);
-			drawLine(points.D1, points.B1);
-			drawLine(points.F1, points.C1);
-			drawLine(points.F1, points.D1);
-			drawLine(points.H1, points.C1);
-			drawLine(points.H1, points.F1);			
-		}
-		// frameを描画
-		function step(timestamp){
+			
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.beginPath();
+			ctx.moveTo(points.M0.x, points.M0.y);
+			ctx.lineTo(points.M1.x, points.M1.y);
+			ctx.lineTo(points.B1.x, points.B1.y);
+			ctx.lineTo(points.A0.x, points.A0.y);
+			ctx.lineTo(points.C1.x, points.C1.y);
+			ctx.lineTo(points.M1.x, points.M1.y);
+			ctx.moveTo(points.B1.x, points.B1.y);
+			ctx.lineTo(points.D1.x, points.D1.y);
+			ctx.lineTo(points.A0.x, points.A0.y);
+			ctx.moveTo(points.D1.x, points.D1.y);
+			ctx.lineTo(points.F1.x, points.F1.y);
+			ctx.lineTo(points.C1.x, points.C1.y);
+			ctx.lineTo(points.H1.x, points.H1.y);
+			ctx.lineTo(points.F1.x, points.F1.y);
+			ctx.closePath();
+			ctx.stroke();
+		}
+		function changeAngle({target}){
+			angle = target.value * Math.PI / 180;
 			drawFrame(angle);
-			angle += .03;
-			animationId = window.requestAnimationFrame(step);
-		}
-		function startAnimation() {
-			if (!animationId) {
-				step();
-			}
-		}
-		function stopAnimation() {
-			window.cancelAnimationFrame(animationId);
-			animationId = undefined;
 		}
 		// 実行
 		drawFrame(0);
-		document.getElementById('start').addEventListener('click', startAnimation, false);
-		document.getElementById('stop').addEventListener('click', stopAnimation, false);
+		document.getElementById('myRange').addEventListener('input', changeAngle, false);
 
     </script>
 </body>
