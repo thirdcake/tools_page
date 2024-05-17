@@ -1,45 +1,56 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>テーブルからdata.jsonにする</title>
     <style>
-        label{display:block;margin-block:1rem;padding-block:1rem;border-top:thin solid #333;}
+        label {
+            display: block;
+            margin-block: 1rem;
+            padding-block: 1rem;
+            border-top: thin solid #333;
+        }
     </style>
 </head>
+
 <body>
-	<h1>テーブルからdata.jsonにする</h1>
+    <h1>テーブルからdata.jsonにする</h1>
     <p>できること：</p>
     <ol>
         <li>テキストエリアにテーブルデータ（HTML）を入力してください</li>
         <li>
-        「データ追加」をクリックすると：<br>左から2番目のtd内をkeyとして、左から3番目のtdのdiv要素のtextcontentと、左から7番目のtdのa要素のdataset.idを取得して追加します</li>
-        <li>「データダウンロード」をクリックすると：<br>
-        データをdata.jsonとしてダウンロードします</li>
+            「データ追加」をクリックすると：<br>左から2番目のtd内をkeyとして、左から3番目のtdのdiv要素のtextcontentと、左から7番目のtdのa要素のdataset.idを取得して追加します</li>
+        <li>「データコピー」をクリックすると：<br>
+            データがコピーされるので、data.jsonとして保存してください。</li>
     </ol>
     <label>テーブルデータ（HTML）の入力：<br>
-    <textarea id="$textarea"></textarea></label>
+        <textarea id="$textarea"></textarea></label>
     <label>データを追加：<br>
-    <button id="$datapush">データ追加</button></label>
+        <button id="$datapush">データ追加</button></label>
     <div id="$display"></div>
-    <p>データをダウンロード：<a id="$download">データダウンロード</a></p>
+    <p><button id="$result">データコピー</button></p>
     <script>
-		'use strict';
+        'use strict';
         const $obj = {}
         // 実行
-        $datapush.addEventListener('click', ()=>{
+        $datapush.addEventListener('click', () => {
             table2obj($textarea.value, $obj);
             obj2display($obj, $display);
+        }, false);
+        $result.addEventListener('click', async () => {
             const jsonData = obj2jsonstring($obj);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            $download.href = url;
-            $download.download = 'data.json';
+            try {
+                await navigator.clipboard.writeText(jsonData);
+                console.log('コピー成功');
+            } catch (err) {
+                console.error('コピー失敗: ', err);
+            }
         }, false);
 
         // $tableのhtmlからデータを取得して、$objに追加する。重複しないようにする。return void
-        function table2obj($table, $obj){
+        function table2obj($table, $obj) {
             const frag = document.createElement('div');
             frag.innerHTML = $table;
             frag.querySelectorAll('tr:has(td)').forEach(tr => {
@@ -54,7 +65,7 @@
             });
         }
         // $objのデータをdiv id="$display"に表示する。return void
-        function obj2display($obj, $display){
+        function obj2display($obj, $display) {
             const result = [];
             const keys = Object.keys($obj)
             result.push(`合計人数：${keys.length} 人`);
@@ -64,14 +75,15 @@
             $display.textContent = result.join(', ')
         }
         // $objのデータを配列に変えて、json文字列にする。return jsonstring
-        function obj2jsonstring($obj){
+        function obj2jsonstring($obj) {
             const dataarrary = [];
             for (const k of Object.keys($obj)) {
                 dataarrary.push($obj[k])
             }
-            const json = JSON.stringify({data: dataarrary}, null, 2);
+            const json = JSON.stringify({ data: dataarrary }, null, 0);
             return json;
         }
     </script>
 </body>
+
 </html>
