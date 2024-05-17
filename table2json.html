@@ -51,8 +51,8 @@
 
         // $tableのhtmlからデータを取得して、$objに追加する。重複しないようにする。return void
         function table2obj($table, $obj) {
-            const frag = document.createElement('div');
-            frag.innerHTML = $table;
+            const parser = new DOMParser();
+            const frag = parser.parseFromString($table, 'text/html');
             frag.querySelectorAll('tr:has(td)').forEach(tr => {
                 const keynum = tr.querySelector('td:nth-child(2)').textContent;
                 const valuetexts = []
