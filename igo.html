@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>囲碁のマス目</title>
+</head>
+<body>
+  <h1>死活</h1>
+  <canvas id="$go" width="900" height="900" style="max-width:100%;height:auto;"></canvas>
+  <form style="display:flex;gap:10px;">
+    <label><input type="radio" name="color" value="b" checked>黒</label>
+    <label><input type="radio" name="color" value="w">白</label>
+  </form>
+  <textarea></textarea>
+  <script>
+  "use strict";
+
+  class Igo {
+    constructor(canvas) {
+      this.ctx = canvas.getContext('2d');
+      this.area = {x: 'left', y: 'bottom', size: 9};
+      this.board_size = {w: canvas.width, h: canvas.height};
+      this.cell_size = this.board_size.w / (this.area.size + 1);
+      this.stones = [];
+      for (let i = 0; i < this.area.size + 1; i++) {
+        this.stones.push([]);
+        for (let j = 0; j < this.area.size + 1; j++) {
+          this.stones[i].push(0)
+        }
+      }
+      this.draw();
+    }
+    draw () {
+      this.ctx.clearRect(0, 0, this.board_size.w, this.board_size.h);
+      const margins = {
+        default: this.cell_size / 2,
+        left: (this.area.x === 'left') ? (this.cell_size / 2) : 0,
+        right: (this.area.x === 'right') ? (this.cell_size / 2) : 0,
+        top: (this.area.y === 'top') ? (this.cell_size / 2) : 0,
+        bottom: (this.area.y === 'bottom') ? (this.cell_size / 2) : 0,
+      }
+      const is_bold = (xy, i) => {
+        if (i === 0) {
+          return this.area[xy] === 'left' || this.area[xy] === 'top';
+        } else if (i === this.area.size) {
+          return this.area[xy] === 'right' || this.area[xy] === 'bottom';
+        }
+      }
+      this.ctx.strokeStyle = '#333';
+      this.ctx.lineWidth = 1;
+      for (let i = 0; i < this.area.size + 1; i++) {
+        if (is_bold('x', i)) {
+          this.ctx.lineWidth = 3;
+        }
+        this.ctx.beginPath();
+        this.ctx.moveTo(margins.default + i * this.cell_size, margins.top);
+        this.ctx.lineTo(margins.default + i * this.cell_size, this.board_size.w - margins.bottom);
+        this.ctx.stroke();
+        if (is_bold('x', i)) {
+          this.ctx.lineWidth = 1;
+        }
+        const is_y_bold = ( (this.area.y === 'top') && (i === 0) ) || ( (this.area.y === 'bottom') && (i === this.area.size))
+        if (is_bold('y', i)) {
+          this.ctx.lineWidth = 3;
+        }
+        this.ctx.beginPath();
+        this.ctx.moveTo(margins.left, margins.default + i * this.cell_size);
+        this.ctx.lineTo(this.board_size.h - margins.right, margins.default + i * this.cell_size);
+        this.ctx.stroke();
+        if (is_bold('y', i)) {
+          this.ctx.lineWidth = 1;
+        }
+      }
+      
+      const dots = [[], [], [], []];
+      if (this.area.x === 'left') {
+        dots.forEach((arr, idx) => {if (idx < 2) {arr.push(3)} else {arr.push(9)}});
+      } else if (this.area.x === 'right') {
+        dots.forEach((arr, idx) => {if (idx < 2) {arr.push(0)} else {arr.push(6)}});
+      }
+      if (this.area.y === 'top') {
+        dots.forEach((arr, idx) => {if (idx % 2 === 0) {arr.push(3)} else {arr.push(9)}});
+      }else if (this.area.y === 'bottom') {
+        dots.forEach((arr, idx) => {if (idx % 2 === 0) {arr.push(0)} else {arr.push(6)}});
+      }
+      this.ctx.fillStyle = '#333';
+      dots.forEach(idxs => {
+        this.ctx.beginPath();
+        this.ctx.arc(
+          margins.default + idxs[0] * this.cell_size, 
+          margins.default + idxs[1] * this.cell_size, 
+          3, 0, 2 * Math.PI
+        );
+        this.ctx.fill();
+      });
+      this.stones.forEach((arr, i) => {
+        arr.forEach((s, j) => {
+          if (s === 1) {
+            this.ctx.fillStyle = '#333';
+            this.ctx.strokeStyle = '#333';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(
+              margins.default + i * this.cell_size, 
+              margins.default + j * this.cell_size, 
+              this.cell_size * .4, 0, 2 * Math.PI
+            );
+            this.ctx.fill();
+            this.ctx.stroke();
+          } else if (s === -1) {
+            this.ctx.fillStyle = '#fff';
+            this.ctx.strokeStyle = '#333';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(
+              margins.default + i * this.cell_size, 
+              margins.default + j * this.cell_size, 
+              this.cell_size * .4, 0, 2 * Math.PI
+            );
+            this.ctx.fill();
+            this.ctx.stroke();
+          }
+        })
+      })
+    }
+    handleEvent(ev){
+      const $gorect = window.$go.getBoundingClientRect();
+      const x = ev.clientX - $gorect.left,
+        y = ev.clientY - $gorect.top;
+      const unit_size = $go.clientWidth / (this.area.size + 1);
+      const ix = (x / unit_size) | 0,
+        iy = (y / unit_size) | 0;
+      if (this.stones[ix][iy] === 0) {
+        this.stones[ix][iy] = (document.forms[0].color.value === 'b') ? 1 : -1;
+      } else {
+        this.stones[ix][iy] = 0;
+      }
+      this.draw();
+    }
+  }
+  const igo = new Igo($go);
+  $go.addEventListener('click', igo, false);
+
+  </script>
+</body>
+</html>
