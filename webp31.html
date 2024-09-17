@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webp変換</title>
+  <style>
+    #webp > img {
+      max-width:100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>webp変換</h1>
+  <ul>
+    <li>jpgやpngを選択すると、webpに変換して、幅960px、3:1にトリミングするだけの機能です</li>
+    <li>画質は、0.95で設定しています</li>
+    <li>chromeとfirefoxで動作確認しています</li>
+    <li>フロントエンドのJavaScriptのみで動作し、画像はアップロードされません</li>
+  </ul>
+  <p><input type="file" id="inputFile"/></p>
+  <img id="png" style="display:none;"/>
+  <img id="webp" width="3" height="1" alt="ここに画像が出ます" style="max-width:960px;width:100%;height:auto;" />
+  <p><a id="downloadLink" download="image.webp" href="#" style="display:none;">ダウンロード</a></p>
+  <script>
+    'use strict';
+    // DOM読み取り
+    const inputFile = document.getElementById('inputFile'),
+      pngImage = document.getElementById('png'),
+      webpImg = document.getElementById('webp'),
+      downloadLink = document.getElementById('downloadLink');
+    
+    const 
+      canvas = document.createElement('canvas'),  // 確認用canvas
+      context = canvas.getContext('2d'),
+      fileReader = new FileReader();  // fileをloadする用
+    canvas.width = 960;
+    canvas.height = 320;
+
+    const data = {
+      pngW: 0,  // pngの幅
+      pngH: 0,  // pngの高さ
+      sx: 0,  // canvasに貼るときのx方向の差
+      sy: 0,  // y方向の差
+      sW: 0,  // canvasに貼るときの幅
+      sH: 0,  // 高さ
+    }
+    /** 
+     * 画像位置を設定してwebp変換
+    */
+    const toBlob_webp = ()=>{
+      const canvasSize = [0, 0, canvas.width, canvas.height];
+      const imageSize = [
+        data.sx,
+        data.sy, 
+        data.sW, 
+        data.sH,
+      ];
+      context.drawImage(pngImage, ...imageSize, ...canvasSize);
+      canvas.toBlob( blob => {
+        const webpDataUrl = URL.createObjectURL(blob);
+        webpImg.src = webpDataUrl;
+        downloadLink.href = webpDataUrl;
+      }, 'image/webp', 0.95);
+    }
+    /**
+     * 初期設定
+    */
+    const file_init = ({target}) => {
+      pngImage.src = target.result;
+      pngImage.addEventListener('load', () => {
+        // 元画像の幅と高さ
+        pngImage.style.display = 'inline';
+        data.pngW = pngImage.clientWidth;
+        data.pngH = pngImage.clientHeight;
+        pngImage.style.display="none";
+        // 3:1よりも縦長か横長かでsy,sxを設定
+        if(data.pngH / data.pngW > 1 / 3) {
+          data.sy = (data.pngH - data.pngW * 1 / 3) / 2;
+          data.sW = data.pngW;
+          data.sH = data.pngH - ( 2 * data.sy );
+        } else {
+          data.sx = (data.pngW - data.pngH * 3 / 1) / 2;
+          data.sW = data.pngW - ( 2 * data.sx );
+          data.sH = data.pngH;
+        }
+        // display:noneしていたlinkを表示する
+        downloadLink.style.display = 'inline';
+        // webp変換
+        toBlob_webp();
+      });
+    }
+    const input_file_change = ({target}) => {
+      const selectedFile = target.files[0],
+        uploadName = selectedFile.name,
+        downloadName = uploadName.replace(/\..+$/, '.webp');
+      downloadLink.download = downloadName;
+      fileReader.readAsDataURL(selectedFile);
+      fileReader.onload = file_init;
+    }
+    /**
+     * キーボード
+    */
+    const keydown_arrow = (event) => {
+      if( !event.shiftKey) return;
+      switch (event.key) {
+        case "Down":
+        case "ArrowDown":
+          data.sy -= 100;
+	  if (data.sy < 0){data.sy = 0;}
+          break;
+        case "Up":
+        case "ArrowUp":
+          data.sy += 100;
+	  if (data.sy + data.sH > data.pngH){data.sy = data.pngH - data.sH;}
+          break;
+        case "Left":
+        case "ArrowLeft":
+          data.sx += 100;
+          break;
+        case "Right":
+        case "ArrowRight":
+          data.sx -= 100;
+          break;
+        default:
+          return;
+      }
+      toBlob_webp();
+    }
+    // 実行
+    inputFile.addEventListener('change', input_file_change);
+    document.body.addEventListener('keydown', keydown_arrow);
+    
+  </script>
+</body>
+</html>
