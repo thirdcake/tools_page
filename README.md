@@ -8,3 +8,4 @@ JavaScript で作ったツール
 - [テオヤンセン機構（4本足・アニメーション）](./strandbeest2.html)
 - [テーブルからjsonファイルにする](./table2json.html)
 - [囲碁の部分図](./igo.html)
+- [AVL木の回転](./avl-tree.html)
