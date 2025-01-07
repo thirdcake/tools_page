@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL木の回転</title>
+    <style>
+        body {
+            margin:0;
+            padding: .5rem .5rem 3rem;
+        }
+        svg#svg {
+            box-sizing: border-box;
+            border: 1px solid #333;
+            border-radius: 5px;
+            display: block;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+        }
+        form#insert {
+            display:flex;
+            flex-wrap: wrap;
+            justify-content: start;
+            align-items: baseline;
+        }
+    </style>
+</head>
+<body>
+    <h1>AVL木の回転</h1>
+    <p>使い方</p>
+    <ul>
+        <li>整数を入力してInsertボタンを押す</li>
+        <li>L or Rで回転</li>
+        <li>xで削除</li>
+    </ul>
+    <hr>
+    <p id="errorspace">メッセージ：</p>
+    <svg id="svg" viewBox="0 0 800 400" width="800" height="400" >
+        <g></g>
+    </svg>
+    <form id="insert" style="padding:1rem 0;">
+        <label>整数:<input type="text" id="inputnum" value="8 4 12 2 6 10 5 7 11"/></label>
+        <button>Insert</button>
+    </form>
+    <script type="module" src="./assets/avl-tree.js"></script>
+</body>
+</html>
