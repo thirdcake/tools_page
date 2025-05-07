@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>現在時刻: ISO 8601</title>
+    <style>
+        div#now {
+            font-size: 3rem;
+        }
+        div.flex {
+            display:flex;
+            flex-wrap: nowrap;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>現在時刻: ISO 8601 フォーマット</h1>
+    <div id="now"></div>
+    <div class="flex">
+        <button id="copy">コピー</button>
+        <button id="reset">リセット</button>
+    </div>
+    <script>
+        'use strict';
+        document.addEventListener('DOMContentLoaded', ()=>{
+            const now = document.getElementById('now');
+            const copy = document.getElementById('copy');
+            const reset = document.getElementById('reset');
+            let date = new Date();
+            now.textContent = iso8601(date);
+            reset.addEventListener('click', resetClick, false);
+            copy.addEventListener('click', copyClick, false);
+        }, false);
+        function iso8601 (date) {
+            const pad = (n) => String(n).padStart(2, '0');
+            const Y = date.getFullYear();
+            const M = pad(date.getMonth()+1);
+            const D = pad(date.getDate());
+            const h = pad(date.getHours());
+            const m = pad(date.getMinutes());
+            const s = pad(date.getSeconds());
+            const str = `${Y}-${M}-${D}T${h}:${m}:${s}+09:00`;
+            return str;
+        }
+        function resetClick () {
+            const date = new Date();
+            now.textContent = iso8601(date);
+        }
+        async function copyClick () {
+            const now = document.getElementById('now');
+            try {
+                await navigator.clipboard.writeText(now.textContent);
+                console.log('コピー成功: '+now.textContent);
+            } catch (err) {
+                console.error('コピー失敗: ', err);
+            }
+        }
+    </script>
+</body>
+</html>

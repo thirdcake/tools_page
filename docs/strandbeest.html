@@ -6,10 +6,13 @@
     <title>テオヤンセン機構</title>
 </head>
 <body>
-	<h1>テオヤンセン機構</h1>
+    <h1>テオヤンセン機構</h1>
     <canvas id="myCanvas" width="250" height="150" style="width:100%;height:auto;max-width:500px;"></canvas>
-   <p style="width:100%;max-width:500px;"><input id="myRange" style="width:100%;" type="range" min="-180" max="360" value="0" step="10"/></p>
-   <p style="width:100%;max-width:500px;display:flex;justify-content:space-between;"><span>-180</span><span>0</span><span>180</span><span>360</span></p>
+	<div style="width:100%;max-width:500px">
+		<label for="myRange">range: </label><br/>
+		<input id="myRange" style="width:100%;" type="range" min="-180" max="360" value="0" step="10"/>
+	</div>
+    <p style="width:100%;max-width:500px;display:flex;justify-content:space-between;"><span>-180</span><span>0</span><span>180</span><span>360</span></p>
     <script>
 		'use strict';
 		// ホーリーナンバー

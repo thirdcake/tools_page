@@ -20,17 +20,16 @@
     <li>フロントエンドのJavaScriptのみで動作し、画像はアップロードされません</li>
   </ul>
   <p><input type="file" id="inputFile"/></p>
-  <img id="png" style="display:none;"/>
-  <img id="webp" width="16" height="9" alt="ここに画像が出ます" style="max-width:960px;width:100%;height:auto;" />
+  <img id="webp" src="#" width="16" height="9" alt="ここに画像が出ます" style="max-width:960px;width:100%;height:auto;" />
   <p><a id="downloadLink" download="image.webp" href="#" style="display:none;">ダウンロード</a></p>
   <script>
     'use strict';
     // DOM読み取り
     const inputFile = document.getElementById('inputFile'),
-      pngImage = document.getElementById('png'),
       webpImg = document.getElementById('webp'),
       downloadLink = document.getElementById('downloadLink');
-    
+    const pngImage = document.createElement('img');
+    webpImg.parentNode.insertBefore(pngImage, webpImg);
     const 
       canvas = document.createElement('canvas'),  // 確認用canvas
       context = canvas.getContext('2d'),
