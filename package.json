@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  },
+  "scripts": {
+    "build_igo": "esbuild src/igo_all/index.js --bundle --outfile=docs/assets/igo/script.js"
+  }
+}

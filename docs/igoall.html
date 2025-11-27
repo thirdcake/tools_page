@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>囲碁</title>
+    <style>
+        html,body {margin:0;padding:0;color:#111;}
+        * {margin:0;padding:0;box-sizing:border-box;}
+        h1 {margin:0;padding:.5rem;font-weight:normal;font-size:1rem;}
+        ul, li {list-style-type: none;}
+        ul.list {margin:0; padding:.5rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1rem;}
+        li > label {margin:0;padding:0 .5rem;border:thin solid #333;border-radius:.3rem;}
+        li > label:has(input[type="radio"]:checked){color:#8f8;background-color: #555;}
+        .display-flex {display:flex;align-items:flex-start;justify-content:flex-start;gap:0;}
+        .display-flex > label {padding:.8rem;cursor:pointer;}
+        .display-flex > label:hover {background-color:#ccc;}
+        .display-flex > label > span {display:block;width:100%;}
+        .display-flex > label > span[data-t="textarea"] {white-space:pre-wrap;}
+        .display-flex > label > span > svg {display:block;width:100%;height:auto;}
+        @media print {
+            .no-print {display:none !important;}
+        }
+    </style>
+</head>
+<body>
+    <h1 class="no-print">囲碁 問題解答 印刷用</h1>
+    <ul class="list no-print">
+        <li><label><input type="radio" value="0" name="tab" checked />全体を俯瞰</label></li>
+        <li><label><input id="tab-1" type="radio" value="1" name="tab" />左上を拡大</label></li>
+        <li><label><input id="tab-2" type="radio" value="2" name="tab" />右上を拡大</label></li>
+        <li><label><input id="tab-3" type="radio" value="3" name="tab" />左下を拡大</label></li>
+        <li><label><input id="tab-4" type="radio" value="4" name="tab" />右下を拡大</label></li>
+    </ul>
+    <div id="display">
+        <div class="display-flex">
+            <label for="tab-1"><span data-v="1"></span><span data-t="textarea"></span></label>
+            <label for="tab-2"><span data-v="2"></span><span data-t="textarea"></span></label>
+        </div>
+        <div class="display-flex">
+            <label for="tab-3"><span data-v="3"></span><span data-t="textarea"></span></label>
+            <label for="tab-4"><span data-v="4"></span><span data-t="textarea"></span></label>
+        </div>
+    </div>
+    <div id="input">
+        <div class="svg-input" style="max-width: 600px;"></div>
+        <ul class="list">
+            <li>碁石の色：</li>
+            <li><label><input type="radio" value="0" name="color" checked />無色</label></li>
+            <li><label><input type="radio" value="1" name="color" />黒</label></li>
+            <li><label><input type="radio" value="2" name="color" />白</label></li>
+        </ul>
+        <ul class="list">
+            <li>文字：</li>
+            <li><label><input type="radio" value="0" name="char" checked />（無し）</label></li>
+            <li><label><input type="radio" value="a" name="char" />A</label></li>
+            <li><label><input type="radio" value="b" name="char" />B</label></li>
+            <li><label><input type="radio" value="c" name="char" />C</label></li>
+            <li><label><input type="radio" value="d" name="char" />D</label></li>
+            <li><label><input type="radio" value="e" name="char" />E</label></li>
+            <li><label><input type="radio" value="1" name="char" />1</label></li>
+            <li><label><input type="radio" value="2" name="char" />2</label></li>
+            <li><label><input type="radio" value="3" name="char" />3</label></li>
+            <li><label><input type="radio" value="4" name="char" />4</label></li>
+            <li><label><input type="radio" value="5" name="char" />5</label></li>
+        </ul>
+        <div style="padding:1rem;">
+            <textarea placeholder="ここに文章を書けます。" id="textarea" aria-label="文章追加部"
+                style="margin:0;padding:.5rem;width:100%;max-width:600px;height:5rem;"></textarea>
+        </div>
+    </div>
+    <script>
+        'use strict';
+        document.addEventListener('DOMContentLoaded', igo, false);
+        function igo () {
+            let state = init();
+            render(state);
+            document.addEventListener('click', (ev) => {
+                const label = ev.target.closest('label');
+                if(label !== null) return;
+                state = handleClick(ev, state);
+            }, false);
+            document.addEventListener('change', (ev) => {
+                state = handleRadio(ev, state);
+            }, false);
+        }
+        function init () {
+            const tab = Number(document.querySelector('input[name="tab"]:checked').value);
+            const svgs = Array.from({length: 4}, (_, i) => new IgoSvg(i+1) );
+            const textarea = new Array(4).fill('');
+            return {
+                tab,
+                svgs,
+                textarea,
+            }
+        }
+        
+        function handleClick (ev, state) {
+            const svg = ev.target.closest('svg');
+            if(svg !== null) {
+                if(state.tab===0) {
+                    // これ不要かも？
+                    state.tab = Number(svg.parentNode.dataset.v);
+                }else{
+                    console.log([ev.offsetX, ev.offsetY]);
+                }
+                render(state);
+            }
+            return state;
+        }
+
+        function handleRadio (ev, state) {
+            switch(ev.target.name) {
+                case 'tab':
+                    if(state.tab > 0) {
+                        state.textarea[state.tab-1] = document.querySelector('textarea#textarea').value;
+                    }
+                    state.tab = Number(ev.target.value);
+                    if(state.tab > 0) {
+                        document.querySelector('textarea#textarea').value = state.textarea[state.tab-1];
+                    }
+                    render(state);
+                    break;
+                case 'color':
+                    state.color = Number(ev.target.value);
+                    break;
+                case 'char':
+                    state.char = ev.target.value
+                    break;
+            }
+            return state;
+        }
+
+        function render(state) {
+            console.log('render');
+            const display = document.querySelector('#display');
+            const input = document.querySelector('#input');
+            if(state.tab===0) {
+                input.style.display = 'none';
+                display.style.display = 'block';
+                state.svgs.forEach((svg, i) => {
+                    display.querySelector(`span[data-v="${i+1}"]`).appendChild(svg.svg);
+                });
+                state.textarea.forEach((text, i) => {
+                    display.querySelector(`span[data-v="${i+1}"]~span[data-t="textarea"]`).textContent = text;
+                });
+            }else{
+                display.style.display = 'none';
+                input.style.display = 'block';
+                const tab = state.tab;
+                const svgInput = input.querySelector('div.svg-input');
+                while(!!svgInput.lastChild) {
+                    svgInput.removeChild(svgInput.lastChild);
+                }
+                svgInput.appendChild(state.svgs[tab-1].svg);
+            }
+        }
+
+        class IgoSvg {
+            ns = 'http://www.w3.org/2000/svg';
+            svg;
+            thin = 2;
+            thick = 4;
+            square_width = 48;
+            radius = 46;
+            grid;
+            data;
+            constructor(id) {
+                this.grid = this.createGrid();
+                this.svg = this.createSvg(id);
+                this.data = this.createData();
+            }
+            createGrid() {}
+            createSvg(id) {
+                const svg = document.createElementNS(this.ns, 'svg');
+                const w = this.square_width * 19;
+                const m = Math.floor(this.square_width / 2);
+                svg.setAttribute('viewBox', `0 0 ${w} ${w}`);
+                svg.dataset.value = id;
+                // line を作る
+                const line_idxs = Array.from({length: 19}, (_, i) => m + this.square_width * i);
+                const createLine = (x1, x2, y1, y2, s_w) => {
+                    const line = document.createElementNS(this.ns, 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', '#333');
+                    line.setAttribute('stroke-width', s_w);
+                    return line;
+                }
+                const start = m - Math.floor(this.thick / 2),
+                    end = w - start;
+                line_idxs.forEach((x, i) => {
+                    const lx = (i===0 || i===18)
+                        ? createLine(start, end, x, x, this.thick)
+                        : createLine(start, end, x, x, this.thin);
+                    const ly = (i===0 || i===18)
+                        ? createLine(x, x, start, end, this.thick)
+                        : createLine(x, x, start, end, this.thin);
+                    svg.appendChild(lx);
+                    svg.appendChild(ly);
+                });
+                // dot を作る
+                const dot_idxs = [line_idxs[3], line_idxs[9], line_idxs[15]];
+                dot_idxs.forEach(cx => {
+                    dot_idxs.forEach(cy => {
+                        const dot = document.createElementNS(this.ns, 'circle');
+                        dot.setAttribute('cx', cx);
+                        dot.setAttribute('cy', cy);
+                        dot.setAttribute('r', Math.floor(this.thick * 1.5));
+                        dot.setAttribute('fill', '#333');
+                        svg.appendChild(dot);
+                    })
+                });
+                return svg;
+            }
+            createData() {}
+        }
+    </script>
+</body>
+</html>

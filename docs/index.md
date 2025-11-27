@@ -12,4 +12,5 @@ JavaScript で作ったツール
 - [囲碁の部分図](./igo.html)
 - [AVL木の回転](./avl-tree.html)
 - [現在時刻: ISO 8601](./iso8601.html)
+- [囲碁の全体図](./igoall.html)
 
