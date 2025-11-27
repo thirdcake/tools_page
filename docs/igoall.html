@@ -43,7 +43,6 @@
         </div>
     </div>
     <div id="input">
-        <div class="svg-input" style="max-width: 600px;"></div>
         <ul class="list">
             <li>碁石の色：</li>
             <li><label><input type="radio" value="0" name="color" checked />無色</label></li>
@@ -53,17 +52,18 @@
         <ul class="list">
             <li>文字：</li>
             <li><label><input type="radio" value="0" name="char" checked />（無し）</label></li>
-            <li><label><input type="radio" value="a" name="char" />A</label></li>
-            <li><label><input type="radio" value="b" name="char" />B</label></li>
-            <li><label><input type="radio" value="c" name="char" />C</label></li>
-            <li><label><input type="radio" value="d" name="char" />D</label></li>
-            <li><label><input type="radio" value="e" name="char" />E</label></li>
+            <li><label><input type="radio" value="A" name="char" />A</label></li>
+            <li><label><input type="radio" value="B" name="char" />B</label></li>
+            <li><label><input type="radio" value="C" name="char" />C</label></li>
+            <li><label><input type="radio" value="D" name="char" />D</label></li>
+            <li><label><input type="radio" value="E" name="char" />E</label></li>
             <li><label><input type="radio" value="1" name="char" />1</label></li>
             <li><label><input type="radio" value="2" name="char" />2</label></li>
             <li><label><input type="radio" value="3" name="char" />3</label></li>
             <li><label><input type="radio" value="4" name="char" />4</label></li>
             <li><label><input type="radio" value="5" name="char" />5</label></li>
         </ul>
+        <div class="svg-input" style="max-width: 600px;"></div>
         <div style="padding:1rem;">
             <textarea placeholder="ここに文章を書けます。" id="textarea" aria-label="文章追加部"
                 style="margin:0;padding:.5rem;width:100%;max-width:600px;height:5rem;"></textarea>
@@ -92,6 +92,8 @@
                 tab,
                 svgs,
                 textarea,
+                color: 0,
+                char: 0,
             }
         }
         
@@ -102,7 +104,8 @@
                     // これ不要かも？
                     state.tab = Number(svg.parentNode.dataset.v);
                 }else{
-                    console.log([ev.offsetX, ev.offsetY]);
+                    const instance = state.svgs[state.tab-1];
+                    instance.onClick(ev, state);
                 }
                 render(state);
             }
@@ -125,6 +128,13 @@
                     state.color = Number(ev.target.value);
                     break;
                 case 'char':
+                    let char = ev.target.value;
+                    if(char.length>1) {
+                        char = char[0];
+                    }
+                    if(Number.isInteger(char)) {
+                        char = Number(char);
+                    }
                     state.char = ev.target.value
                     break;
             }
@@ -162,23 +172,35 @@
             thin = 2;
             thick = 4;
             square_width = 48;
-            radius = 46;
+            radius = 23;
             grid;
             data;
+            group;
             constructor(id) {
-                this.grid = this.createGrid();
-                this.svg = this.createSvg(id);
-                this.data = this.createData();
+                const m = Math.floor(this.square_width / 2);
+                const positions = Array.from({length: 19}, (_, i) => m + this.square_width * i);
+                this.grid = this.createGrid(positions);
+                this.svg = this.createSvg(id, positions);
+                this.group = document.createElementNS(this.ns, 'g');
+                this.svg.appendChild(this.group);
+                this.data = Array.from({length: 19*19}, () => [0, 0]);
             }
-            createGrid() {}
-            createSvg(id) {
+
+            createGrid(positions) {
+                const grid = [];
+                positions.forEach((x, i) => {
+                    positions.forEach(y => {
+                        grid.push([x, y]);
+                    })
+                });
+                return grid;
+            }
+            createSvg(id, positions) {
                 const svg = document.createElementNS(this.ns, 'svg');
                 const w = this.square_width * 19;
-                const m = Math.floor(this.square_width / 2);
                 svg.setAttribute('viewBox', `0 0 ${w} ${w}`);
                 svg.dataset.value = id;
                 // line を作る
-                const line_idxs = Array.from({length: 19}, (_, i) => m + this.square_width * i);
                 const createLine = (x1, x2, y1, y2, s_w) => {
                     const line = document.createElementNS(this.ns, 'line');
                     line.setAttribute('x1', x1);
@@ -189,9 +211,10 @@
                     line.setAttribute('stroke-width', s_w);
                     return line;
                 }
+                const m = Math.floor(this.square_width / 2);
                 const start = m - Math.floor(this.thick / 2),
                     end = w - start;
-                line_idxs.forEach((x, i) => {
+                positions.forEach((x, i) => {
                     const lx = (i===0 || i===18)
                         ? createLine(start, end, x, x, this.thick)
                         : createLine(start, end, x, x, this.thin);
@@ -202,9 +225,9 @@
                     svg.appendChild(ly);
                 });
                 // dot を作る
-                const dot_idxs = [line_idxs[3], line_idxs[9], line_idxs[15]];
-                dot_idxs.forEach(cx => {
-                    dot_idxs.forEach(cy => {
+                const dotPs = [positions[3], positions[9], positions[15]];
+                dotPs.forEach(cx => {
+                    dotPs.forEach(cy => {
                         const dot = document.createElementNS(this.ns, 'circle');
                         dot.setAttribute('cx', cx);
                         dot.setAttribute('cy', cy);
@@ -215,7 +238,47 @@
                 });
                 return svg;
             }
-            createData() {}
+            onClick(ev, state) {
+                const index = this.nearestIndex(ev.clientX, ev.clientY);
+                const [cx, cy] = this.grid[index];
+                this.data[index] = [state.color, state.char];
+                this.render();
+            }
+            nearestIndex(clientX, clientY) {
+                const pt = this.svg.createSVGPoint();
+                pt.x = clientX;
+                pt.y = clientY;
+                const p = pt.matrixTransform(this.svg.getScreenCTM().inverse());
+                const index = this.grid
+                .map(([x, y]) => (p.x-x)**2 + (p.y-y)**2)
+                .reduce(([minDist, idx], dist, i) => {
+                    return (minDist <= dist) ? [minDist, idx] : [dist, i]
+                }, [1<<30, -1])
+                .at(1);
+                return index;
+            }
+            clear() {
+                while(!!this.group.lastChild) {
+                    this.group.removeChild(this.group.lastChild);
+                }
+            }
+            render() {
+                this.clear();
+                this.data.forEach(([color, char], i) => {
+                    if(color===0 && char===0) return;
+                    const [cx, cy] = this.grid[i];
+                    const stone = this.createStone(cx, cy, color, char);
+                    this.group.appendChild(stone);
+                });
+            }
+            createStone(cx, cy, color, char) {
+                const stone = document.createElementNS(this.ns, 'circle');
+                stone.setAttribute('cx', cx);
+                stone.setAttribute('cy', cy);
+                stone.setAttribute('r', this.radius);
+                stone.setAttribute('stroke', '#333');
+                return stone;
+            }
         }
     </script>
 </body>
