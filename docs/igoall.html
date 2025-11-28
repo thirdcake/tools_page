@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>囲碁</title>
     <style>
-        html,body {margin:0;padding:0;color:#111;}
+        html,body {margin:0;padding:0;color:#111;font-size:18px;}
         * {margin:0;padding:0;box-sizing:border-box;}
         h1 {margin:0;padding:.5rem;font-weight:normal;font-size:1rem;}
         ul, li {list-style-type: none;}
@@ -22,12 +22,14 @@
         .display-flex > label > span {display:block;width:100%;}
         .display-flex > label > span[data-t="textarea"] {white-space:pre-wrap;}
         .display-flex > label > span > svg {display:block;width:100%;height:auto;}
+        span[data-t="textarea"] {font-size:20px;}
+        textarea {font-size:20px;}
         @media print {
             .no-print {display:none !important;}
-        .display-flex {justify-content:space-between;height:50vh;}
-        .display-flex > label {padding:0;}
-        .display-flex > label > span {display:block;width:50vw}
-        .display-flex > label > span > svg {display:block;width:100%;height:auto;}
+            .display-flex {justify-content:space-between;height:50vh;gap:1rem;}
+            .display-flex > label {padding:0;}
+            .display-flex > label > span {display:block;width:50vw;}
+            .display-flex > label > span > svg {display:block;width:100%;height:auto;}
         }
     </style>
 </head>
@@ -69,6 +71,7 @@
             <li><label><input type="radio" value="C" name="char" />C</label></li>
             <li><label><input type="radio" value="D" name="char" />D</label></li>
             <li><label><input type="radio" value="E" name="char" />E</label></li>
+            <li><label><input type="radio" value="△" name="char" />△</label></li>
             <li><label><input type="radio" value="1" name="char" />1</label></li>
             <li><label><input type="radio" value="2" name="char" />2</label></li>
             <li><label><input type="radio" value="3" name="char" />3</label></li>
@@ -204,10 +207,14 @@
             const file = ev.target.files[0];
             try {
                 const jsonText = await file.text();  // ファイル内容（文字列）
-                const data = JSON.parse(jsonText);  // JSON → JSオブジェクト
-                data.data.forEach((dat, i) => {state.svgs[i].data = dat});
+                const data = JSON.parse(jsonText);
+                data.data.forEach((dat, i) => {state.svgs[i].setData(dat)});
                 state.svgs.forEach(svg => {svg.render()});
-                state.textarea = data.textarea;
+                data.textarea.forEach((textarea, i) => {
+                    if(typeof textarea === 'string') {
+                        store.textarea[i] = textarea;
+                    }
+                });
                 render(state);
             } catch (err) {
                 console.error("JSONのパースに失敗:", err);
@@ -346,6 +353,23 @@
                     stone.appendChild(text);
                 }
                 return stone;
+            }
+            setData(data) {
+                if(Array.isArray(data)===false) {
+                    console.error('データがおかしいです');
+                    return;
+                }
+                if(data.length !== 19*19) {
+                    console.error('data の要素数エラー');
+                    return;
+                }
+                data.forEach((dat, i) => {
+                    if(Array.isArray(dat)===false) return;
+                    if(dat.length !== 2) return;
+                    if([0,1,2].includes(dat[0])===false) return;
+                    if(['string', 'number'].includes(typeof dat[1])===false) return;
+                    this.data[i] = dat;
+                });
             }
         }
     </script>
