@@ -12,6 +12,10 @@
         ul.list {margin:0; padding:.5rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem 1rem;}
         li > label {margin:0;padding:0 .5rem;border:thin solid #333;border-radius:.3rem;}
         li > label:has(input[type="radio"]:checked){color:#8f8;background-color: #555;}
+        button {display:block;padding:0 .5rem;border:thin solid #333;border-radius:.3rem;background-color:transparent;}
+        button:hover {background-color:#eee;}
+        button:active {background-color:#aaa;}
+        svg {cursor:pointer;}
         .display-flex {display:flex;align-items:flex-start;justify-content:flex-start;gap:0;}
         .display-flex > label {padding:.8rem;cursor:pointer;}
         .display-flex > label:hover {background-color:#ccc;}
@@ -20,6 +24,10 @@
         .display-flex > label > span > svg {display:block;width:100%;height:auto;}
         @media print {
             .no-print {display:none !important;}
+        .display-flex {justify-content:space-between;height:50vh;}
+        .display-flex > label {padding:0;}
+        .display-flex > label > span {display:block;width:50vw}
+        .display-flex > label > span > svg {display:block;width:100%;height:auto;}
         }
     </style>
 </head>
@@ -33,6 +41,10 @@
         <li><label><input id="tab-4" type="radio" value="4" name="tab" />右下を拡大</label></li>
     </ul>
     <div id="display">
+        <ul class="list no-print">
+            <li><button type="button" value="save" id="save">保存</button></li>
+            <li>読込: <input type="file" id="load" accept="application/json"></li>
+        </ul>
         <div class="display-flex">
             <label for="tab-1"><span data-v="1"></span><span data-t="textarea"></span></label>
             <label for="tab-2"><span data-v="2"></span><span data-t="textarea"></span></label>
@@ -80,10 +92,16 @@
                 if(label !== null) return;
                 state = handleClick(ev, state);
             }, false);
-            document.addEventListener('change', (ev) => {
-                state = handleRadio(ev, state);
+            document.addEventListener('change', async (ev) => {
+                const file = ev.target.files;
+                if (!!file) {
+                    state = await load(ev, state);
+                }else{
+                    state = handleRadio(ev, state);
+                }
             }, false);
         }
+
         function init () {
             const tab = Number(document.querySelector('input[name="tab"]:checked').value);
             const svgs = Array.from({length: 4}, (_, i) => new IgoSvg(i+1) );
@@ -109,6 +127,12 @@
                 }
                 render(state);
             }
+            const button = ev.target.closest('button');
+            if(button !== null) {
+                if(button.value==='save') {
+                    save(state);
+                }
+            }
             return state;
         }
 
@@ -129,20 +153,15 @@
                     break;
                 case 'char':
                     let char = ev.target.value;
-                    if(char.length>1) {
-                        char = char[0];
-                    }
-                    if(Number.isInteger(char)) {
-                        char = Number(char);
-                    }
-                    state.char = ev.target.value
+                    char = char[0];
+                    char = isNaN(parseInt(char)) ? char : Number(char);
+                    state.char = char;
                     break;
             }
             return state;
         }
 
         function render(state) {
-            console.log('render');
             const display = document.querySelector('#display');
             const input = document.querySelector('#input');
             if(state.tab===0) {
@@ -166,13 +185,43 @@
             }
         }
 
+        function save(state) {
+            const json = JSON.stringify({
+                data: state.svgs.map(igosvg => igosvg.data),
+                textarea: state.textarea,
+            });
+            const blob = new Blob([json], { type: "application/json" });  // Blob 作成
+            const url = URL.createObjectURL(blob);  // ダウンロード用のURLを生成
+            // 一時的に a タグを作ってクリックしてダウンロード
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `囲碁データ${Date.now()}.json`; // ダウンロードするファイル名
+            a.click();
+            URL.revokeObjectURL(url);  // メモリ解放
+        }
+
+        async function load(ev, state) {
+            const file = ev.target.files[0];
+            try {
+                const jsonText = await file.text();  // ファイル内容（文字列）
+                const data = JSON.parse(jsonText);  // JSON → JSオブジェクト
+                data.data.forEach((dat, i) => {state.svgs[i].data = dat});
+                state.svgs.forEach(svg => {svg.render()});
+                state.textarea = data.textarea;
+                render(state);
+            } catch (err) {
+                console.error("JSONのパースに失敗:", err);
+            }
+            return state;
+        }
+
         class IgoSvg {
             ns = 'http://www.w3.org/2000/svg';
             svg;
             thin = 2;
             thick = 4;
             square_width = 48;
-            radius = 23;
+            radius = 20;
             grid;
             data;
             group;
@@ -195,6 +244,7 @@
                 });
                 return grid;
             }
+
             createSvg(id, positions) {
                 const svg = document.createElementNS(this.ns, 'svg');
                 const w = this.square_width * 19;
@@ -271,12 +321,30 @@
                     this.group.appendChild(stone);
                 });
             }
+
             createStone(cx, cy, color, char) {
-                const stone = document.createElementNS(this.ns, 'circle');
-                stone.setAttribute('cx', cx);
-                stone.setAttribute('cy', cy);
-                stone.setAttribute('r', this.radius);
-                stone.setAttribute('stroke', '#333');
+                const stone = document.createElementNS(this.ns, 'g');
+                const circle = document.createElementNS(this.ns, 'circle');
+                circle.setAttribute('cx', cx);
+                circle.setAttribute('cy', cy);
+                circle.setAttribute('r', this.radius);
+                const fill = (color===1) ? '#333' : '#fff';
+                const stroke = (color===0) ? '#fff' : '#333';
+                circle.setAttribute('fill', fill); 
+                circle.setAttribute('stroke', stroke);
+                circle.setAttribute('stroke-width', 4);
+                stone.appendChild(circle);
+                if(char!==0) {
+                    const text = document.createElementNS(this.ns, 'text');
+                    text.setAttribute('style', `font: normal ${this.radius*1.8}px sans-serif`);
+                    text.setAttribute('x', cx);
+                    text.setAttribute('y', cy+(this.radius*.6));
+                    const text_fill = (color===1) ? '#fff' : '#333';
+                    text.setAttribute('fill', text_fill);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.textContent = char;
+                    stone.appendChild(text);
+                }
                 return stone;
             }
         }
