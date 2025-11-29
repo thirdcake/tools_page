@@ -136,8 +136,8 @@
                 render(state);
             }
             const button = ev.target.closest('button');
-            if(button !== null) {
-                if(button.value==='save') {
+            if(button !== null && button.value==='save') {
+                if(window.confirm('保存してよろしいですか？')) {
                     save(state);
                 }
             }
@@ -302,8 +302,12 @@
             }
             onClick(ev, state) {
                 const index = this.nearestIndex(ev.clientX, ev.clientY);
-                const [cx, cy] = this.grid[index];
-                this.data[index] = [state.color, state.char];
+                if(this.data[index][0] === state.color
+                    && this.data[index][1] === state.char) {
+                        this.data[index] = [0, 0];
+                }else{
+                    this.data[index] = [state.color, state.char];
+                }
                 this.render();
             }
             nearestIndex(clientX, clientY) {

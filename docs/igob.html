@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>囲碁</title>
+    <title>囲碁部分図</title>
     <style>
         html,body {margin:0;padding:0;color:#111;font-size:18px;}
         * {margin:0;padding:0;box-sizing:border-box;}
@@ -111,7 +111,10 @@
             }, false);
             document.addEventListener('keydown', (ev) => {
                 if(['Backspace', 'Delete'].includes(ev.key)) {
-                    console.log('keydown');
+                    if(state.tab===0) return;
+                    const tab = state.tab;
+                    state.svgs[tab-1].undo();
+                    render(state);
                 }
             }, false);
         }
@@ -142,8 +145,8 @@
                 render(state);
             }
             const button = ev.target.closest('button');
-            if(button !== null) {
-                if(button.value==='save') {
+            if(button !== null && button.value==='save') {
+                if(window.confirm('保存してよろしいですか？')) {
                     save(state);
                 }
             }
@@ -311,8 +314,13 @@
             }
             onClick(ev, state) {
                 const index = this.nearestIndex(ev.clientX, ev.clientY);
-                const [cx, cy] = this.grid[index];
-                this.data[index] = [state.color, state.char];
+                // const [cx, cy] = this.grid[index];
+                if(this.data[index][0] === state.color
+                    && this.data[index][1] === state.char) {
+                        this.data[index] = [0, 0];
+                }else{
+                    this.data[index] = [state.color, state.char];
+                }
                 this.render();
             }
             nearestIndex(clientX, clientY) {
@@ -373,7 +381,7 @@
                     console.error('データがおかしいです');
                     return;
                 }
-                if(data.length !== 19*19) {
+                if(data.length !== 11*9) {
                     console.error('data の要素数エラー');
                     return;
                 }
