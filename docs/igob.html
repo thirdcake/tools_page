@@ -26,7 +26,7 @@
         textarea {font-size:20px;}
         @media print {
             .no-print {display:none !important;}
-            .display-flex {justify-content:space-between;height:50vh;gap:1rem;}
+            .display-flex {justify-content:space-between;height:30vh;gap:1rem;}
             .display-flex > label {padding:0;flex:1 1 50vw;}
             .display-flex > label > span {display:block;width:100%;}
             .display-flex > label > span > svg {display:block;width:100%;height:auto;}
@@ -34,13 +34,15 @@
     </style>
 </head>
 <body>
-    <h1 class="no-print">囲碁 問題解答 印刷用</h1>
+    <h1 class="no-print">囲碁部分図 問題解答 印刷用</h1>
     <ul class="list no-print">
         <li><label><input type="radio" value="0" name="tab" checked />全体を俯瞰</label></li>
         <li><label><input id="tab-1" type="radio" value="1" name="tab" />左上を拡大</label></li>
         <li><label><input id="tab-2" type="radio" value="2" name="tab" />右上を拡大</label></li>
-        <li><label><input id="tab-3" type="radio" value="3" name="tab" />左下を拡大</label></li>
-        <li><label><input id="tab-4" type="radio" value="4" name="tab" />右下を拡大</label></li>
+        <li><label><input id="tab-3" type="radio" value="3" name="tab" />左中を拡大</label></li>
+        <li><label><input id="tab-4" type="radio" value="3" name="tab" />右中を拡大</label></li>
+        <li><label><input id="tab-5" type="radio" value="4" name="tab" />左下を拡大</label></li>
+        <li><label><input id="tab-6" type="radio" value="4" name="tab" />右下を拡大</label></li>
     </ul>
     <div id="display">
         <ul class="list no-print">
@@ -54,6 +56,10 @@
         <div class="display-flex">
             <label for="tab-3"><span data-v="3"></span><span data-t="textarea"></span></label>
             <label for="tab-4"><span data-v="4"></span><span data-t="textarea"></span></label>
+        </div>
+        <div class="display-flex">
+            <label for="tab-5"><span data-v="5"></span><span data-t="textarea"></span></label>
+            <label for="tab-6"><span data-v="6"></span><span data-t="textarea"></span></label>
         </div>
     </div>
     <div id="input">
@@ -112,8 +118,8 @@
 
         function init () {
             const tab = Number(document.querySelector('input[name="tab"]:checked').value);
-            const svgs = Array.from({length: 4}, (_, i) => new IgoSvg(i+1) );
-            const textarea = new Array(4).fill('');
+            const svgs = Array.from({length: 6}, (_, i) => new IgoSvg(i+1) );
+            const textarea = new Array(6).fill('');
             return {
                 tab,
                 svgs,
@@ -238,29 +244,31 @@
             data;
             group;
             constructor(id) {
-                const m = Math.floor(this.square_width / 2);
-                const positions = Array.from({length: 19}, (_, i) => m + this.square_width * i);
-                this.grid = this.createGrid(positions);
-                this.svg = this.createSvg(id, positions);
+                const margin = Math.floor(this.square_width / 2);
+                const row_positions = Array.from({length: 9}, (_, i) => margin + this.square_width * i);
+                const col_positions = Array.from({length: 11}, (_, i) => margin + this.square_width * i);
+                this.grid = this.createGrid(row_positions, col_positions);
+                this.svg = this.createSvg(id, row_positions, col_positions);
                 this.group = document.createElementNS(this.ns, 'g');
                 this.svg.appendChild(this.group);
-                this.data = Array.from({length: 19*19}, () => [0, 0]);
+                this.data = Array.from({length: 11*9}, () => [0, 0]);
             }
 
-            createGrid(positions) {
+            createGrid(row_positions, col_positions) {
                 const grid = [];
-                positions.forEach((x, i) => {
-                    positions.forEach(y => {
+                row_positions.forEach(x => {
+                    col_positions.forEach(y => {
                         grid.push([x, y]);
                     })
                 });
                 return grid;
             }
 
-            createSvg(id, positions) {
+            createSvg(id, row_positions, col_positions) {
                 const svg = document.createElementNS(this.ns, 'svg');
-                const w = this.square_width * 19;
-                svg.setAttribute('viewBox', `0 0 ${w} ${w}`);
+                const w = this.square_width * 11;
+                const h = this.square_width * 9;
+                svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
                 svg.dataset.value = id;
                 // line を作る
                 const createLine = (x1, x2, y1, y2, s_w) => {
@@ -273,31 +281,32 @@
                     line.setAttribute('stroke-width', s_w);
                     return line;
                 }
-                const m = Math.floor(this.square_width / 2);
-                const start = m - Math.floor(this.thick / 2),
-                    end = w - start;
-                positions.forEach((x, i) => {
-                    const lx = (i===0 || i===18)
-                        ? createLine(start, end, x, x, this.thick)
-                        : createLine(start, end, x, x, this.thin);
-                    const ly = (i===0 || i===18)
-                        ? createLine(x, x, start, end, this.thick)
-                        : createLine(x, x, start, end, this.thin);
+                const margin = Math.floor(this.square_width / 2);
+                const row_start = margin - Math.floor(this.thick / 2),
+                    col_end = h - row_start;
+                row_positions.forEach((x, i) => {
+                    const lx = (i===8)
+                        ? createLine(row_start, w, x, x, this.thick)
+                        : createLine(row_start, w, x, x, this.thin);
                     svg.appendChild(lx);
+                });
+                col_positions.forEach((y, i) => {
+                    const ly = (i===0)
+                        ? createLine(y, y, 0, col_end, this.thick)
+                        : createLine(y, y, 0, col_end, this.thin);
                     svg.appendChild(ly);
                 });
                 // dot を作る
-                const dotPs = [positions[3], positions[9], positions[15]];
-                dotPs.forEach(cx => {
-                    dotPs.forEach(cy => {
-                        const dot = document.createElementNS(this.ns, 'circle');
-                        dot.setAttribute('cx', cx);
-                        dot.setAttribute('cy', cy);
-                        dot.setAttribute('r', Math.floor(this.thick * 1.5));
-                        dot.setAttribute('fill', '#333');
-                        svg.appendChild(dot);
-                    })
-                });
+                const createDot = (cy, cx) => {
+                    const dot = document.createElementNS(this.ns, 'circle');
+                    dot.setAttribute('cx', cx);
+                    dot.setAttribute('cy', cy);
+                    dot.setAttribute('r', Math.floor(this.thick * 1.5));
+                    dot.setAttribute('fill', '#333');
+                    return dot;
+                }
+                svg.appendChild(createDot(row_positions[5], col_positions[3]));
+                svg.appendChild(createDot(row_positions[5], col_positions[9]));
                 return svg;
             }
             onClick(ev, state) {
