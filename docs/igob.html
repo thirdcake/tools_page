@@ -40,9 +40,9 @@
         <li><label><input id="tab-1" type="radio" value="1" name="tab" />左上を拡大</label></li>
         <li><label><input id="tab-2" type="radio" value="2" name="tab" />右上を拡大</label></li>
         <li><label><input id="tab-3" type="radio" value="3" name="tab" />左中を拡大</label></li>
-        <li><label><input id="tab-4" type="radio" value="3" name="tab" />右中を拡大</label></li>
-        <li><label><input id="tab-5" type="radio" value="4" name="tab" />左下を拡大</label></li>
-        <li><label><input id="tab-6" type="radio" value="4" name="tab" />右下を拡大</label></li>
+        <li><label><input id="tab-4" type="radio" value="4" name="tab" />右中を拡大</label></li>
+        <li><label><input id="tab-5" type="radio" value="5" name="tab" />左下を拡大</label></li>
+        <li><label><input id="tab-6" type="radio" value="6" name="tab" />右下を拡大</label></li>
     </ul>
     <div id="display">
         <ul class="list no-print">
@@ -178,6 +178,7 @@
         }
 
         function render(state) {
+            console.log(state);
             const display = document.querySelector('#display');
             const input = document.querySelector('#input');
             if(state.tab===0) {
@@ -273,7 +274,6 @@
                 const w = this.square_width * 11;
                 const h = this.square_width * 9;
                 svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-                svg.dataset.value = id;
                 // line を作る
                 const createLine = (x1, x2, y1, y2, s_w) => {
                     const line = document.createElementNS(this.ns, 'line');
