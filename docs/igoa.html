@@ -103,14 +103,16 @@
                     state = handleRadio(ev, state);
                 }
             }, false);
-            document.addEventListener('keydown', (ev) => {
-                if(['Backspace', 'Delete'].includes(ev.key)) {
-                    console.log('keydown');
-                }
-            }, false);
+        }
+
+        function resetRadio() {
+            document.getElementsByName('tab')[0].click();
+            document.getElementsByName('color')[0].click();
+            document.getElementsByName('char')[0].click();
         }
 
         function init () {
+            resetRadio();
             const tab = Number(document.querySelector('input[name="tab"]:checked').value);
             const svgs = Array.from({length: 4}, (_, i) => new IgoSvg(i+1) );
             const textarea = new Array(4).fill('');
@@ -220,6 +222,7 @@
                         state.textarea[i] = textarea;
                     }
                 });
+                resetRadio();
                 render(state);
             } catch (err) {
                 console.error("JSONのパースに失敗:", err);
@@ -238,8 +241,9 @@
             data;
             group;
             constructor(id) {
-                const m = Math.floor(this.square_width / 2);
-                const positions = Array.from({length: 19}, (_, i) => m + this.square_width * i);
+                const margin = Math.floor(this.square_width / 2);
+                const pitch = (_, i) => margin + this.square_width * i;
+                const positions = Array.from({length: 19}, pitch);
                 this.grid = this.createGrid(positions);
                 this.svg = this.createSvg(id, positions);
                 this.group = document.createElementNS(this.ns, 'g');
@@ -273,8 +277,8 @@
                     line.setAttribute('stroke-width', s_w);
                     return line;
                 }
-                const m = Math.floor(this.square_width / 2);
-                const start = m - Math.floor(this.thick / 2),
+                const margin = Math.floor(this.square_width / 2);
+                const start = margin - Math.floor(this.thick / 2),
                     end = w - start;
                 positions.forEach((x, i) => {
                     const lx = (i===0 || i===18)
@@ -287,15 +291,18 @@
                     svg.appendChild(ly);
                 });
                 // dot を作る
+                const createDot = (cy, cx) => {
+                    const dot = document.createElementNS(this.ns, 'circle');
+                    dot.setAttribute('cx', cx);
+                    dot.setAttribute('cy', cy);
+                    dot.setAttribute('r', Math.floor(this.thick * 1.5));
+                    dot.setAttribute('fill', '#333');
+                    return dot;
+                }
                 const dotPs = [positions[3], positions[9], positions[15]];
                 dotPs.forEach(cx => {
                     dotPs.forEach(cy => {
-                        const dot = document.createElementNS(this.ns, 'circle');
-                        dot.setAttribute('cx', cx);
-                        dot.setAttribute('cy', cy);
-                        dot.setAttribute('r', Math.floor(this.thick * 1.5));
-                        dot.setAttribute('fill', '#333');
-                        svg.appendChild(dot);
+                        svg.appendChild(createDot(cx, cy));
                     })
                 });
                 return svg;
