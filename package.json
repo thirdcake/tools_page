@@ -3,6 +3,6 @@
     "esbuild": "0.25.11"
   },
   "scripts": {
-    "build_igo": "esbuild src/igo_all/index.js --bundle --outfile=docs/assets/igo/script.js"
+    "build_igo": "esbuild src/igo/index.ts --bundle --outfile=docs/assets/igo.js"
   }
 }
