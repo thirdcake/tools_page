@@ -136,6 +136,41 @@
     }
   };
 
+  // src/igo/state.ts
+  var State = class {
+    #color;
+    #character;
+    constructor() {
+      this.#color = 0;
+      this.#character = "";
+    }
+    get color() {
+      return this.#color;
+    }
+    set color(n) {
+      switch (n) {
+        case "1":
+          this.#color = 1;
+          break;
+        case "2":
+          this.#color = 2;
+          break;
+        default:
+          this.#color = 0;
+      }
+    }
+    get character() {
+      return this.#character;
+    }
+    set character(c) {
+      if (c.length > 1) {
+        this.#character = c[0];
+      } else {
+        this.#character = c;
+      }
+    }
+  };
+
   // src/igo/board.ts
   var Board = class {
     #ns = "http://www.w3.org/2000/svg";
@@ -154,6 +189,7 @@
     svg;
     #grid;
     #coodinates;
+    #state;
     constructor() {
       this.#positions = this.#createPositions();
       this.svg = document.createElementNS(this.#ns, "svg");
@@ -163,6 +199,13 @@
       this.svg.appendChild(this.#grid.g);
       this.#coodinates = new Coordinates(this.#config, this.#positions);
       this.svg.appendChild(this.#coodinates.g);
+      this.#state = new State();
+    }
+    onClickSVG(clix, cliy) {
+      const pt = this.svg.createSVGPoint();
+      pt.x = clix;
+      pt.y = cliy;
+      const { x, y } = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
     }
     onClickVertical(oldVal, newVal) {
       if (oldVal === "null" && newVal !== "null") {
@@ -207,6 +250,9 @@
     // document に接続時実行
     connectedCallback() {
       this.appendChild(this.board.svg);
+      this.board.svg.addEventListener("click", (ev) => {
+        this.board.onClickSVG(ev.clientX, ev.clientY);
+      }, false);
     }
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {

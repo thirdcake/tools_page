@@ -2,6 +2,7 @@ import { BoardConfig } from "./config";
 import { Grid } from "./grid";
 import { Coordinates } from "./coordinates";
 import { State } from "./state";
+import { Stones } from "./stones";
 
 export class Board {
     #ns = 'http://www.w3.org/2000/svg';
@@ -23,6 +24,7 @@ export class Board {
     #grid: Grid;
     #coodinates: Coordinates;
     #state: State;
+    #stones: Stones;
 
     constructor() {
         this.#positions = this.#createPositions();
@@ -38,13 +40,16 @@ export class Board {
         this.svg.appendChild(this.#coodinates.g);
 
         this.#state = new State();
+
+        this.#stones = new Stones(this.#config, this.#positions);
+        this.svg.appendChild(this.#stones.g);
     }
     onClickSVG(clix:number, cliy:number) {
         const pt = this.svg.createSVGPoint();
         pt.x = clix;
         pt.y = cliy;
         const {x, y} = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
-        
+        this.#stones.onClick(x, y, this.#state);
     }
 
     onClickVertical(oldVal:string, newVal:string) {
