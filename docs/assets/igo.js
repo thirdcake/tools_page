@@ -171,6 +171,138 @@
     }
   };
 
+  // src/igo/stone.ts
+  var Stone = class {
+    #ns = "http://www.w3.org/2000/svg";
+    #config;
+    #color;
+    #character;
+    g;
+    #circle;
+    #text;
+    constructor(config, row, col, color = 0, character = "") {
+      this.#config = config;
+      this.g = document.createElementNS(this.#ns, "g");
+      this.#circle = this.#createCircle(row, col);
+      this.g.appendChild(this.#circle);
+      this.#text = this.#createText(row, col);
+      this.g.appendChild(this.#text);
+      this.#color = color;
+      this.#character = character;
+      this.#render();
+    }
+    onChange(color, character) {
+      const same_color = color === this.#color;
+      const same_char = character === this.#character;
+      if (same_color && same_char) {
+        this.#color = 0;
+        this.#character = "";
+      } else {
+        this.#color = color;
+        this.#character = character;
+      }
+      this.#render();
+    }
+    #createCircle(row, col) {
+      const circle = document.createElementNS(this.#ns, "circle");
+      circle.setAttribute("cx", `${col}`);
+      circle.setAttribute("cy", `${row}`);
+      circle.setAttribute("r", `${this.#config.radius}`);
+      circle.setAttribute("fill", "transparent");
+      circle.setAttribute("stroke", "transparent");
+      circle.setAttribute("stroke-width", `${this.#config.thick}`);
+      return circle;
+    }
+    #createText(row, col) {
+      const text = document.createElementNS(this.#ns, "text");
+      const text_size = this.#config.text_size;
+      const font_style = `font:normal ${text_size}px sans-serif`;
+      text.setAttribute("style", font_style);
+      text.setAttribute("x", `${col}`);
+      const base_line = this.#config.radius * 0.6;
+      const y = base_line + row;
+      text.setAttribute("y", `${y}`);
+      text.setAttribute("fill", "transparent");
+      text.setAttribute("text-anchor", "middle");
+      text.textContent = "";
+      return text;
+    }
+    #render() {
+      const color = this.#color;
+      const character = this.#character;
+      const line_color = this.#config.color;
+      let circle_fill = "transparent", circle_stroke = "transparent", text_fill = "transparent";
+      if (color === 0 && character === "") {
+        circle_fill = "transparent";
+        circle_stroke = "transparent";
+        text_fill = "transparent";
+      } else if (color === 0) {
+        circle_fill = "#fff";
+        circle_stroke = "#fff";
+        text_fill = line_color;
+      } else if (color === 1) {
+        circle_fill = line_color;
+        circle_stroke = line_color;
+        text_fill = "#fff";
+      } else if (color === 2) {
+        circle_fill = "#fff";
+        circle_stroke = line_color;
+        text_fill = line_color;
+      }
+      this.#circle.setAttribute("fill", circle_fill);
+      this.#circle.setAttribute("stroke", circle_stroke);
+      this.#text.setAttribute("fill", text_fill);
+      this.#text.textContent = character;
+    }
+  };
+
+  // src/igo/stones.ts
+  var Stones = class {
+    #ns = "http://www.w3.org/2000/svg";
+    #config;
+    #positions;
+    stones;
+    g;
+    constructor(config, positions) {
+      this.#config = config;
+      this.#positions = positions;
+      this.stones = this.#createStones(positions);
+      this.g = document.createElementNS(this.#ns, "g");
+      this.stones.forEach((row) => {
+        row.forEach((stone) => {
+          this.g.appendChild(stone.g);
+        });
+      });
+    }
+    onClick(x, y, state) {
+      if (x < 0) return;
+      const max_height = this.#config.size * this.#config.interval;
+      if (max_height < y) return;
+      const positions = this.#positions;
+      const init_x = { idx: 0, dist: Math.abs(positions[0] - x), now: x };
+      const init_y = { idx: 0, dist: Math.abs(positions[0] - y), now: y };
+      const minDist = (obj, pos, i) => {
+        if (Math.abs(pos - obj.now) < obj.dist) {
+          obj.idx = i;
+          obj.dist = Math.abs(pos - obj.now);
+        }
+        return obj;
+      };
+      const col = positions.reduce(minDist, init_x).idx;
+      const row = positions.reduce(minDist, init_y).idx;
+      const color = state.color;
+      const character = state.character;
+      this.stones[row][col].onChange(color, character);
+    }
+    #createStones(positions) {
+      return positions.map(
+        (row_pos) => positions.map(
+          (col_pos) => new Stone(this.#config, row_pos, col_pos, 0, "")
+        )
+      );
+    }
+  };
+
   // src/igo/board.ts
   var Board = class {
     #ns = "http://www.w3.org/2000/svg";
@@ -190,6 +322,7 @@
     #grid;
     #coodinates;
     #state;
+    #stones;
     constructor() {
       this.#positions = this.#createPositions();
       this.svg = document.createElementNS(this.#ns, "svg");
@@ -200,12 +333,47 @@
       this.#coodinates = new Coordinates(this.#config, this.#positions);
       this.svg.appendChild(this.#coodinates.g);
       this.#state = new State();
+      this.#stones = new Stones(this.#config, this.#positions);
+      this.svg.appendChild(this.#stones.g);
+      this.svg.addEventListener("click", (ev) => {
+        this.#onClickSVG(ev.clientX, ev.clientY);
+      });
     }
-    onClickSVG(clix, cliy) {
+    #onClickSVG(clix, cliy) {
       const pt = this.svg.createSVGPoint();
       pt.x = clix;
       pt.y = cliy;
       const { x, y } = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
+      this.#stones.onClick(x, y, this.#state);
+    }
+    onClickColor(oldVal, newVal) {
+      this.#state.color = newVal;
+    }
+    onClickChar(oldVal, newVal) {
+      this.#state.character = newVal;
+    }
+    onChangeXL(oldVal, newVal) {
+    }
+    onChangeXR(oldVal, newVal) {
+      const oldNum = Number(oldVal);
+      const newNum = Number(newVal);
+      if (isNaN(oldNum) || isNaN(newNum)) return;
+      const oldLeft = this.#config.interval * (oldNum - 1);
+      const newLeft = this.#config.interval * (newNum - 1);
+      this.#viewBox[2] += newLeft - oldLeft;
+      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
+    }
+    onChangeYU(oldVal, newVal) {
+      const oldNum = Number(oldVal);
+      const newNum = Number(newVal);
+      if (isNaN(oldNum) || isNaN(newNum)) return;
+      const oldUp = this.#config.interval * (oldNum - 1);
+      const newUp = this.#config.interval * (newNum - 1);
+      this.#viewBox[1] += oldUp - newUp;
+      this.#viewBox[3] -= oldUp - newUp;
+      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
+    }
+    onChangeYD(oldVal, newVal) {
     }
     onClickVertical(oldVal, newVal) {
       if (oldVal === "null" && newVal !== "null") {
@@ -238,28 +406,55 @@
   // src/igo/board-svg.ts
   var BoardSVG = class extends HTMLElement {
     board;
-    static observedAttributes = ["clientxy", "color", "char", "vertical", "holizontal"];
+    static observedAttributes = [
+      "color",
+      "char",
+      "x_left",
+      "x_right",
+      "y_up",
+      "y_down",
+      "vertical",
+      "holizontal"
+    ];
     constructor() {
       super();
-      this.setAttribute("color", "0");
-      this.setAttribute("char", "");
-      this.setAttribute("vertical", "null");
-      this.setAttribute("holizontal", "null");
+      const inits = [
+        ["color", "0"],
+        ["char", ""],
+        ["x_left", "1"],
+        ["x_right", "19"],
+        ["y_up", "19"],
+        ["y_down", "1"],
+        ["vertical", "null"],
+        ["holizontal", "null"]
+      ];
+      inits.forEach((arr) => {
+        this.setAttribute(arr[0], arr[1]);
+      });
       this.board = new Board();
     }
     // document に接続時実行
     connectedCallback() {
       this.appendChild(this.board.svg);
-      this.board.svg.addEventListener("click", (ev) => {
-        this.board.onClickSVG(ev.clientX, ev.clientY);
-      }, false);
     }
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {
       switch (attr) {
         case "color":
+          this.board.onClickColor(oldVal, newVal);
           break;
         case "char":
+          this.board.onClickChar(oldVal, newVal);
+          break;
+        case "x_left":
+          break;
+        case "x_right":
+          this.board.onChangeXR(oldVal, newVal);
+          break;
+        case "y_up":
+          this.board.onChangeYU(oldVal, newVal);
+          break;
+        case "y_down":
           break;
         case "vertical":
           this.board.onClickVertical(oldVal, newVal);
@@ -273,6 +468,33 @@
 
   // src/igo/index.ts
   customElements.define("board-svg", BoardSVG);
+  document.addEventListener("DOMContentLoaded", main, false);
+  function main() {
+    onChangeRange();
+  }
+  function onChangeRange() {
+    const range_u = document.querySelector('input[name="go-state-range-u"]');
+    const range_r = document.querySelector('input[name="go-state-range-r"]');
+    if (!range_u || !range_r) return;
+    range_u.addEventListener("change", (ev) => {
+      const target = ev.target;
+      if (target instanceof HTMLInputElement) {
+        const value = target.value;
+        document.querySelectorAll("board-svg").forEach((svg) => {
+          svg.setAttribute("y_up", value);
+        });
+      }
+    }, false);
+    range_r.addEventListener("change", (ev) => {
+      const target = ev.target;
+      if (target instanceof HTMLInputElement) {
+        const value = target.value;
+        document.querySelectorAll("board-svg").forEach((svg) => {
+          svg.setAttribute("x_right", value);
+        });
+      }
+    }, false);
+  }
   document.addEventListener("click", (ev) => {
     const target = ev.target;
     if (!(target instanceof HTMLElement)) return;
@@ -290,8 +512,14 @@
     });
     switch (type) {
       case "color":
+        document.querySelectorAll("board-svg").forEach((svg) => {
+          svg.setAttribute("color", `${value}`);
+        });
         break;
       case "char":
+        document.querySelectorAll("board-svg").forEach((svg) => {
+          svg.setAttribute("char", `${value}`);
+        });
         break;
       case "vertical":
         document.querySelectorAll("board-svg").forEach((svg) => {

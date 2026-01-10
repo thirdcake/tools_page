@@ -43,14 +43,50 @@ export class Board {
 
         this.#stones = new Stones(this.#config, this.#positions);
         this.svg.appendChild(this.#stones.g);
+
+        this.svg.addEventListener('click', (ev: PointerEvent)=>{
+            this.#onClickSVG(ev.clientX, ev.clientY)
+        });
     }
-    onClickSVG(clix:number, cliy:number) {
+
+    #onClickSVG(clix:number, cliy:number) {
         const pt = this.svg.createSVGPoint();
         pt.x = clix;
         pt.y = cliy;
         const {x, y} = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
         this.#stones.onClick(x, y, this.#state);
     }
+
+    onClickColor(oldVal:string, newVal:string) {
+        this.#state.color = newVal;
+    }
+
+    onClickChar(oldVal:string, newVal:string) {
+        this.#state.character = newVal;
+    }
+
+    onChangeXL(oldVal:string, newVal:string) {
+    }
+    onChangeXR(oldVal:string, newVal:string) {
+        const oldNum = Number(oldVal);
+        const newNum = Number(newVal);
+        if(isNaN(oldNum) || isNaN(newNum)) return;
+        const oldLeft = this.#config.interval * (oldNum - 1);
+        const newLeft = this.#config.interval * (newNum - 1);
+        this.#viewBox[2] += newLeft - oldLeft;
+        this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+    }
+    onChangeYU(oldVal:string, newVal:string) {
+        const oldNum = Number(oldVal);
+        const newNum = Number(newVal);
+        if(isNaN(oldNum) || isNaN(newNum)) return;
+        const oldUp = this.#config.interval * (oldNum - 1);
+        const newUp = this.#config.interval * (newNum - 1);
+        this.#viewBox[1] += oldUp - newUp;
+        this.#viewBox[3] -= oldUp - newUp;
+        this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+    }
+    onChangeYD(oldVal:string, newVal:string) {}
 
     onClickVertical(oldVal:string, newVal:string) {
         if(oldVal==='null' && newVal!=='null') {

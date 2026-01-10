@@ -29,7 +29,7 @@ export class Stones {
         const positions = this.#positions;
         const init_x = {idx: 0, dist: Math.abs(positions[0] - x), now: x};
         const init_y = {idx: 0, dist: Math.abs(positions[0] - y), now: y};
-        const minDist = (obj, pos:number, i:number) => {
+        const minDist = (obj:{idx:number, dist:number, now:number}, pos:number, i:number) => {
             if(Math.abs(pos - obj.now) < obj.dist) {
                 obj.idx = i;
                 obj.dist = Math.abs(pos - obj.now);
@@ -40,13 +40,13 @@ export class Stones {
         const row = positions.reduce(minDist, init_y).idx;
         const color = state.color;
         const character = state.character;
-        this.#stones[row][col].onChange(color, character);
+        this.stones[row][col].onChange(color, character);
     }
 
     #createStones(positions: number[]): Stone[][] {
         return positions.map(row_pos => 
             positions.map(col_pos => 
-                new Stone(row_pos, col_pos, 0, '')
+                new Stone(this.#config, row_pos, col_pos, 0, '')
             )
         );
     }

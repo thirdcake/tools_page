@@ -39,25 +39,29 @@
         <li><button type="button" data-gostate-type="char" data-gostate-value="5">5</button></li>
     </ul>
     <div>
-        <label>範囲（上）：<input type="number" name="go-state-range-u" value="1" min="1" max="19"/></label>
+        <label>範囲（上）：<input type="number" name="go-state-range-u" value="19" min="2" max="19"/></label>
+        <!--
         <label>範囲（下）：<input type="number" name="go-state-range-d" value="19" min="1" max="19"/></label>
+        -->
         <br/>
+        <!--
         <label>範囲（左）：<input type="number" name="go-state-range-l" value="1" min="1" max="19"/></label>
-        <label>範囲（右）：<input type="number" name="go-state-range-r" value="19" min="1" max="19"/></label>
+        -->
+        <label>範囲（右）：<input type="number" name="go-state-range-r" value="19" min="2" max="19"/></label>
     </div>
-    <ul class="go-form-ul" data-gostate-type="ul">
-        <li>座標（横）：</li>
-        <li><button type="button" data-gostate-type="vertical" data-gostate-value="null" class="active">（無し）</button></li>
-        <li><button type="button" data-gostate-type="vertical" data-gostate-value="nums">1,2,3...</button></li>
-        <li><button type="button" data-gostate-type="vertical" data-gostate-value="aiu">あ,い,う...</button></li>
-        <li><button type="button" data-gostate-type="vertical" data-gostate-value="iroha">イ,ロ,ハ...</button></li>
-    </ul>
     <ul class="go-form-ul" data-gostate-type="ul">
         <li>座標（縦）：</li>
         <li><button type="button" data-gostate-type="holizontal" data-gostate-value="null" class="active">（無し）</button></li>
         <li><button type="button" data-gostate-type="holizontal" data-gostate-value="nums">1,2,3...</button></li>
         <li><button type="button" data-gostate-type="holizontal" data-gostate-value="aiu">あ,い,う...</button></li>
         <li><button type="button" data-gostate-type="holizontal" data-gostate-value="iroha">イ,ロ,ハ...</button></li>
+    </ul>
+    <ul class="go-form-ul" data-gostate-type="ul">
+        <li>座標（横）：</li>
+        <li><button type="button" data-gostate-type="vertical" data-gostate-value="null" class="active">（無し）</button></li>
+        <li><button type="button" data-gostate-type="vertical" data-gostate-value="nums">1,2,3...</button></li>
+        <li><button type="button" data-gostate-type="vertical" data-gostate-value="aiu">あ,い,う...</button></li>
+        <li><button type="button" data-gostate-type="vertical" data-gostate-value="iroha">イ,ロ,ハ...</button></li>
     </ul>
     <board-svg></board-svg>
 </body>
