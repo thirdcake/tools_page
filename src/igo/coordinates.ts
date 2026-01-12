@@ -4,7 +4,7 @@ export class Coordinates {
     #ns = 'http://www.w3.org/2000/svg';
     #config: BoardConfig;
 
-    g: SVGGElement;
+    dom: SVGGElement;
 
     #aiu = 'あいうえおかきくけこさしすせそたちつて'.split('');
     #iroha = 'イロハニホヘトチリヌルヲワカヨタレソツ'.split('');
@@ -15,13 +15,16 @@ export class Coordinates {
 
     constructor(config: BoardConfig, positions:number[]) {
         this.#config = config;
-        this.g = document.createElementNS(this.#ns, 'g') as SVGGElement;
-
+        const dom = document.createElementNS(this.#ns, 'g');
+        if(!(dom instanceof SVGGElement)) {
+            throw new Error('coordinates error');
+        }
+        this.dom = dom;
         this.#verticalChars = this.#createVerticalChars(positions);
         this.#holizontalChars = this.#createHolizontalChars(positions);
 
-        this.g = this.#setChars(this.g, this.#verticalChars);
-        this.g = this.#setChars(this.g, this.#holizontalChars);
+        this.dom = this.#setChars(this.dom, this.#verticalChars);
+        this.dom = this.#setChars(this.dom, this.#holizontalChars);
     }
 
     onChangeCoord(type:'vertical'|'holizontal', value: string) {

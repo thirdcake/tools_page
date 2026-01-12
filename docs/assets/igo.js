@@ -1,35 +1,40 @@
+"use strict";
 (() => {
   // src/igo/grid.ts
   var Grid = class {
     #ns = "http://www.w3.org/2000/svg";
     #config;
-    g;
+    dom;
     constructor(config, positions) {
       this.#config = config;
-      this.g = document.createElementNS(this.#ns, "g");
-      this.g = this.#drawLines(this.g, positions);
-      this.g = this.#drawDots(this.g, positions);
+      const dom = document.createElementNS(this.#ns, "g");
+      if (!(dom instanceof SVGGElement)) {
+        throw new Error("Grid \u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002");
+      }
+      this.dom = dom;
+      this.dom = this.#drawLines(this.dom, positions);
+      this.dom = this.#drawDots(this.dom, positions);
     }
-    #drawLines(group, positions) {
+    #drawLines(dom, positions) {
       const start = Math.floor(this.#config.interval / 2) - Math.floor(this.#config.thick / 2);
       const end = this.#config.interval * this.#config.size - start;
-      return positions.reduce((gro, pos, i) => {
+      return positions.reduce((group, pos, i) => {
         const isFirstOrLast = i === 0 || i === positions.length - 1;
         const sw = isFirstOrLast ? this.#config.thick : this.#config.thin;
-        gro.appendChild(this.#createLine(start, end, pos, pos, sw));
-        gro.appendChild(this.#createLine(pos, pos, start, end, sw));
-        return gro;
-      }, group);
+        group.appendChild(this.#createLine(start, end, pos, pos, sw));
+        group.appendChild(this.#createLine(pos, pos, start, end, sw));
+        return group;
+      }, dom);
     }
-    #drawDots(group, positions) {
+    #drawDots(dom, positions) {
       const isDotPos = (_, i) => i === 3 || i === 9 || i === 15;
       const filterPositions = positions.filter(isDotPos);
       filterPositions.forEach((pos_r) => {
         filterPositions.forEach((pos_c) => {
-          group.appendChild(this.#createDot(pos_r, pos_c));
+          dom.appendChild(this.#createDot(pos_r, pos_c));
         });
       });
-      return group;
+      return dom;
     }
     #createLine(x1, x2, y1, y2, sw) {
       const line = document.createElementNS(this.#ns, "line");
@@ -56,7 +61,7 @@
   var Coordinates = class {
     #ns = "http://www.w3.org/2000/svg";
     #config;
-    g;
+    dom;
     #aiu = "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split("");
     #iroha = "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split("");
     #nums = Array.from({ length: 19 }, (_, i) => `${i + 1}`);
@@ -64,11 +69,15 @@
     #holizontalChars;
     constructor(config, positions) {
       this.#config = config;
-      this.g = document.createElementNS(this.#ns, "g");
+      const dom = document.createElementNS(this.#ns, "g");
+      if (!(dom instanceof SVGGElement)) {
+        throw new Error("coordinates error");
+      }
+      this.dom = dom;
       this.#verticalChars = this.#createVerticalChars(positions);
       this.#holizontalChars = this.#createHolizontalChars(positions);
-      this.g = this.#setChars(this.g, this.#verticalChars);
-      this.g = this.#setChars(this.g, this.#holizontalChars);
+      this.dom = this.#setChars(this.dom, this.#verticalChars);
+      this.dom = this.#setChars(this.dom, this.#holizontalChars);
     }
     onChangeCoord(type, value) {
       const arr = this.#changeChars(value);
@@ -132,41 +141,6 @@
           return this.#nums;
         default:
           return null;
-      }
-    }
-  };
-
-  // src/igo/state.ts
-  var State = class {
-    #color;
-    #character;
-    constructor() {
-      this.#color = 0;
-      this.#character = "";
-    }
-    get color() {
-      return this.#color;
-    }
-    set color(n) {
-      switch (n) {
-        case "1":
-          this.#color = 1;
-          break;
-        case "2":
-          this.#color = 2;
-          break;
-        default:
-          this.#color = 0;
-      }
-    }
-    get character() {
-      return this.#character;
-    }
-    set character(c) {
-      if (c.length > 1) {
-        this.#character = c[0];
-      } else {
-        this.#character = c;
       }
     }
   };
@@ -262,15 +236,19 @@
     #config;
     #positions;
     stones;
-    g;
+    dom;
     constructor(config, positions) {
       this.#config = config;
       this.#positions = positions;
       this.stones = this.#createStones(positions);
-      this.g = document.createElementNS(this.#ns, "g");
+      const dom = document.createElementNS(this.#ns, "g");
+      if (!(dom instanceof SVGGElement)) {
+        throw new Error("stones error");
+      }
+      this.dom = dom;
       this.stones.forEach((row) => {
         row.forEach((stone) => {
-          this.g.appendChild(stone.g);
+          this.dom.appendChild(stone.g);
         });
       });
     }
@@ -315,85 +293,42 @@
       text_size: 36,
       radius: 20
     };
-    #width = this.#config.size * this.#config.interval;
-    #viewBox = [0, 0, this.#width, this.#width];
+    #parentViewBox = {
+      min_x: 0,
+      min_y: 0,
+      width: this.#config.size * this.#config.interval,
+      height: this.#config.size * this.#config.interval
+    };
+    #childViewBox = {
+      min_x: 0,
+      min_y: 0,
+      width: this.#config.size * this.#config.interval,
+      height: this.#config.size * this.#config.interval
+    };
     #positions;
-    svg;
+    dom;
+    #childDom;
     #grid;
-    #coodinates;
-    #state;
+    #coorinates;
     #stones;
     constructor() {
       this.#positions = this.#createPositions();
-      this.svg = document.createElementNS(this.#ns, "svg");
-      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
-      this.svg.setAttribute("style", "width:100%;height:auto;max-width:600px;");
+      this.dom = this.#createDom();
+      this.#childDom = this.#createChild();
+      this.dom.appendChild(this.#childDom);
+      this.#coorinates = new Coordinates(this.#config, this.#positions);
+      this.dom.appendChild(this.#coorinates.dom);
       this.#grid = new Grid(this.#config, this.#positions);
-      this.svg.appendChild(this.#grid.g);
-      this.#coodinates = new Coordinates(this.#config, this.#positions);
-      this.svg.appendChild(this.#coodinates.g);
-      this.#state = new State();
+      this.#childDom.appendChild(this.#grid.dom);
       this.#stones = new Stones(this.#config, this.#positions);
-      this.svg.appendChild(this.#stones.g);
-      this.svg.addEventListener("click", (ev) => {
-        this.#onClickSVG(ev.clientX, ev.clientY);
-      });
+      this.#childDom.appendChild(this.#stones.dom);
     }
-    #onClickSVG(clix, cliy) {
-      const pt = this.svg.createSVGPoint();
-      pt.x = clix;
-      pt.y = cliy;
-      const { x, y } = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
-      this.#stones.onClick(x, y, this.#state);
-    }
-    onClickColor(oldVal, newVal) {
-      this.#state.color = newVal;
-    }
-    onClickChar(oldVal, newVal) {
-      this.#state.character = newVal;
-    }
-    onChangeXL(oldVal, newVal) {
-    }
-    onChangeXR(oldVal, newVal) {
-      const oldNum = Number(oldVal);
-      const newNum = Number(newVal);
-      if (isNaN(oldNum) || isNaN(newNum)) return;
-      const oldLeft = this.#config.interval * (oldNum - 1);
-      const newLeft = this.#config.interval * (newNum - 1);
-      this.#viewBox[2] += newLeft - oldLeft;
-      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
-    }
-    onChangeYU(oldVal, newVal) {
-      const oldNum = Number(oldVal);
-      const newNum = Number(newVal);
-      if (isNaN(oldNum) || isNaN(newNum)) return;
-      const oldUp = this.#config.interval * (oldNum - 1);
-      const newUp = this.#config.interval * (newNum - 1);
-      this.#viewBox[1] += oldUp - newUp;
-      this.#viewBox[3] -= oldUp - newUp;
-      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
-    }
-    onChangeYD(oldVal, newVal) {
-    }
-    onClickVertical(oldVal, newVal) {
-      if (oldVal === "null" && newVal !== "null") {
-        this.#viewBox[0] -= this.#config.interval;
-        this.#viewBox[2] += this.#config.interval;
-      } else if (oldVal !== "null" && newVal === "null") {
-        this.#viewBox[0] += this.#config.interval;
-        this.#viewBox[2] -= this.#config.interval;
-      }
-      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
-      this.#coodinates.onChangeCoord("vertical", newVal);
-    }
-    onClickHolizontal(oldVal, newVal) {
-      if (oldVal === "null" && newVal !== "null") {
-        this.#viewBox[3] += this.#config.interval;
-      } else if (oldVal !== "null" && newVal === "null") {
-        this.#viewBox[3] -= this.#config.interval;
-      }
-      this.svg.setAttribute("viewBox", this.#viewBox.join(" "));
-      this.#coodinates.onChangeCoord("holizontal", newVal);
+    onClick(ev, state) {
+      const pt = this.#childDom.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const { x, y } = pt.matrixTransform(this.#childDom.getScreenCTM()?.inverse());
+      this.#stones.onClick(x, y, state);
     }
     #createPositions() {
       const margin = Math.floor(this.#config.interval / 2);
@@ -401,136 +336,335 @@
       const positions = Array.from({ length: this.#config.size }, func);
       return positions;
     }
+    #createDom() {
+      const dom = document.createElementNS(this.#ns, "svg");
+      if (!(dom instanceof SVGSVGElement)) {
+        throw new Error("SVG \u8981\u7D20\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u3066\u3044\u307E\u3059\u3002");
+      }
+      dom.setAttribute("viewBox", this.#getViewBox(this.#parentViewBox));
+      return dom;
+    }
+    #createChild() {
+      const dom = document.createElementNS(this.#ns, "svg");
+      if (!(dom instanceof SVGSVGElement)) {
+        throw new Error("SVG child \u8981\u7D20\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u3066\u3044\u307E\u3059\u3002");
+      }
+      dom.setAttribute("viewBox", this.#getViewBox(this.#childViewBox));
+      return dom;
+    }
+    #getViewBox(viewBox) {
+      const {
+        min_x,
+        min_y,
+        width,
+        height
+      } = viewBox;
+      return [min_x, min_y, width, height].join(" ");
+    }
+    /*
+        onClickColor(oldVal:string, newVal:string) {
+            this.#state.color = newVal;
+        }
+    
+        onClickChar(oldVal:string, newVal:string) {
+            this.#state.character = newVal;
+        }
+    
+        onChangeXL(oldVal:string, newVal:string) {
+        }
+        onChangeXR(oldVal:string, newVal:string) {
+            const oldNum = Number(oldVal);
+            const newNum = Number(newVal);
+            if(isNaN(oldNum) || isNaN(newNum)) return;
+            const oldLeft = this.#config.interval * (oldNum - 1);
+            const newLeft = this.#config.interval * (newNum - 1);
+            this.#viewBox[2] += newLeft - oldLeft;
+            this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+        }
+        onChangeYU(oldVal:string, newVal:string) {
+            const oldNum = Number(oldVal);
+            const newNum = Number(newVal);
+            if(isNaN(oldNum) || isNaN(newNum)) return;
+            const oldUp = this.#config.interval * (oldNum - 1);
+            const newUp = this.#config.interval * (newNum - 1);
+            this.#viewBox[1] += oldUp - newUp;
+            this.#viewBox[3] -= oldUp - newUp;
+            this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+        }
+        onChangeYD(oldVal:string, newVal:string) {}
+    
+        onClickVertical(oldVal:string, newVal:string) {
+            if(oldVal==='null' && newVal!=='null') {
+                this.#viewBox[0] -= this.#config.interval;
+                this.#viewBox[2] += this.#config.interval;
+            }else if(oldVal!=='null' && newVal==='null') {
+                this.#viewBox[0] += this.#config.interval;
+                this.#viewBox[2] -= this.#config.interval;
+            }
+            this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+            this.#coodinates.onChangeCoord('vertical', newVal);
+        }
+    
+        onClickHolizontal(oldVal:string, newVal:string) {
+            if(oldVal==='null' && newVal!=='null') {
+                this.#viewBox[3] += this.#config.interval;
+            }else if(oldVal!=='null' && newVal==='null') {
+                this.#viewBox[3] -= this.#config.interval;
+            }
+            this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
+            this.#coodinates.onChangeCoord('holizontal', newVal);
+        }
+    
+        */
   };
 
-  // src/igo/board-svg.ts
-  var BoardSVG = class extends HTMLElement {
-    board;
+  // src/igo/controller.ts
+  var Controller = class {
+    dom;
+    constructor() {
+      this.dom = this.#createDom();
+    }
+    #createDom() {
+      const dom = document.createElement("span");
+      return dom;
+    }
+    onClick(ev) {
+    }
+    onChange(ev) {
+    }
+  };
+
+  // src/igo/state.ts
+  var State = class {
+    #color;
+    #character;
+    #rangeLR;
+    #rangeTB;
+    #holizontal;
+    #vertical;
+    #is_change;
+    #type;
+    constructor() {
+      this.#color = 0;
+      this.#character = "";
+      this.#rangeLR = [0, 18];
+      this.#rangeTB = [0, 18];
+      this.#vertical = "null";
+      this.#holizontal = "null";
+      this.#is_change = true;
+      this.#type = null;
+    }
+    onClick(ev) {
+      const target = ev.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest("button");
+      if (!(button instanceof HTMLButtonElement)) return;
+      const type = button.dataset.gostateType;
+      const value = button.dataset.gostateValue;
+      if (typeof value === "undefined") return;
+      switch (type) {
+        case "color":
+          this.#type = "color";
+          const old_color = this.color;
+          this.color = value;
+          this.#is_change = old_color !== this.color;
+          break;
+        case "char":
+          this.#type = "character";
+          const old_char = this.character;
+          this.character = value;
+          this.#is_change = old_char !== this.character;
+          break;
+        case "holizontal":
+          this.#type = "coordinates";
+          const old_holizontal = this.holizontal;
+          this.holizontal = value;
+          this.#is_change = old_holizontal !== this.holizontal;
+          break;
+        case "vertical":
+          this.#type = "coordinates";
+          const old_vertical = this.vertical;
+          this.vertical = value;
+          this.#is_change = old_vertical !== this.vertical;
+          break;
+      }
+    }
+    onChange(ev) {
+      const target = ev.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const value = target.value;
+      this.#type = "range";
+      switch (target.dataset.gostateRange) {
+        case "left":
+          const old_left = this.left;
+          this.left = value;
+          this.#is_change = old_left !== this.left;
+          break;
+        case "right":
+          const old_right = this.right;
+          this.right = value;
+          this.#is_change = old_right !== this.right;
+          break;
+        case "top":
+          const old_top = this.top;
+          this.top = value;
+          this.#is_change = old_top !== this.top;
+          break;
+        case "bottom":
+          const old_bottom = this.bottom;
+          this.bottom = value;
+          this.#is_change = old_bottom !== this.bottom;
+          break;
+      }
+    }
+    get color() {
+      return this.#color;
+    }
+    set color(n) {
+      switch (n) {
+        case "0":
+          this.#color = 0;
+          break;
+        case "1":
+          this.#color = 1;
+          break;
+        case "2":
+          this.#color = 2;
+          break;
+      }
+    }
+    get character() {
+      return this.#character;
+    }
+    set character(c) {
+      if (c.length > 1) {
+        this.#character = c[0];
+      } else {
+        this.#character = c;
+      }
+    }
+    get left() {
+      return this.#rangeLR[0];
+    }
+    set left(s) {
+      const num = Number(s);
+      if (!Number.isInteger(num)) return;
+      if (num >= this.#rangeLR[1]) return;
+      this.#rangeLR[0] = num;
+    }
+    get right() {
+      return this.#rangeLR[1];
+    }
+    set right(s) {
+      const num = Number(s);
+      if (!Number.isInteger(num)) return;
+      if (num <= this.#rangeLR[0]) return;
+      this.#rangeLR[1] = num;
+    }
+    get top() {
+      return this.#rangeTB[0];
+    }
+    set top(s) {
+      const num = Number(s);
+      if (!Number.isInteger(num)) return;
+      if (num <= this.#rangeTB[1]) return;
+      this.#rangeTB[0] = num;
+    }
+    get bottom() {
+      return this.#rangeTB[1];
+    }
+    set bottom(s) {
+      const num = Number(s);
+      if (!Number.isInteger(num)) return;
+      if (num <= this.#rangeTB[0]) return;
+      this.#rangeTB[1] = num;
+    }
+    get holizontal() {
+      return this.#holizontal;
+    }
+    set holizontal(s) {
+      switch (s) {
+        case "null":
+          this.#holizontal = "null";
+          break;
+        case "nums":
+          this.#holizontal = "nums";
+          break;
+        case "aiu":
+          this.#holizontal = "aiu";
+          break;
+        case "iroha":
+          this.#holizontal = "iroha";
+          break;
+      }
+    }
+    get vertical() {
+      return this.#vertical;
+    }
+    set vertical(s) {
+      switch (s) {
+        case "null":
+          this.#vertical = "null";
+          break;
+        case "nums":
+          this.#vertical = "nums";
+          break;
+        case "aiu":
+          this.#vertical = "aiu";
+          break;
+        case "iroha":
+          this.#vertical = "iroha";
+          break;
+      }
+    }
+    get is_change() {
+      return this.#is_change;
+    }
+    get type() {
+      return this.#type;
+    }
+  };
+
+  // src/igo/board-controller.ts
+  var BoardController = class extends HTMLElement {
+    boardController;
     static observedAttributes = [
-      "color",
-      "char",
-      "x_left",
-      "x_right",
-      "y_up",
-      "y_down",
-      "vertical",
-      "holizontal"
+      //"data-gostate-data",
     ];
     constructor() {
       super();
-      const inits = [
-        ["color", "0"],
-        ["char", ""],
-        ["x_left", "1"],
-        ["x_right", "19"],
-        ["y_up", "19"],
-        ["y_down", "1"],
-        ["vertical", "null"],
-        ["holizontal", "null"]
-      ];
-      inits.forEach((arr) => {
-        this.setAttribute(arr[0], arr[1]);
-      });
-      this.board = new Board();
+      this.boardController = {
+        board: new Board(),
+        controller: new Controller(),
+        state: new State()
+      };
+      this.appendChild(this.boardController.board.dom);
+      this.appendChild(this.boardController.controller.dom);
     }
     // document に接続時実行
     connectedCallback() {
-      this.appendChild(this.board.svg);
+      const board = this.boardController.board;
+      const controller = this.boardController.controller;
+      const state = this.boardController.state;
+      board.dom.addEventListener("click", (ev) => {
+        board.onClick(ev, state);
+      }, false);
+      controller.dom.addEventListener("click", (ev) => {
+        state.onClick(ev);
+        controller.onClick(ev);
+      }, false);
+      controller.dom.addEventListener("change", (ev) => {
+        state.onChange(ev);
+        controller.onChange(ev);
+      }, false);
     }
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {
-      switch (attr) {
-        case "color":
-          this.board.onClickColor(oldVal, newVal);
-          break;
-        case "char":
-          this.board.onClickChar(oldVal, newVal);
-          break;
-        case "x_left":
-          break;
-        case "x_right":
-          this.board.onChangeXR(oldVal, newVal);
-          break;
-        case "y_up":
-          this.board.onChangeYU(oldVal, newVal);
-          break;
-        case "y_down":
-          break;
-        case "vertical":
-          this.board.onClickVertical(oldVal, newVal);
-          break;
-        case "holizontal":
-          this.board.onClickHolizontal(oldVal, newVal);
-          break;
+      if (attr === "data-gostate-data") {
       }
     }
   };
 
   // src/igo/index.ts
-  customElements.define("board-svg", BoardSVG);
-  document.addEventListener("DOMContentLoaded", main, false);
-  function main() {
-    onChangeRange();
-  }
-  function onChangeRange() {
-    const range_u = document.querySelector('input[name="go-state-range-u"]');
-    const range_r = document.querySelector('input[name="go-state-range-r"]');
-    if (!range_u || !range_r) return;
-    range_u.addEventListener("change", (ev) => {
-      const target = ev.target;
-      if (target instanceof HTMLInputElement) {
-        const value = target.value;
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("y_up", value);
-        });
-      }
-    }, false);
-    range_r.addEventListener("change", (ev) => {
-      const target = ev.target;
-      if (target instanceof HTMLInputElement) {
-        const value = target.value;
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("x_right", value);
-        });
-      }
-    }, false);
-  }
-  document.addEventListener("click", (ev) => {
-    const target = ev.target;
-    if (!(target instanceof HTMLElement)) return;
-    const ul = target.closest('ul[data-gostate-type="ul"]');
-    if (ul === null) return;
-    const type = target.dataset.gostateType;
-    const value = target.dataset.gostateValue;
-    const btns = ul.querySelectorAll(`button[data-gostate-type="${type}"]`);
-    btns.forEach((button) => {
-      if (button === target) {
-        button.classList.add("active");
-      } else {
-        button.classList.remove("active");
-      }
-    });
-    switch (type) {
-      case "color":
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("color", `${value}`);
-        });
-        break;
-      case "char":
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("char", `${value}`);
-        });
-        break;
-      case "vertical":
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("vertical", `${value}`);
-        });
-        break;
-      case "holizontal":
-        document.querySelectorAll("board-svg").forEach((svg) => {
-          svg.setAttribute("holizontal", `${value}`);
-        });
-        break;
-    }
-  }, false);
+  customElements.define("board-controller", BoardController);
 })();

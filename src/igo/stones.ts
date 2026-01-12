@@ -8,16 +8,20 @@ export class Stones {
     #positions: number[];
 
     stones: Stone[][];
-    g: SVGGElement;
+    dom: SVGGElement;
 
     constructor(config: BoardConfig, positions: number[]) {
         this.#config = config;
         this.#positions = positions;
         this.stones = this.#createStones(positions);
-        this.g = document.createElementNS(this.#ns, 'g') as SVGGElement;
+        const dom = document.createElementNS(this.#ns, 'g');
+        if(!(dom instanceof SVGGElement)) {
+            throw new Error('stones error');
+        }
+        this.dom = dom;
         this.stones.forEach(row => {
             row.forEach(stone => {
-                this.g.appendChild(stone.g);
+                this.dom.appendChild(stone.g);
             })
         });
     }

@@ -1,11 +1,17 @@
 import { BoardConfig } from "./config";
 import { Grid } from "./grid";
 import { Coordinates } from "./coordinates";
-import { State } from "./state";
 import { Stones } from "./stones";
+import { State } from "./state";
 
+type ViewBoxType = {
+    min_x: number,
+    min_y: number,
+    width: number,
+    height: number,
+}
 export class Board {
-    #ns = 'http://www.w3.org/2000/svg';
+    #ns: string = 'http://www.w3.org/2000/svg';
     #config:BoardConfig = {
         color: '#333',
         thin: 2,
@@ -15,48 +21,88 @@ export class Board {
         text_size: 36,
         radius: 20,
     }
-    #width = this.#config.size * this.#config.interval;
-    #viewBox = [0, 0, this.#width, this.#width];
-
+    #parentViewBox: ViewBoxType = {
+        min_x: 0,
+        min_y: 0,
+        width: this.#config.size * this.#config.interval,
+        height: this.#config.size * this.#config.interval,
+    }
+    #childViewBox: ViewBoxType = {
+        min_x: 0,
+        min_y: 0,
+        width: this.#config.size * this.#config.interval,
+        height: this.#config.size * this.#config.interval,
+    }
     #positions: number[];
-
-    svg: SVGSVGElement;
+    
+    dom: SVGSVGElement;
+    #childDom: SVGSVGElement;
     #grid: Grid;
-    #coodinates: Coordinates;
-    #state: State;
+    #coorinates: Coordinates;
     #stones: Stones;
-
+    
     constructor() {
         this.#positions = this.#createPositions();
+ 
+        this.dom = this.#createDom();
+ 
+        this.#childDom = this.#createChild();
+        this.dom.appendChild(this.#childDom);
 
-        this.svg = document.createElementNS(this.#ns, 'svg') as SVGSVGElement;
-        this.svg.setAttribute('viewBox', this.#viewBox.join(' '));
-        this.svg.setAttribute('style', 'width:100%;height:auto;max-width:600px;');
-
+        this.#coorinates = new Coordinates(this.#config, this.#positions);
+        this.dom.appendChild(this.#coorinates.dom);
+ 
         this.#grid = new Grid(this.#config, this.#positions);
-        this.svg.appendChild(this.#grid.g);
-
-        this.#coodinates = new Coordinates(this.#config, this.#positions);
-        this.svg.appendChild(this.#coodinates.g);
-
-        this.#state = new State();
+        this.#childDom.appendChild(this.#grid.dom);
 
         this.#stones = new Stones(this.#config, this.#positions);
-        this.svg.appendChild(this.#stones.g);
+        this.#childDom.appendChild(this.#stones.dom);
 
-        this.svg.addEventListener('click', (ev: PointerEvent)=>{
-            this.#onClickSVG(ev.clientX, ev.clientY)
-        });
+    }
+    
+    onClick(ev: PointerEvent, state: State) {
+        const pt = this.#childDom.createSVGPoint();
+        pt.x = ev.clientX;
+        pt.y = ev.clientY;
+        const {x, y} = pt.matrixTransform(this.#childDom.getScreenCTM()?.inverse());
+        this.#stones.onClick(x, y, state);
     }
 
-    #onClickSVG(clix:number, cliy:number) {
-        const pt = this.svg.createSVGPoint();
-        pt.x = clix;
-        pt.y = cliy;
-        const {x, y} = pt.matrixTransform(this.svg.getScreenCTM()?.inverse());
-        this.#stones.onClick(x, y, this.#state);
+    #createPositions():number[] {
+        const margin = Math.floor(this.#config.interval / 2);
+        const func = (_:undefined, i:number) => margin + this.#config.interval * i;
+        const positions = Array.from({length: this.#config.size}, func);
+        return positions;
     }
 
+    #createDom():SVGSVGElement {
+        const dom = document.createElementNS(this.#ns, 'svg');
+        if(!(dom instanceof SVGSVGElement)) {
+            throw new Error('SVG 要素の作成に失敗しています。');
+        }
+        dom.setAttribute('viewBox', this.#getViewBox(this.#parentViewBox));
+        return dom;
+    }
+    
+    #createChild(): SVGSVGElement {
+        const dom = document.createElementNS(this.#ns, 'svg');
+        if(!(dom instanceof SVGSVGElement)) {
+            throw new Error('SVG child 要素の作成に失敗しています。');
+        }
+        dom.setAttribute('viewBox', this.#getViewBox(this.#childViewBox));
+        return dom;
+    }
+
+    #getViewBox(viewBox: ViewBoxType): string {
+        const {
+            min_x,
+            min_y,
+            width,
+            height,
+        } = viewBox;
+        return [min_x, min_y, width, height].join(' ');
+    }
+    /*
     onClickColor(oldVal:string, newVal:string) {
         this.#state.color = newVal;
     }
@@ -110,10 +156,5 @@ export class Board {
         this.#coodinates.onChangeCoord('holizontal', newVal);
     }
 
-    #createPositions():number[] {
-        const margin = Math.floor(this.#config.interval / 2);
-        const func = (_:undefined, i:number) => margin + this.#config.interval * i;
-        const positions = Array.from({length: this.#config.size}, func);
-        return positions;
-    }
+    */
 }

@@ -4,36 +4,41 @@ export class Grid {
     #ns = 'http://www.w3.org/2000/svg';
 
     #config: BoardConfig;
-    g: SVGGElement;
+    dom: SVGGElement;
 
     constructor(config:BoardConfig, positions: number[]) {
         this.#config = config;
-        this.g = document.createElementNS(this.#ns, 'g') as SVGGElement;
-        this.g = this.#drawLines(this.g, positions);
-        this.g = this.#drawDots(this.g, positions);
+        const dom = document.createElementNS(this.#ns, 'g');
+        if(!(dom instanceof SVGGElement)) {
+            throw new Error('Grid の作成に失敗しました。');
+        }
+        this.dom = dom;
+        this.dom = this.#drawLines(this.dom, positions);
+        this.dom = this.#drawDots(this.dom, positions);
     }
 
-    #drawLines(group:SVGGElement, positions:number[]): SVGGElement {
-        const start = Math.floor(this.#config.interval / 2) - Math.floor(this.#config.thick / 2);
+    #drawLines(dom:SVGGElement, positions:number[]): SVGGElement {
+        const start = Math.floor(this.#config.interval / 2)
+            - Math.floor(this.#config.thick / 2);
         const end = this.#config.interval * this.#config.size - start;
-        return positions.reduce((gro:SVGGElement, pos:number, i:number) => {
+        return positions.reduce((group:SVGGElement, pos:number, i:number) => {
             const isFirstOrLast = (i === 0 || i === positions.length - 1);
             const sw = isFirstOrLast ? this.#config.thick : this.#config.thin;
-            gro.appendChild(this.#createLine(start, end, pos, pos, sw));
-            gro.appendChild(this.#createLine(pos, pos, start, end, sw));
-            return gro;
-        }, group);
+            group.appendChild(this.#createLine(start, end, pos, pos, sw));
+            group.appendChild(this.#createLine(pos, pos, start, end, sw));
+            return group;
+        }, dom);
     }
 
-    #drawDots(group:SVGGElement, positions:number[]): SVGGElement {
+    #drawDots(dom:SVGGElement, positions:number[]): SVGGElement {
         const isDotPos = (_:any, i:number) => (i===3 || i===9 || i===15);
         const filterPositions = positions.filter(isDotPos);
         filterPositions.forEach(pos_r => {
             filterPositions.forEach(pos_c => {
-                group.appendChild(this.#createDot(pos_r, pos_c));
+                dom.appendChild(this.#createDot(pos_r, pos_c));
             });
         });
-        return group;
+        return dom;
     }
 
     #createLine(
