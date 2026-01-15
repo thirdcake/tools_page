@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/grid.ts
   var Grid = class {
@@ -342,6 +341,7 @@
         throw new Error("SVG \u8981\u7D20\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u3066\u3044\u307E\u3059\u3002");
       }
       dom.setAttribute("viewBox", this.#getViewBox(this.#parentViewBox));
+      dom.classList.add("board");
       return dom;
     }
     #createChild() {
@@ -421,16 +421,174 @@
   // src/igo/controller.ts
   var Controller = class {
     dom;
+    #data = {
+      color: {
+        title: "\u8272\uFF1A",
+        dat: [
+          { value: "0", text: "\u900F\u660E", active: true },
+          { value: "1", text: "\u9ED2", active: false },
+          { value: "2", text: "\u767D", active: false }
+        ]
+      },
+      character: {
+        title: "\u6587\u5B57\uFF1A",
+        dat: [
+          { value: "", text: "\uFF08\u7121\u3057\uFF09", active: true },
+          { value: "A", text: "A", active: false },
+          { value: "B", text: "B", active: false },
+          { value: "C", text: "C", active: false },
+          { value: "D", text: "D", active: false },
+          { value: "E", text: "E", active: false },
+          { value: "\u25B3", text: "\u25B3", active: false },
+          { value: "1", text: "1", active: false },
+          { value: "2", text: "2", active: false },
+          { value: "3", text: "3", active: false },
+          { value: "4", text: "4", active: false }
+        ]
+      },
+      holizontal: {
+        title: "\u5EA7\u6A19\uFF08\u7E26\uFF09\uFF1A",
+        dat: [
+          { value: "null", text: "\uFF08\u7121\u3057\uFF09", active: true },
+          { value: "nums", text: "1,2,3...", active: false },
+          { value: "aiu", text: "\u3042,\u3044,\u3046...", active: false },
+          { value: "iroha", text: "\u30A4,\u30ED,\u30CF...", active: false }
+        ]
+      },
+      vertical: {
+        title: "\u5EA7\u6A19\uFF08\u6A2A\uFF09\uFF1A",
+        dat: [
+          { value: "null", text: "\uFF08\u7121\u3057\uFF09", active: true },
+          { value: "nums", text: "1,2,3...", active: false },
+          { value: "aiu", text: "\u3042,\u3044,\u3046...", active: false },
+          { value: "iroha", text: "\u30A4,\u30ED,\u30CF...", active: false }
+        ]
+      }
+    };
+    buttons;
+    ranges = {
+      x: document.createElement("span"),
+      y: document.createElement("span")
+    };
     constructor() {
+      this.buttons = {
+        color: this.#createButtons("color", this.#data.color.dat),
+        character: this.#createButtons("character", this.#data.character.dat),
+        holizontal: this.#createButtons("holizontal", this.#data.holizontal.dat),
+        vertical: this.#createButtons("vertical", this.#data.vertical.dat)
+      };
       this.dom = this.#createDom();
     }
+    onClick(state) {
+      if (state.is_change === false) return;
+      const updateActive = (type) => {
+        this.buttons[type].forEach((btn) => {
+          btn.classList.remove("active");
+          const val = Number(btn.dataset.gostateValue);
+          if (isNaN(val)) return;
+          if (val === state.color) {
+            btn.classList.add("active");
+          }
+        });
+      };
+      switch (state.type) {
+        case "color":
+        case "character":
+        case "holizontal":
+        case "vertical":
+          updateActive(state.type);
+          break;
+      }
+    }
+    onChange(state) {
+      switch (state.type) {
+        case "range-x":
+          this.ranges.x.textContent = `${state.rangeX}`;
+          break;
+        case "range-y":
+          this.ranges.y.textContent = `${state.rangeY}`;
+          break;
+      }
+    }
     #createDom() {
-      const dom = document.createElement("span");
+      const dom = document.createElement("div");
+      dom.appendChild(this.#createUl(
+        this.#data.color.title,
+        this.buttons.color
+      ));
+      dom.appendChild(this.#createUl(
+        this.#data.character.title,
+        this.buttons.character
+      ));
+      dom.appendChild(this.#createRange());
+      dom.appendChild(this.#createUl(
+        this.#data.holizontal.title,
+        this.buttons.holizontal
+      ));
+      dom.appendChild(this.#createUl(
+        this.#data.vertical.title,
+        this.buttons.vertical
+      ));
       return dom;
     }
-    onClick(ev) {
+    #createButtons(type, origin) {
+      return origin.map((o) => {
+        const dom = document.createElement("button");
+        dom.dataset.gostateType = type;
+        dom.dataset.gostateValue = o.value;
+        dom.textContent = o.text;
+        if (o.active) {
+          dom.classList.add("active");
+        }
+        return dom;
+      });
     }
-    onChange(ev) {
+    #createUl(title, buttons) {
+      const ul = document.createElement("ul");
+      ul.classList.add("go-form-ul");
+      const li = document.createElement("li");
+      li.textContent = title;
+      ul.appendChild(li);
+      return buttons.reduce((uldom, button) => {
+        const li2 = document.createElement("li");
+        li2.appendChild(button);
+        uldom.appendChild(li2);
+        return uldom;
+      }, ul);
+    }
+    #createRange() {
+      const div = document.createElement("div");
+      div.classList.add("go-form-range");
+      const data = [
+        { text: "\u7E26\u5E45", dir: "range-y", min: "1", max: "19", value: "19" },
+        { text: "\u6A2A\u5E45", dir: "range-x", min: "1", max: "19", value: "19" }
+      ];
+      data.forEach((obj) => {
+        const label = document.createElement("label");
+        const title = document.createElement("span");
+        title.textContent = obj.text;
+        label.appendChild(title);
+        const input = document.createElement("input");
+        input.type = "range";
+        input.dataset.gostateType = "range";
+        input.dataset.gostateDir = obj.dir;
+        input.value = obj.value;
+        input.min = obj.min;
+        input.max = obj.max;
+        label.appendChild(input);
+        switch (obj.dir) {
+          case "range-x":
+            this.ranges.x.textContent = obj.value;
+            label.appendChild(this.ranges.x);
+            break;
+          case "range-y":
+            this.ranges.y.textContent = obj.value;
+            label.appendChild(this.ranges.y);
+            break;
+        }
+        div.appendChild(label);
+      });
+      return div;
     }
   };
 
@@ -438,8 +596,8 @@
   var State = class {
     #color;
     #character;
-    #rangeLR;
-    #rangeTB;
+    #rangeX;
+    #rangeY;
     #holizontal;
     #vertical;
     #is_change;
@@ -447,8 +605,8 @@
     constructor() {
       this.#color = 0;
       this.#character = "";
-      this.#rangeLR = [0, 18];
-      this.#rangeTB = [0, 18];
+      this.#rangeX = 19;
+      this.#rangeY = 19;
       this.#vertical = "null";
       this.#holizontal = "null";
       this.#is_change = true;
@@ -469,20 +627,20 @@
           this.color = value;
           this.#is_change = old_color !== this.color;
           break;
-        case "char":
+        case "character":
           this.#type = "character";
           const old_char = this.character;
           this.character = value;
           this.#is_change = old_char !== this.character;
           break;
         case "holizontal":
-          this.#type = "coordinates";
+          this.#type = "holizontal";
           const old_holizontal = this.holizontal;
           this.holizontal = value;
           this.#is_change = old_holizontal !== this.holizontal;
           break;
         case "vertical":
-          this.#type = "coordinates";
+          this.#type = "vertical";
           const old_vertical = this.vertical;
           this.vertical = value;
           this.#is_change = old_vertical !== this.vertical;
@@ -493,27 +651,20 @@
       const target = ev.target;
       if (!(target instanceof HTMLInputElement)) return;
       const value = target.value;
-      this.#type = "range";
-      switch (target.dataset.gostateRange) {
-        case "left":
-          const old_left = this.left;
-          this.left = value;
-          this.#is_change = old_left !== this.left;
+      if (typeof value !== "string") return;
+      let old_range;
+      switch (target.dataset.gostateDir) {
+        case "range-x":
+          this.#type = "range-x";
+          old_range = this.rangeX;
+          this.rangeX = value;
+          this.#is_change = old_range !== this.rangeX;
           break;
-        case "right":
-          const old_right = this.right;
-          this.right = value;
-          this.#is_change = old_right !== this.right;
-          break;
-        case "top":
-          const old_top = this.top;
-          this.top = value;
-          this.#is_change = old_top !== this.top;
-          break;
-        case "bottom":
-          const old_bottom = this.bottom;
-          this.bottom = value;
-          this.#is_change = old_bottom !== this.bottom;
+        case "range-y":
+          this.#type = "range-y";
+          old_range = this.rangeY;
+          this.rangeY = value;
+          this.#is_change = old_range !== this.rangeY;
           break;
       }
     }
@@ -543,41 +694,25 @@
         this.#character = c;
       }
     }
-    get left() {
-      return this.#rangeLR[0];
+    get rangeX() {
+      return this.#rangeX;
     }
-    set left(s) {
+    set rangeX(s) {
       const num = Number(s);
       if (!Number.isInteger(num)) return;
-      if (num >= this.#rangeLR[1]) return;
-      this.#rangeLR[0] = num;
+      if (1 <= num && num <= 19) {
+        this.#rangeX = num;
+      }
     }
-    get right() {
-      return this.#rangeLR[1];
+    get rangeY() {
+      return this.#rangeY;
     }
-    set right(s) {
+    set rangeY(s) {
       const num = Number(s);
       if (!Number.isInteger(num)) return;
-      if (num <= this.#rangeLR[0]) return;
-      this.#rangeLR[1] = num;
-    }
-    get top() {
-      return this.#rangeTB[0];
-    }
-    set top(s) {
-      const num = Number(s);
-      if (!Number.isInteger(num)) return;
-      if (num <= this.#rangeTB[1]) return;
-      this.#rangeTB[0] = num;
-    }
-    get bottom() {
-      return this.#rangeTB[1];
-    }
-    set bottom(s) {
-      const num = Number(s);
-      if (!Number.isInteger(num)) return;
-      if (num <= this.#rangeTB[0]) return;
-      this.#rangeTB[1] = num;
+      if (1 <= num && num <= 19) {
+        this.#rangeY = num;
+      }
     }
     get holizontal() {
       return this.#holizontal;
@@ -638,8 +773,8 @@
         controller: new Controller(),
         state: new State()
       };
-      this.appendChild(this.boardController.board.dom);
       this.appendChild(this.boardController.controller.dom);
+      this.appendChild(this.boardController.board.dom);
     }
     // document に接続時実行
     connectedCallback() {
@@ -650,12 +785,17 @@
         board.onClick(ev, state);
       }, false);
       controller.dom.addEventListener("click", (ev) => {
+        const target = ev.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (!target.closest("button")) return;
         state.onClick(ev);
-        controller.onClick(ev);
+        controller.onClick(state);
       }, false);
       controller.dom.addEventListener("change", (ev) => {
+        console.log(state);
         state.onChange(ev);
-        controller.onChange(ev);
+        console.log(state);
+        controller.onChange(state);
       }, false);
     }
     // 属性変更時実行

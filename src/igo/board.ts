@@ -81,6 +81,7 @@ export class Board {
             throw new Error('SVG 要素の作成に失敗しています。');
         }
         dom.setAttribute('viewBox', this.#getViewBox(this.#parentViewBox));
+        dom.classList.add('board');
         return dom;
     }
     

@@ -1,11 +1,12 @@
 type CoordinatesType = 'null'|'nums'|'aiu'|'iroha';
-type StateType = null|'color'|'character'|'range'|'coordinates';
+type StateType = null|'color'|'character'|'range-x'|'range-y'|
+    'holizontal'|'vertical';
 
 export class State {
     #color: 0|1|2;
     #character: string;
-    #rangeLR: number[];
-    #rangeTB: number[];
+    #rangeX: number;
+    #rangeY: number;
     #holizontal: CoordinatesType;
     #vertical: CoordinatesType;
     #is_change: boolean;
@@ -14,15 +15,15 @@ export class State {
     constructor() {
         this.#color = 0;
         this.#character = '';
-        this.#rangeLR = [0, 18];  // 0-index;
-        this.#rangeTB = [0, 18];
+        this.#rangeX = 19;  // 1-index;
+        this.#rangeY = 19;
         this.#vertical = 'null';
         this.#holizontal = 'null';
         this.#is_change = true;
         this.#type = null;
     }
     
-    onClick(ev: PointerEvent) {
+    onClick(ev: PointerEvent):void {
         const target = ev.target;
         if(!(target instanceof HTMLElement)) return;
         const button = target.closest('button');
@@ -38,20 +39,20 @@ export class State {
                 this.color = value;
                 this.#is_change = (old_color !== this.color);
                 break;
-            case 'char':
+            case 'character':
                 this.#type = 'character';
                 const old_char = this.character;
                 this.character = value;
                 this.#is_change = (old_char !== this.character);
                 break;
             case 'holizontal':
-                this.#type = 'coordinates';
+                this.#type = 'holizontal';
                 const old_holizontal = this.holizontal;
                 this.holizontal = value;
                 this.#is_change = (old_holizontal !== this.holizontal);
                 break;
             case 'vertical':
-                this.#type = 'coordinates';
+                this.#type = 'vertical';
                 const old_vertical = this.vertical;
                 this.vertical = value;
                 this.#is_change = (old_vertical !== this.vertical);
@@ -59,31 +60,24 @@ export class State {
         }
     }
     
-    onChange(ev: Event) {
+    onChange(ev: Event):void {
         const target = ev.target;
         if(!(target instanceof HTMLInputElement)) return;
         const value = target.value;
-        this.#type = 'range';
-        switch(target.dataset.gostateRange) {
-            case 'left':
-                const old_left = this.left;
-                this.left = value;
-                this.#is_change = (old_left !== this.left);
+        if(typeof value !== 'string') return;
+        let old_range;
+        switch(target.dataset.gostateDir) {
+            case 'range-x':
+                this.#type = 'range-x';
+                old_range = this.rangeX;
+                this.rangeX = value;
+                this.#is_change = (old_range !== this.rangeX);
                 break;
-            case 'right':
-                const old_right = this.right;
-                this.right = value;
-                this.#is_change = (old_right !== this.right);
-                break;
-            case 'top':
-                const old_top = this.top;
-                this.top = value;
-                this.#is_change = (old_top !== this.top);
-                break;
-            case 'bottom':
-                const old_bottom = this.bottom;
-                this.bottom = value;
-                this.#is_change = (old_bottom !== this.bottom);
+            case 'range-y':
+                this.#type = 'range-y';
+                old_range = this.rangeY;
+                this.rangeY = value;
+                this.#is_change = (old_range !== this.rangeY);
                 break;
         }
     }
@@ -118,48 +112,28 @@ export class State {
         }
     }
     
-    get left():number {
-        return this.#rangeLR[0];
+    get rangeX():number {
+        return this.#rangeX;
     }
     
-    set left(s:string) {
+    set rangeX(s:string) {
         const num = Number(s);
         if(!Number.isInteger(num)) return;
-        if(num >= this.#rangeLR[1]) return;
-        this.#rangeLR[0] = num;
+        if(1 <= num && num <=19) {
+            this.#rangeX = num;
+        }
     }
     
-    get right():number {
-        return this.#rangeLR[1];
+    get rangeY():number {
+        return this.#rangeY;
     }
     
-    set right(s:string) {
+    set rangeY(s:string) {
         const num = Number(s);
         if(!Number.isInteger(num)) return;
-        if(num <= this.#rangeLR[0]) return;
-        this.#rangeLR[1] = num;
-    }
-    
-    get top():number {
-        return this.#rangeTB[0];
-    }
-    
-    set top(s:string) {
-        const num = Number(s);
-        if(!Number.isInteger(num)) return;
-        if(num <= this.#rangeTB[1]) return;
-        this.#rangeTB[0] = num;
-    }
-    
-    get bottom():number {
-        return this.#rangeTB[1];
-    }
-    
-    set bottom(s:string) {
-        const num = Number(s);
-        if(!Number.isInteger(num)) return;
-        if(num <= this.#rangeTB[0]) return;
-        this.#rangeTB[1] = num;
+        if(1 <= num && num <=19) {
+            this.#rangeY = num;
+        }
     }
         
     get holizontal():CoordinatesType {

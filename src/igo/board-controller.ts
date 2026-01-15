@@ -21,8 +21,8 @@ export class BoardController extends HTMLElement {
             controller: new Controller(),
             state: new State(),
         }
-        this.appendChild(this.boardController.board.dom);
         this.appendChild(this.boardController.controller.dom);
+        this.appendChild(this.boardController.board.dom);
     }
 
     // document に接続時実行
@@ -34,15 +34,20 @@ export class BoardController extends HTMLElement {
         board.dom.addEventListener('click', (ev: PointerEvent)=>{
             board.onClick(ev, state);
         }, false);
-        
+
         controller.dom.addEventListener('click', (ev: PointerEvent)=>{
+            const target = ev.target;
+            if(!(target instanceof HTMLElement)) return;
+            if(!target.closest('button')) return;
             state.onClick(ev);
-            controller.onClick(ev);
+            controller.onClick(state);
         }, false);
 
         controller.dom.addEventListener('change', (ev: Event)=>{
+            console.log(state);
             state.onChange(ev);
-            controller.onChange(ev);
+            console.log(state);
+            controller.onChange(state);
         }, false);
 
     }
