@@ -1,200 +1,118 @@
 import { State } from "./state";
+import { Buttons } from "./buttons";
+import { Ranges } from "./ranges";
 
 export class Controller {
     
+    buttons: HTMLButtonElement[];
+    ranges: {
+        span: HTMLSpanElement,
+        input: HTMLInputElement,
+    }[];
+    
     dom: HTMLDivElement;
-
-    #data = {
+    
+    #init_data = {
         color: {
             title: '色：',
-            dat:[
-                {value:'0', text:'透明', active:true},
-                {value:'1', text:'黒', active:false},
-                {value:'2', text:'白', active:false},
+            active: 0,
+            data:[
+                {value:'0', text:'透明'},
+                {value:'1', text:'黒'},
+                {value:'2', text:'白'},
             ]
         },
         character: {
             title: '文字：',
-            dat:[
-                {value: '', text: '（無し）', active: true},
-                {value: 'A', text: 'A', active: false},
-                {value: 'B', text: 'B', active: false},
-                {value: 'C', text: 'C', active: false},
-                {value: 'D', text: 'D', active: false},
-                {value: 'E', text: 'E', active: false},
-                {value: '△', text: '△', active: false},
-                {value: '1', text: '1', active: false},
-                {value: '2', text: '2', active: false},
-                {value: '3', text: '3', active: false},
-                {value: '4', text: '4', active: false},
+            active: 0,
+            data:[
+                {value: '', text: '（無し）'},
+                {value: 'A', text: 'A'},
+                {value: 'B', text: 'B'},
+                {value: 'C', text: 'C'},
+                {value: 'D', text: 'D'},
+                {value: 'E', text: 'E'},
+                {value: '△', text: '△'},
+                {value: '1', text: '1'},
+                {value: '2', text: '2'},
+                {value: '3', text: '3'},
+                {value: '4', text: '4'},
             ]
         },
         holizontal: {
             title: '座標（縦）：',
-            dat: [
-                {value: 'null', text: '（無し）', active: true},
-                {value: 'nums', text: '1,2,3...', active: false},
-                {value: 'aiu', text: 'あ,い,う...', active: false},
-                {value: 'iroha', text: 'イ,ロ,ハ...', active: false},
+            active: 0,
+            data: [
+                {value: 'null', text: '（無し）'},
+                {value: 'nums', text: '1,2,3...'},
+                {value: 'aiu', text: 'あ,い,う...'},
+                {value: 'iroha', text: 'イ,ロ,ハ...'},
             ]
         },
         vertical: {
             title: '座標（横）：',
-            dat: [
-                {value: 'null', text: '（無し）', active: true},
-                {value: 'nums', text: '1,2,3...', active: false},
-                {value: 'aiu', text: 'あ,い,う...', active: false},
-                {value: 'iroha', text: 'イ,ロ,ハ...', active: false},
+            active: 0,
+            data: [
+                {value: 'null', text: '（無し）'},
+                {value: 'nums', text: '1,2,3...'},
+                {value: 'aiu', text: 'あ,い,う...'},
+                {value: 'iroha', text: 'イ,ロ,ハ...'},
+            ]
+        },
+        range: {
+            data: [
+                {title: '縦幅', dir: 'range-y', min: '1', max: '19', value: '19'},
+                {title: '横幅', dir: 'range-x', min: '1', max: '19', value: '19'},
             ]
         },
     }
-
-    buttons: {
-        color: HTMLButtonElement[],
-        character: HTMLButtonElement[],
-        holizontal: HTMLButtonElement[],
-        vertical: HTMLButtonElement[],
-    }
-
-    ranges = {
-        x: document.createElement('span'),
-        y: document.createElement('span'),
-    };
     
     constructor() {
-        this.buttons = {
-            color: this.#createButtons('color', this.#data.color.dat),
-            character: this.#createButtons('character', this.#data.character.dat),
-            holizontal: this.#createButtons('holizontal', this.#data.holizontal.dat),
-            vertical: this.#createButtons('vertical', this.#data.vertical.dat),
-        };
-        this.dom = this.#createDom();
+        this.buttons = [];
+        const color_buttons = new Buttons('color', this.#init_data.color);
+        this.buttons = color_buttons.pushButtons(this.buttons);
+        const character_buttons = new Buttons('character', this.#init_data.character);
+        this.buttons = character_buttons.pushButtons(this.buttons);
+        const hollizontal_buttons = new Buttons('holizontal', this.#init_data.holizontal);
+        this.buttons = hollizontal_buttons.pushButtons(this.buttons);
+        const vertical_buttons = new Buttons('vertical', this.#init_data.vertical);
+        this.buttons = vertical_buttons.pushButtons(this.buttons);
+        
+        this.ranges = [];
+        const dir_ranges = new Ranges(this.#init_data.range.data);
+        this.ranges = dir_ranges.pushRanges(this.ranges);
+        
+        this.dom =  document.createElement('div');
+        this.dom.appendChild(color_buttons.dom);
+        this.dom.appendChild(character_buttons.dom);
+        this.dom.appendChild(dir_ranges.dom);
+        this.dom.appendChild(hollizontal_buttons.dom);
+        this.dom.appendChild(vertical_buttons.dom);
+        
     }
     
     onClick(state: State) {
-        if(state.is_change===false) return;
-        const updateActive = (type: 'color'|'character'|'holizontal'|'vertical') => {
-            this.buttons[type].forEach(btn => {
-                btn.classList.remove('active');
-                const val = Number(btn.dataset.gostateValue);
-                if(isNaN(val)) return;
-                if(val === state.color) {
-                    btn.classList.add('active');
+        if(state.is_change === false) return;
+        this.buttons.forEach(button => {
+            const isSameType = button.dataset.gostateType === state.type;
+            const isSameValue = button.dataset.gostateValue === state.value;
+            if(isSameType) {
+                if(isSameValue) {
+                    button.classList.add('active');
+                }else{
+                    button.classList.remove('active');
                 }
-            });
-        }
-        switch(state.type) {
-            case 'color':
-            case 'character':
-            case 'holizontal':
-            case 'vertical':
-                updateActive(state.type);
-                break;
-        }
+            }
+        });
     }
-
     onChange(state: State) {
-        switch(state.type) {
-            case 'range-x':
-                this.ranges.x.textContent = `${state.rangeX}`;
-                break;
-            case 'range-y':
-                this.ranges.y.textContent = `${state.rangeY}`;
-                break;
-        }
-    }
-
-    #createDom():HTMLDivElement {
-        const dom = document.createElement('div');
-        dom.appendChild(this.#createUl(
-            this.#data.color.title,
-            this.buttons.color,
-        ));
-        dom.appendChild(this.#createUl(
-            this.#data.character.title,
-            this.buttons.character,
-        ));
-        dom.appendChild(this.#createRange());
-        dom.appendChild(this.#createUl(
-            this.#data.holizontal.title,
-            this.buttons.holizontal,
-        ));
-        dom.appendChild(this.#createUl(
-            this.#data.vertical.title,
-            this.buttons.vertical,
-        ));
-        return dom;
-    }
-
-    #createButtons(
-        type: string,
-        origin:{value:string, text:string, active:boolean}[],
-    ):HTMLButtonElement[] {
-        return origin.map(o => {
-            const dom = document.createElement('button');
-            dom.dataset.gostateType = type;
-            dom.dataset.gostateValue = o.value;
-            dom.textContent = o.text;
-            if(o.active) {
-                dom.classList.add('active');
+        if(state.is_change === false) return;
+        this.ranges.forEach(range => {
+            const isSameDir = range.input.dataset.gostateDir === state.type;
+            if(isSameDir) {
+                range.span.textContent = state.value;
             }
-            return dom;
         });
-    }
-
-    #createUl(
-        title: string,
-        buttons: HTMLButtonElement[],
-    ):HTMLUListElement {
-        const ul = document.createElement('ul');
-        ul.classList.add('go-form-ul');
-        const li = document.createElement('li');
-        li.textContent = title;
-        ul.appendChild(li);
-        return buttons.reduce((uldom, button) => {
-            const li = document.createElement('li');
-            li.appendChild(button);
-            uldom.appendChild(li);
-            return uldom;
-        }, ul);
-    }
-
-    #createRange():HTMLDivElement {
-        const div = document.createElement('div');
-        div.classList.add('go-form-range');
-        const data = [
-            {text: '縦幅', dir: 'range-y', min: '1', max: '19', value: '19'},
-            {text: '横幅', dir: 'range-x', min: '1', max: '19', value: '19'},
-        ];
-        data.forEach(obj => {
-            const label = document.createElement('label');
-            
-            const title = document.createElement('span');
-            title.textContent = obj.text;
-            label.appendChild(title);
-            
-            const input = document.createElement('input');
-            input.type = 'range';
-            input.dataset.gostateType = 'range';
-            input.dataset.gostateDir = obj.dir;
-            input.value = obj.value;
-            input.min = obj.min;
-            input.max = obj.max;
-            label.appendChild(input);
-
-            switch(obj.dir) {
-                case 'range-x':
-                    this.ranges.x.textContent = obj.value;
-                    label.appendChild(this.ranges.x);
-                    break;
-                case 'range-y':
-                    this.ranges.y.textContent = obj.value;
-                    label.appendChild(this.ranges.y);
-                    break;
-            }
-            div.appendChild(label);
-        });
-        return div;
     }
 
 }

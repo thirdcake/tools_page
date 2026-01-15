@@ -11,6 +11,7 @@ export class State {
     #vertical: CoordinatesType;
     #is_change: boolean;
     #type: StateType;
+    #value: string;
 
     constructor() {
         this.#color = 0;
@@ -21,6 +22,7 @@ export class State {
         this.#holizontal = 'null';
         this.#is_change = true;
         this.#type = null;
+        this.#value = '';
     }
     
     onClick(ev: PointerEvent):void {
@@ -31,6 +33,7 @@ export class State {
         const type = button.dataset.gostateType;
         const value = button.dataset.gostateValue;
         if(typeof value === 'undefined') return;
+        this.#value = value;
         
         switch(type) {
             case 'color':
@@ -65,6 +68,8 @@ export class State {
         if(!(target instanceof HTMLInputElement)) return;
         const value = target.value;
         if(typeof value !== 'string') return;
+        this.#value = value;
+        
         let old_range;
         switch(target.dataset.gostateDir) {
             case 'range-x':
@@ -184,5 +189,9 @@ export class State {
     
     get type():StateType {
         return this.#type;
+    }
+    
+    get value():string {
+        return this.#value;
     }
 }

@@ -34,21 +34,24 @@ export class BoardController extends HTMLElement {
         board.dom.addEventListener('click', (ev: PointerEvent)=>{
             board.onClick(ev, state);
         }, false);
+        
+        controller.buttons.forEach(button => {
+            button.addEventListener('click', (ev: PointerEvent) => {
+                const target = ev.target;
+                if(!(target instanceof HTMLElement)) return;
+                if(!target.closest('button')) return;
 
-        controller.dom.addEventListener('click', (ev: PointerEvent)=>{
-            const target = ev.target;
-            if(!(target instanceof HTMLElement)) return;
-            if(!target.closest('button')) return;
-            state.onClick(ev);
-            controller.onClick(state);
-        }, false);
-
-        controller.dom.addEventListener('change', (ev: Event)=>{
-            console.log(state);
-            state.onChange(ev);
-            console.log(state);
-            controller.onChange(state);
-        }, false);
+                state.onClick(ev);
+                controller.onClick(state);
+            }, false);
+        });
+        
+        controller.ranges.forEach(range => {
+            range.input.addEventListener('change', (ev: Event) => {
+                state.onChange(ev);
+                controller.onChange(state);
+            }, false);
+        });
 
     }
 
