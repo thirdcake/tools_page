@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/igo/board/config.ts
   var config = Object.freeze({
@@ -264,7 +265,7 @@
           this.dom.appendChild(stone.g);
         });
       });
-      this.data = [[[0, "a"]]];
+      this.data = this.#createBlankData();
     }
     onClick(x, y, state) {
       if (x < 0) return JSON.stringify(this.data);
@@ -292,6 +293,12 @@
         (row_pos) => positions.map(
           (col_pos) => new Stone(row_pos, col_pos, 0, "")
         )
+      );
+    }
+    #createBlankData() {
+      return Array.from(
+        { length: config.size },
+        () => Array.from({ length: config.size }, () => [0, ""])
       );
     }
   };
@@ -752,11 +759,113 @@
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {
       if (attr === "data-gostate-data") {
-        console.log(oldVal, newVal);
+        if (oldVal === newVal) return;
       }
     }
   };
 
   // src/igo/index.ts
   customElements.define("board-controller", BoardController);
+  document.addEventListener("DOMContentLoaded", () => {
+    const perPageButtons = [];
+    document.querySelectorAll("#display-per-page button").forEach(
+      (button) => {
+        if (button instanceof HTMLButtonElement) {
+          perPageButtons.push(button);
+        }
+      }
+    );
+    const toggleButtons = [];
+    document.querySelectorAll("#toggle-display button").forEach(
+      (button) => {
+        if (button instanceof HTMLButtonElement) {
+          toggleButtons.push(button);
+        }
+      }
+    );
+    const save = document.querySelector("#save");
+    const load = document.querySelector("#load");
+    const boardControllers = [];
+    document.querySelectorAll("board-controller").forEach(
+      (boardCon) => {
+        if (boardCon instanceof BoardController) {
+          boardControllers.push(boardCon);
+        }
+      }
+    );
+    displayPerPage(
+      perPageButtons,
+      toggleButtons,
+      boardControllers
+    );
+    toggleDisplayBoard(
+      toggleButtons,
+      boardControllers
+    );
+  }, false);
+  function toggleActiveClass(button, buttons) {
+    buttons.forEach((btn) => {
+      if (button === btn) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+  function displayPerPage(perPageButtons, toggleButtons, boardControllers) {
+    perPageButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        toggleActiveClass(button, perPageButtons);
+        const length = Number(button.dataset.godisplayPerPage);
+        toggleButtons.forEach((tButton, idx) => {
+          if (idx <= length) {
+            tButton.style.display = "block";
+          } else {
+            tButton.style.display = "none";
+          }
+        });
+        boardControllers.forEach((bCon, idx) => {
+          if (idx <= length) {
+            bCon.dataset.display = "true";
+          } else {
+            bCon.dataset.display = "false";
+          }
+        });
+      }, false);
+    });
+  }
+  function toggleDisplayBoard(toggleButtons, boardControllers) {
+    toggleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        toggleActiveClass(button, toggleButtons);
+        const num = Number(button.dataset.godisplayIdx);
+        if (num < 0) {
+          displayOverview(boardControllers);
+        } else {
+          displayZoomboard(num, boardControllers);
+        }
+      }, false);
+    });
+  }
+  function displayOverview(boardControllers) {
+    const num = 6;
+    boardControllers.forEach((bCon, idx) => {
+      if (idx < num) {
+        bCon.dataset.display = "true";
+        bCon.dataset.size = "small";
+      } else {
+        bCon.dataset.display = "false";
+      }
+    });
+  }
+  function displayZoomboard(num, boardControllers) {
+    boardControllers.forEach((bCon, idx) => {
+      if (num === idx) {
+        bCon.dataset.display = "true";
+        bCon.dataset.size = "large";
+      } else {
+        bCon.dataset.display = "false";
+      }
+    });
+  }
 })();

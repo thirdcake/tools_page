@@ -6,31 +6,92 @@
     <title>囲碁</title>
     <script type="module" src="./assets/igo.js"></script>
     <style>
+        body {
+            line-height: 1.5;
+        }
+        button {
+            color: #333;
+            background-color: #efefef;
+            padding: .37rem .75rem;
+            border: 1px solid #333;
+            border-radius: .37rem;
+            font-weight: 400;
+        }
+        hr {
+            margin:1rem;
+            border: 1px solid #ccc;
+        }
+        button.active {
+            color: #fff;
+            background-color: #185;
+            border-color: #185;
+            font-weight: bold;
+        }
         ul.go-form-ul {
-            margin:0; padding:0;
+            margin:0; padding:.7rem;
             list-style-type: none;
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
             gap: .5rem;
         }
-        ul.go-form-ul > li > button.active {
-            background-color: #333;
-            color: #fff;
-        }
         div.go-form-range {
+            margin:0;
+            padding: .7rem;
+        }
+        .go-form-range label {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 0 1rem;
+            align-items: center;
+            justify-content: flex-start;
         }
         svg.board {
             width: 100%;
             height: auto;
             max-width: min(600px, 100svh);
+            }
+        .text-area {
+            white-space: pre-line;
+        }
+        .p4 {
+            padding: .7rem;
         }
     </style>
 </head>
 <body>
-    <h1>囲碁</h1>
-    <board-controller></board-controller>
+    <div class="no-print">
+        <h1 class="p4">囲碁 問題解答 印刷用</h1>
+        <ul id="display-per-page" class="go-form-ul">
+            <li>１ページに表示する数：</li>
+            <li><button type="button" data-godisplay-per-page="4">４つ</button></li>
+            <li><button type="button" data-godisplay-per-page="6"
+                class="active">６つ</button></li>
+        </ul>
+        <ul id="toggle-display" class="go-form-ul">
+            <li><button type="button" data-godisplay-idx="-1" class="active">全体を俯瞰</button></li>
+            <li><button type="button" data-godisplay-idx="0">１つ目を拡大</button></li>
+            <li><button type="button" data-godisplay-idx="1">２つ目を拡大</button></li>
+            <li><button type="button" data-godisplay-idx="2">３つ目を拡大</button></li>
+            <li><button type="button" data-godisplay-idx="3">４つ目を拡大</button></li>
+            <li><button type="button" data-godisplay-idx="4">５つ目を拡大</button></li>
+            <li><button type="button" data-godisplay-idx="5">６つ目を拡大</button></li>
+        </ul>
+        <hr>
+        <div id="save">
+            <p class="p4">保存：<button type="button" value="save" id="save">保存</button></p>
+            <p class="p4">読込：<input type="file" id="load" accept="application/json"></p>
+        </div>
+        <hr>
+    </div>
+    <div id="input">
+        <board-controller data-goboard-num="1"></board-controller>
+        <board-controller data-goboard-num="2"></board-controller>
+        <board-controller data-goboard-num="3"></board-controller>
+        <board-controller data-goboard-num="4"></board-controller>
+        <board-controller data-goboard-num="5"></board-controller>
+        <board-controller data-goboard-num="6"></board-controller>
+    </div>
 </body>
 </html>
