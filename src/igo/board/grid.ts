@@ -1,14 +1,10 @@
-import { BoardConfig } from "./config";
+import { config } from "./config";
 
 export class Grid {
-    #ns = 'http://www.w3.org/2000/svg';
-
-    #config: BoardConfig;
     dom: SVGGElement;
 
-    constructor(config:BoardConfig, positions: number[]) {
-        this.#config = config;
-        const dom = document.createElementNS(this.#ns, 'g');
+    constructor(positions: number[]) {
+        const dom = document.createElementNS(config.ns, 'g');
         if(!(dom instanceof SVGGElement)) {
             throw new Error('Grid の作成に失敗しました。');
         }
@@ -18,12 +14,12 @@ export class Grid {
     }
 
     #drawLines(dom:SVGGElement, positions:number[]): SVGGElement {
-        const start = Math.floor(this.#config.interval / 2)
-            - Math.floor(this.#config.thick / 2);
-        const end = this.#config.interval * this.#config.size - start;
+        const start = Math.floor(config.interval / 2)
+            - Math.floor(config.thick / 2);
+        const end = config.interval * config.size - start;
         return positions.reduce((group:SVGGElement, pos:number, i:number) => {
             const isFirstOrLast = (i === 0 || i === positions.length - 1);
-            const sw = isFirstOrLast ? this.#config.thick : this.#config.thin;
+            const sw = isFirstOrLast ? config.thick : config.thin;
             group.appendChild(this.#createLine(start, end, pos, pos, sw));
             group.appendChild(this.#createLine(pos, pos, start, end, sw));
             return group;
@@ -48,12 +44,12 @@ export class Grid {
         y2: number,
         sw: number,
     ):SVGLineElement {
-        const line = document.createElementNS(this.#ns, 'line') as SVGLineElement;
+        const line = document.createElementNS(config.ns, 'line') as SVGLineElement;
         line.setAttribute('x1', `${x1}`);
         line.setAttribute('x2', `${x2}`);
         line.setAttribute('y1', `${y1}`);
         line.setAttribute('y2', `${y2}`);
-        line.setAttribute('stroke', this.#config.color);
+        line.setAttribute('stroke', config.color);
         line.setAttribute('stroke-width', `${sw}`);
         return line;
     }
@@ -62,12 +58,12 @@ export class Grid {
         cx: number,
         cy: number,
     ):SVGCircleElement {
-        const dot = document.createElementNS(this.#ns, 'circle') as SVGCircleElement;
+        const dot = document.createElementNS(config.ns, 'circle') as SVGCircleElement;
         dot.setAttribute('cx', `${cx}`);
         dot.setAttribute('cy', `${cy}`);
-        const r = Math.floor(this.#config.thick * 1.5);
+        const r = Math.floor(config.thick * 1.5);
         dot.setAttribute('r', `${r}`);
-        dot.setAttribute('fill', this.#config.color);
+        dot.setAttribute('fill', config.color);
         return dot;
     }
 

@@ -1,64 +1,67 @@
-import { Board } from "./board";
-import { Controller } from "./controller";
-import { State } from "./state";
+import { Board } from "./board/board";
+import { Controller } from "./controller/controller";
+import { State } from "./state/state";
 
 export class BoardController extends HTMLElement {
-    boardController: {
-        board: Board,
-        controller: Controller,
-        state: State,
-    }
-    
+
     static observedAttributes = [
-        //"data-gostate-data",
+        "data-gostate-data",
     ];
     
 
     constructor() {
         super();
-        this.boardController = {
-            board: new Board(),
-            controller: new Controller(),
-            state: new State(),
-        }
-        this.appendChild(this.boardController.controller.dom);
-        this.appendChild(this.boardController.board.dom);
-    }
 
-    // document に接続時実行
-    connectedCallback() {
-        const board = this.boardController.board;
-        const controller = this.boardController.controller;
-        const state = this.boardController.state;
+        const state = new State();
+        const board = new Board();
+        const controller = new Controller(state);
+
+        this.appendChild(controller.dom);
+        this.appendChild(board.dom);
         
         board.dom.addEventListener('click', (ev: PointerEvent)=>{
-            board.onClick(ev, state);
+            this.dataset.gostateData = board.onClick(ev, state);
         }, false);
         
         controller.buttons.forEach(button => {
             button.addEventListener('click', (ev: PointerEvent) => {
                 const target = ev.target;
-                if(!(target instanceof HTMLElement)) return;
-                if(!target.closest('button')) return;
+                if(!(target instanceof HTMLButtonElement)) return;
 
-                state.onClick(ev);
-                controller.onClick(state);
+                state.updateStart();
+                state.onClick(target);
+                if(state.isChange) {
+                    controller.onClick(state);
+                }
+                state.updateEnd();
             }, false);
         });
         
         controller.ranges.forEach(range => {
             range.input.addEventListener('change', (ev: Event) => {
-                state.onChange(ev);
-                controller.onChange(state);
+                const target = ev.target;
+                if(!(target instanceof HTMLInputElement)) return;
+
+                state.updateStart();
+                state.onChange(target);
+                if(state.isChange) {
+                    range.span.textContent = state.newVal;
+                }
+                state.updateEnd();
             }, false);
         });
 
+    }
+
+    // document に接続時実行
+    connectedCallback() {
     }
 
     // 属性変更時実行
     attributeChangedCallback(attr:string, oldVal:string, newVal:string) {
         if(attr === 'data-gostate-data') {
             // この customElement 外へイベントなどを発火
+            if(oldVal===newVal) return;
         }
     }
      

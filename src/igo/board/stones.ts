@@ -1,20 +1,18 @@
-import { BoardConfig } from "./config";
+import { config } from "./config";
 import { Stone } from "./stone";
-import { State } from "./state";
+import { State } from "../state/state";
 
 export class Stones {
-    #ns = 'http://www.w3.org/2000/svg';
-    #config: BoardConfig;
     #positions: number[];
 
     stones: Stone[][];
     dom: SVGGElement;
+    data: [0|1|2, string][][];
 
-    constructor(config: BoardConfig, positions: number[]) {
-        this.#config = config;
+    constructor(positions: number[]) {
         this.#positions = positions;
         this.stones = this.#createStones(positions);
-        const dom = document.createElementNS(this.#ns, 'g');
+        const dom = document.createElementNS(config.ns, 'g');
         if(!(dom instanceof SVGGElement)) {
             throw new Error('stones error');
         }
@@ -24,12 +22,13 @@ export class Stones {
                 this.dom.appendChild(stone.g);
             })
         });
+        this.data = this.#createBlankData();
     }
 
-    onClick(x:number, y:number, state:State) {
-        if(x < 0) return;
-        const max_height = this.#config.size * this.#config.interval;
-        if(max_height < y) return;
+    onClick(x:number, y:number, state:State):string {
+        if(x < 0) return JSON.stringify(this.data);
+        const max_height = config.size * config.interval;
+        if(max_height < y) return JSON.stringify(this.data);
         const positions = this.#positions;
         const init_x = {idx: 0, dist: Math.abs(positions[0] - x), now: x};
         const init_y = {idx: 0, dist: Math.abs(positions[0] - y), now: y};
@@ -42,16 +41,23 @@ export class Stones {
         }
         const col = positions.reduce(minDist, init_x).idx;
         const row = positions.reduce(minDist, init_y).idx;
-        const color = state.color;
-        const character = state.character;
+        const color = state.color.value;
+        const character = state.character.value;
         this.stones[row][col].onChange(color, character);
+        return JSON.stringify(this.data);
     }
 
     #createStones(positions: number[]): Stone[][] {
         return positions.map(row_pos => 
             positions.map(col_pos => 
-                new Stone(this.#config, row_pos, col_pos, 0, '')
+                new Stone(row_pos, col_pos, 0, '')
             )
+        );
+    }
+
+    #createBlankData():[0|1|2, string][][] {
+        return Array.from({length: config.size}, ()=>
+            Array.from({length: config.size}, () => [0, ''])
         );
     }
 }

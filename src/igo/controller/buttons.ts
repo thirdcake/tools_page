@@ -1,20 +1,18 @@
+import { ButtonState } from "../state/buttons";
+
 export class Buttons {
     dom: HTMLUListElement;
     #buttons: HTMLButtonElement[];
 
     constructor(
         type: string,
-        init: {
-            title: string,
-            active: number,
-            data: {value:string, text:string}[]
-        }
+        state: ButtonState
     ) {
         this.dom = document.createElement('ul');
         this.dom.classList.add('go-form-ul');
-        this.dom.appendChild(this.#createTitle(init.title));
-        this.#buttons = this.#createButtons(type, init.data)
-        this.#buttons[init.active].classList.add('active');
+        this.dom.appendChild(this.#createTitle(state.title));
+        this.#buttons = this.#createButtons(type, state.data)
+        this.#buttons[state.active].classList.add('active');
         this.#buttons.forEach(button => {
             const li = document.createElement('li');
             li.appendChild(button);

@@ -1,9 +1,6 @@
-import { BoardConfig } from "./config";
+import { config } from "./config";
 
 export class Coordinates {
-    #ns = 'http://www.w3.org/2000/svg';
-    #config: BoardConfig;
-
     dom: SVGGElement;
 
     #aiu = 'あいうえおかきくけこさしすせそたちつて'.split('');
@@ -13,9 +10,8 @@ export class Coordinates {
     #verticalChars: SVGTextElement[];
     #holizontalChars: SVGTextElement[];
 
-    constructor(config: BoardConfig, positions:number[]) {
-        this.#config = config;
-        const dom = document.createElementNS(this.#ns, 'g');
+    constructor(positions:number[]) {
+        const dom = document.createElementNS(config.ns, 'g');
         if(!(dom instanceof SVGGElement)) {
             throw new Error('coordinates error');
         }
@@ -44,8 +40,8 @@ export class Coordinates {
     #createVerticalChars(positions:number[]): SVGTextElement[] {
         const createVChar = (pos: number) => {
             const text = this.#createChar();
-            const x = - Math.floor(this.#config.interval / 2);
-            const base_line = this.#config.radius * 0.6;
+            const x = - Math.floor(config.interval / 2);
+            const base_line = config.radius * 0.6;
             const y = pos + base_line;
             text.setAttribute('x', `${x}`);
             text.setAttribute('y', `${y}`);
@@ -58,9 +54,9 @@ export class Coordinates {
     #createHolizontalChars(positions:number[]): SVGTextElement[] {
         const createHChar = (pos: number) => {
             const text = this.#createChar();
-            const base_line = this.#config.radius * 0.6;
-            const y = this.#config.size * this.#config.interval
-                + Math.floor(this.#config.interval / 2)
+            const base_line = config.radius * 0.6;
+            const y = config.size * config.interval
+                + Math.floor(config.interval / 2)
                 + base_line;
             text.setAttribute('x', `${pos}`);
             text.setAttribute('y', `${y}`);
@@ -71,10 +67,10 @@ export class Coordinates {
     }
 
     #createChar():SVGTextElement {
-            const text = document.createElementNS(this.#ns, 'text') as SVGTextElement;
-            const style = `font:normal ${this.#config.text_size}px sans-serif;`;
+            const text = document.createElementNS(config.ns, 'text') as SVGTextElement;
+            const style = `font:normal ${config.text_size}px sans-serif;`;
             text.setAttribute('style', style);
-            text.setAttribute('fill', this.#config.color);
+            text.setAttribute('fill', config.color);
             text.setAttribute('text-anchor', 'middle');
             return text;
     }
