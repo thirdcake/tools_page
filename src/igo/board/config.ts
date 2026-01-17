@@ -7,4 +7,4 @@ export const config = Object.freeze({
     interval: 48,
     text_size: 36,
     radius: 20,
-});
+} as const );

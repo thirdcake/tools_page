@@ -1,76 +1,59 @@
-import { ColorState } from "./color";
-import { CharacterState } from "./character";
-import { VCoordinatesState, HCoordinatesState } from "./coordinates";
-import { WidthState, HeightState } from "./ranges";
+import {
+    Color,
+    Character,
+    Coordinates,
+    Length,
+    } from "./holders";
 
 export class State {
-    color = new ColorState();
-    character = new CharacterState();
-    vertical = new VCoordinatesState();
-    holizontal = new HCoordinatesState();
-    width = new WidthState();
-    height = new HeightState();
+    
+    readonly fields = {
+        color: new Color(),
+        character: new Character(),
+        vertical: new Coordinates(),
+        horizontal: new Coordinates(),
+        width: new Length(),
+        height: new Length(),
+    } as const;
 
-    #type:null|string = null;
-    #oldVal:null|string = null;
-    #newVal:null|string = null;
+    // 状態変更の記録用
+    #type: keyof typeof this.fields | null = null;
+    #oldVal: string | null = null;
+    #newVal: string | null = null;
 
-    reset() {
+    get type() { return this.#type; }
+    get oldVal() { return this.#oldVal; }
+    get newVal() { return this.#newVal; }
+    get isChange(): boolean { return this.#newVal !== null; }
+
+    reset(): void {
         this.#type = null;
         this.#oldVal = null;
         this.#newVal = null;
     }
 
-    get isChange():boolean { return (this.#newVal !== null) } 
-    updateStart():void { this.reset() }
-    updateEnd():void { this.reset() }
-
-    get type() { return this.#type }
-    get oldVal() { return this.#oldVal }
-    get newVal() { return this.#newVal }
-
-    onClick(target: HTMLButtonElement) {
-        const type = target.dataset.gostateType;
-        const value = target.dataset.gostateValue;
-        if(typeof value === 'undefined') return;
-        
-        switch(type) {
-            case 'color':
-            case 'character':
-            case 'vertical':
-            case 'holizontal':
-                this.#type = type;
-                this.#oldVal = this[type].value;
-                this[type].value = value;
-                if(this[type].value !== this.#oldVal) {
-                    this.#newVal = this[type].value;
-                }
-                break;
-        }
-
+    updateEnd(): void {
+        this.reset();
     }
-    onChange(target: HTMLInputElement) {
-        const type = target.dataset.gostateType;
-        const dir = target.dataset.gostateDir;
-        const value = target.value;
 
-        if(type==='range') {
-            if(dir === 'x') {
-                this.#type = 'width';
-                this.#oldVal = this.width.value;
-                this.width.value = value;
-                if(this.width.value !== this.#oldVal) {
-                    this.#newVal = this.width.value;
-                }
-            }else if(dir === 'y') {
-                this.#type = 'height';
-                this.#oldVal = this.height.value;
-                this.height.value = value;
-                if(this.height.value !== this.#oldVal) {
-                    this.#newVal = this.height.value;
-                }
+    updateStart(type: string, value: string): void {
+        this.reset();
+
+        if (this.#isValidKey(type)) {
+            const field = this.fields[type];
+            const currentVal = field.state;
+
+            if (currentVal !== value) {
+                this.#type = type;
+                this.#oldVal = currentVal;
+                field.state = value;
+                this.#newVal = field.state; // セット後の値を代入
             }
         }
+    }
 
+    // 型ガードをメソッドとして分離
+    #isValidKey(key: string): key is keyof typeof this.fields {
+        return key in this.fields;
     }
 }

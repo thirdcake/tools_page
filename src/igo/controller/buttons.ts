@@ -1,18 +1,18 @@
-import { ButtonState } from "../state/buttons";
+import { ButtonsData } from "./init_data";
 
-export class Buttons {
+export class Buttons<T> {
     dom: HTMLUListElement;
     #buttons: HTMLButtonElement[];
 
     constructor(
         type: string,
-        state: ButtonState
+        data: ButtonsData<T>
     ) {
         this.dom = document.createElement('ul');
         this.dom.classList.add('go-form-ul');
-        this.dom.appendChild(this.#createTitle(state.title));
-        this.#buttons = this.#createButtons(type, state.data)
-        this.#buttons[state.active].classList.add('active');
+        this.dom.appendChild(this.#createTitle(data.title));
+        this.#buttons = this.#createButtons(type, data)
+        this.#buttons[data.active].classList.add('active');
         this.#buttons.forEach(button => {
             const li = document.createElement('li');
             li.appendChild(button);
@@ -35,12 +35,12 @@ export class Buttons {
     
     #createButtons(
         type: string,
-        data: {value: string, text:string}[]
+        data: ButtonsData<T>,
     ):HTMLButtonElement[] {
-        return data.map(dat => {
+        return data.data.map(dat => {
             const button = document.createElement('button');
             button.dataset.gostateType = type;
-            button.dataset.gostateValue = dat.value;
+            button.dataset.gostateValue = `${dat.value}`;
             button.textContent = dat.text;
             return button;
         });

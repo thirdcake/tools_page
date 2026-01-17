@@ -151,46 +151,112 @@
     }
   };
 
+  // src/igo/constants.ts
+  var COORDINATES_DATA = Object.freeze(
+    ["null", "nums", "aiu", "iroha"]
+  );
+
+  // src/igo/state/holders.ts
+  var isCoordinatesState = (str) => COORDINATES_DATA.includes(str);
+  var StateHolder = class {
+  };
+  var Color = class extends StateHolder {
+    _state = 0;
+    get state() {
+      return `${this._state}`;
+    }
+    set state(input) {
+      const str = `${input}`;
+      if (str === "1" || str === "2") {
+        this._state = Number(str);
+      } else {
+        this._state = 0;
+      }
+    }
+  };
+  var Character = class extends StateHolder {
+    _state = "";
+    get state() {
+      return this._state;
+    }
+    set state(input) {
+      const str = `${input}`;
+      this._state = str.length > 0 ? str[0] : "";
+    }
+  };
+  var Coordinates2 = class extends StateHolder {
+    _state = "null";
+    get state() {
+      return this._state;
+    }
+    set state(input) {
+      const str = `${input}`;
+      this._state = isCoordinatesState(str) ? str : COORDINATES_DATA[0];
+    }
+  };
+  var Length = class extends StateHolder {
+    _state = 19;
+    MAX = 19;
+    MIN = 1;
+    get state() {
+      return `${this._state}`;
+    }
+    set state(input) {
+      const num = Number(input);
+      if (num >= this.MIN && num <= this.MAX) {
+        this._state = num;
+      }
+    }
+  };
+
   // src/igo/board/stone.ts
   var Stone = class {
-    #color = 0;
-    #character;
-    g;
+    #color = new Color();
+    #character = new Character();
+    #g;
     #circle;
     #text;
-    constructor(row, col, color, character = "") {
-      this.g = document.createElementNS(config.ns, "g");
+    #patternMap = Object.freeze({
+      empty: {
+        circle_fill: "transparent",
+        circle_stroke: "transparent",
+        text_fill: "transparent"
+      },
+      onlyChar: {
+        circle_fill: "#fff",
+        circle_stroke: "#fff",
+        text_fill: config.color
+      },
+      black: {
+        circle_fill: config.color,
+        circle_stroke: config.color,
+        text_fill: "#fff"
+      },
+      white: {
+        circle_fill: "#fff",
+        circle_stroke: config.color,
+        text_fill: config.color
+      }
+    });
+    constructor(row, col, color, character) {
+      this.#g = document.createElementNS(config.ns, "g");
       this.#circle = this.#createCircle(row, col);
-      this.g.appendChild(this.#circle);
+      this.#g.appendChild(this.#circle);
       this.#text = this.#createText(row, col);
-      this.g.appendChild(this.#text);
-      this.color = color;
-      this.#character = character;
+      this.#g.appendChild(this.#text);
+      this.#color.state = color;
+      this.#character.state = character;
       this.#render();
     }
-    set color(color) {
-      const color_string = `${color}`;
-      switch (color_string) {
-        case "1":
-          this.#color = 1;
-          break;
-        case "2":
-          this.#color = 2;
-          break;
-        default:
-          this.#color = 0;
-      }
+    get g() {
+      return this.#g;
     }
     onChange(color, character) {
-      const same_color = color === `${this.#color}`;
-      const same_char = character === this.#character;
-      if (same_color && same_char) {
-        this.#color = 0;
-        this.#character = "";
-      } else {
-        this.color = color;
-        this.#character = character;
-      }
+      const same_color = color === `${this.#color.state}`;
+      const same_char = character === this.#character.state;
+      const is_same = same_color && same_char;
+      this.#color.state = is_same ? 0 : color;
+      this.#character.state = is_same ? "" : character;
       this.#render();
     }
     #createCircle(row, col) {
@@ -218,27 +284,23 @@
       return text;
     }
     #render() {
-      const color = this.#color;
-      const character = this.#character;
-      const line_color = config.color;
-      let circle_fill = "transparent", circle_stroke = "transparent", text_fill = "transparent";
-      if (color === 0 && character === "") {
-        circle_fill = "transparent";
-        circle_stroke = "transparent";
-        text_fill = "transparent";
-      } else if (color === 0) {
-        circle_fill = "#fff";
-        circle_stroke = "#fff";
-        text_fill = line_color;
-      } else if (color === 1) {
-        circle_fill = line_color;
-        circle_stroke = line_color;
-        text_fill = "#fff";
-      } else if (color === 2) {
-        circle_fill = "#fff";
-        circle_stroke = line_color;
-        text_fill = line_color;
+      const color = this.#color.state;
+      const character = this.#character.state;
+      let colorPattern = "empty";
+      if (color === "0" && character === "") {
+        colorPattern = "empty";
+      } else if (color === "0") {
+        colorPattern = "onlyChar";
+      } else if (color === "1") {
+        colorPattern = "black";
+      } else if (color === "2") {
+        colorPattern = "white";
       }
+      const {
+        circle_fill,
+        circle_stroke,
+        text_fill
+      } = this.#patternMap[colorPattern];
       this.#circle.setAttribute("fill", circle_fill);
       this.#circle.setAttribute("stroke", circle_stroke);
       this.#text.setAttribute("fill", text_fill);
@@ -303,44 +365,121 @@
     }
   };
 
+  // src/igo/board/svg.ts
+  var Svg = class {
+    dom;
+    #viewBox = {
+      min_x: 0,
+      min_y: 0,
+      width: config.size * config.interval,
+      height: config.size * config.interval
+    };
+    constructor(...classNames) {
+      this.dom = document.createElementNS(config.ns, "svg");
+      this.#updateViewBox();
+      this.dom.classList.add(...classNames);
+    }
+    getClickedXY(clientX, clientY) {
+      const pt = this.dom.createSVGPoint();
+      pt.x = clientX;
+      pt.y = clientY;
+      const { x, y } = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
+      return [x, y];
+    }
+    set min_x(num) {
+      this.#viewBox.min_x = num;
+      this.#updateViewBox();
+    }
+    set min_y(num) {
+      this.#viewBox.min_y = num;
+      this.#updateViewBox();
+    }
+    set width(num) {
+      this.#viewBox.width = num;
+      this.#updateViewBox();
+    }
+    set height(num) {
+      this.#viewBox.height = num;
+      this.#updateViewBox();
+    }
+    #updateViewBox() {
+      const {
+        min_x,
+        min_y,
+        width,
+        height
+      } = this.#viewBox;
+      const viewBox = [min_x, min_y, width, height].join(" ");
+      this.dom.setAttribute("viewBox", viewBox);
+    }
+  };
+
   // src/igo/board/board.ts
   var Board = class {
-    #parentViewBox = {
-      min_x: 0,
-      min_y: 0,
-      width: config.size * config.interval,
-      height: config.size * config.interval
-    };
-    #childViewBox = {
-      min_x: 0,
-      min_y: 0,
-      width: config.size * config.interval,
-      height: config.size * config.interval
-    };
     #positions;
-    dom;
-    #childDom;
+    #parent;
+    #child;
     #grid;
     #coorinates;
     #stones;
     constructor() {
       this.#positions = this.#createPositions();
-      this.dom = this.#createDom();
-      this.#childDom = this.#createChild();
-      this.dom.appendChild(this.#childDom);
+      this.#parent = new Svg("board");
+      this.#child = new Svg();
+      this.#parent.dom.appendChild(this.#child.dom);
       this.#coorinates = new Coordinates(this.#positions);
-      this.dom.appendChild(this.#coorinates.dom);
+      this.#parent.dom.appendChild(this.#coorinates.dom);
       this.#grid = new Grid(this.#positions);
-      this.#childDom.appendChild(this.#grid.dom);
+      this.#child.dom.appendChild(this.#grid.dom);
       this.#stones = new Stones(this.#positions);
-      this.#childDom.appendChild(this.#stones.dom);
+      this.#child.dom.appendChild(this.#stones.dom);
     }
-    onClick(ev, state) {
-      const pt = this.#childDom.createSVGPoint();
-      pt.x = ev.clientX;
-      pt.y = ev.clientY;
-      const { x, y } = pt.matrixTransform(this.#childDom.getScreenCTM()?.inverse());
+    get dom() {
+      return this.#parent.dom;
+    }
+    onClickBoard(ev, state) {
+      const [x, y] = this.#child.getClickedXY(ev.clientX, ev.clientY);
       return this.#stones.onClick(x, y, state);
+    }
+    onChangeViewBox(state) {
+      if (!state.isChange) return;
+      if (state.type === "width" || state.type === "height") {
+        this.#onChangeBoardSize(state, state.type);
+      } else if (state.type === "vertical" || state.type === "horizontal") {
+        this.#onChangeCoordinates(state, state.type);
+      }
+    }
+    #onChangeBoardSize(state, type) {
+      const idx = Number(state.newVal);
+      if (idx <= 0 || config.size < idx) return;
+      const length = idx * config.interval;
+      const oppositMap = {
+        width: "vertical",
+        height: "horizontal"
+      };
+      const oppositType = oppositMap[type];
+      const hasCoord = state.fields[oppositType].state !== "null";
+      this.#child[type] = length;
+      this.#parent[type] = hasCoord ? length + config.interval : length;
+    }
+    #onChangeCoordinates(state, type) {
+      const newVal = state.newVal;
+      const hasCoord = newVal !== "null";
+      let min = hasCoord ? -config.interval : 0;
+      let length = hasCoord ? config.interval : 0;
+      const oppositMap = {
+        vertical: {
+          opMin: "min_x",
+          opLength: "width"
+        },
+        horizontal: {
+          opMin: "min_y",
+          opLength: "height"
+        }
+      };
+      const { opMin, opLength } = oppositMap[type];
+      this.#parent[opMin] = min;
+      this.#parent[opLength] = length + this.#child[opLength];
     }
     #createPositions() {
       const margin = Math.floor(config.interval / 2);
@@ -348,44 +487,18 @@
       const positions = Array.from({ length: config.size }, func);
       return positions;
     }
-    #createDom() {
-      const dom = document.createElementNS(config.ns, "svg");
-      if (!(dom instanceof SVGSVGElement)) {
-        throw new Error("SVG \u8981\u7D20\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u3066\u3044\u307E\u3059\u3002");
-      }
-      dom.setAttribute("viewBox", this.#getViewBox(this.#parentViewBox));
-      dom.classList.add("board");
-      return dom;
-    }
-    #createChild() {
-      const dom = document.createElementNS(config.ns, "svg");
-      if (!(dom instanceof SVGSVGElement)) {
-        throw new Error("SVG child \u8981\u7D20\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u3066\u3044\u307E\u3059\u3002");
-      }
-      dom.setAttribute("viewBox", this.#getViewBox(this.#childViewBox));
-      return dom;
-    }
-    #getViewBox(viewBox) {
-      const {
-        min_x,
-        min_y,
-        width,
-        height
-      } = viewBox;
-      return [min_x, min_y, width, height].join(" ");
-    }
   };
 
   // src/igo/controller/buttons.ts
   var Buttons = class {
     dom;
     #buttons;
-    constructor(type, state) {
+    constructor(type, data) {
       this.dom = document.createElement("ul");
       this.dom.classList.add("go-form-ul");
-      this.dom.appendChild(this.#createTitle(state.title));
-      this.#buttons = this.#createButtons(type, state.data);
-      this.#buttons[state.active].classList.add("active");
+      this.dom.appendChild(this.#createTitle(data.title));
+      this.#buttons = this.#createButtons(type, data);
+      this.#buttons[data.active].classList.add("active");
       this.#buttons.forEach((button) => {
         const li = document.createElement("li");
         li.appendChild(button);
@@ -404,10 +517,10 @@
       return li;
     }
     #createButtons(type, data) {
-      return data.map((dat) => {
+      return data.data.map((dat) => {
         const button = document.createElement("button");
         button.dataset.gostateType = type;
-        button.dataset.gostateValue = dat.value;
+        button.dataset.gostateValue = `${dat.value}`;
         button.textContent = dat.text;
         return button;
       });
@@ -451,25 +564,65 @@
     }
   };
 
+  // src/igo/controller/init_data.ts
+  var init_data = Object.freeze({
+    color: {
+      title: "",
+      active: 0,
+      data: [
+        { value: 0, text: "\u900F\u660E" },
+        { value: 1, text: "\u9ED2" },
+        { value: 2, text: "\u767D" }
+      ]
+    },
+    character: {
+      title: "",
+      active: 0,
+      data: [
+        { value: "", text: "\uFF08\u7121\u3057\uFF09" },
+        { value: "A", text: "A" },
+        { value: "B", text: "B" },
+        { value: "C", text: "C" },
+        { value: "D", text: "D" },
+        { value: "E", text: "E" },
+        { value: "\u25B3", text: "\u25B3" },
+        { value: "1", text: "1" },
+        { value: "2", text: "2" },
+        { value: "3", text: "3" },
+        { value: "4", text: "4" }
+      ]
+    },
+    length: {
+      title: "",
+      active: 0,
+      data: []
+    },
+    coordinates: {
+      title: "",
+      active: 0,
+      data: []
+    }
+  });
+
   // src/igo/controller/controller.ts
   var Controller = class {
     buttons;
     ranges;
     dom;
-    constructor(state) {
+    constructor() {
       this.buttons = [];
-      const color_buttons = new Buttons("color", state.color);
+      const color_buttons = new Buttons("color", init_data.color);
       this.buttons = color_buttons.pushButtons(this.buttons);
-      const character_buttons = new Buttons("character", state.character);
+      const character_buttons = new Buttons("character", init_data.color);
       this.buttons = character_buttons.pushButtons(this.buttons);
-      const hollizontal_buttons = new Buttons("holizontal", state.holizontal);
+      const hollizontal_buttons = new Buttons("holizontal", init_data.color);
       this.buttons = hollizontal_buttons.pushButtons(this.buttons);
-      const vertical_buttons = new Buttons("vertical", state.vertical);
+      const vertical_buttons = new Buttons("vertical", init_data.color);
       this.buttons = vertical_buttons.pushButtons(this.buttons);
       this.ranges = [];
-      const width_range = new Ranges(state.width);
+      const width_range = new Ranges(init_data.color);
       this.ranges = width_range.pushRanges(this.ranges);
-      const height_range = new Ranges(state.height);
+      const height_range = new Ranges(init_data.color);
       this.ranges = height_range.pushRanges(this.ranges);
       this.dom = document.createElement("div");
       this.dom.appendChild(color_buttons.dom);
@@ -494,174 +647,20 @@
     }
   };
 
-  // src/igo/state/buttons.ts
-  var ButtonState = class {
-    _title = "";
-    _active = 0;
-    _data = [];
-    get title() {
-      return this._title;
-    }
-    get active() {
-      return this._active;
-    }
-    get value() {
-      if (this._active < this._data.length) {
-        return this._data[this._active].value;
-      } else {
-        return this._data[0].value;
-      }
-    }
-    set value(value) {
-      const idx = this._data.findIndex((dat) => dat.value === value);
-      this._active = idx === -1 ? 0 : idx;
-    }
-    get data() {
-      return this._data;
-    }
-  };
-
-  // src/igo/state/color.ts
-  var ColorState = class extends ButtonState {
-    constructor() {
-      super();
-      this._title = "\u8272\uFF1A";
-      this._active = 0;
-      this._data = [
-        { value: "0", text: "\u900F\u660E" },
-        { value: "1", text: "\u9ED2" },
-        { value: "2", text: "\u767D" }
-      ];
-    }
-    get value() {
-      if (this._active < this._data.length) {
-        return this._data[this._active].value;
-      } else {
-        return this._data[0].value;
-      }
-    }
-    set value(value) {
-      const idx = this._data.findIndex((dat) => dat.value === value);
-      this._active = idx === -1 ? 0 : idx;
-    }
-  };
-
-  // src/igo/state/character.ts
-  var CharacterState = class extends ButtonState {
-    constructor() {
-      super();
-      this._title = "\u6587\u5B57\uFF1A";
-      this._active = 0;
-      this._data = [
-        { value: "", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "A", text: "A" },
-        { value: "B", text: "B" },
-        { value: "C", text: "C" },
-        { value: "D", text: "D" },
-        { value: "E", text: "E" },
-        { value: "\u25B3", text: "\u25B3" },
-        { value: "1", text: "1" },
-        { value: "2", text: "2" },
-        { value: "3", text: "3" },
-        { value: "4", text: "4" }
-      ];
-    }
-  };
-
-  // src/igo/state/coordinates.ts
-  var CoordinatesState = class extends ButtonState {
-    constructor() {
-      super();
-      this._active = 0, this._data = [
-        { value: "null", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "nums", text: "1,2,3..." },
-        { value: "aiu", text: "\u3042,\u3044,\u3046..." },
-        { value: "iroha", text: "\u30A4,\u30ED,\u30CF..." }
-      ];
-    }
-  };
-  var HCoordinatesState = class extends CoordinatesState {
-    constructor() {
-      super();
-      this._title = "\u5EA7\u6A19\uFF08\u7E26\uFF09\uFF1A";
-    }
-  };
-  var VCoordinatesState = class extends CoordinatesState {
-    constructor() {
-      super();
-      this._title = "\u5EA7\u6A19\uFF08\u6A2A\uFF09\uFF1A";
-    }
-  };
-
-  // src/igo/state/ranges.ts
-  var RangesState = class {
-    _title = "";
-    _value = 19;
-    _min = 1;
-    _max = 19;
-    _direction = "";
-    get title() {
-      return this._title;
-    }
-    get direction() {
-      return this._direction;
-    }
-    get value() {
-      return `${this._value}`;
-    }
-    set value(value) {
-      const num = Number(value);
-      if (this._min <= num && num <= this._max) {
-        this._value = num;
-      }
-    }
-    get min() {
-      return `${this._min}`;
-    }
-    get max() {
-      return `${this._max}`;
-    }
-  };
-  var WidthState = class extends RangesState {
-    constructor() {
-      super();
-      this._title = "\u6A2A\u5E45";
-      this._direction = "x";
-    }
-  };
-  var HeightState = class extends RangesState {
-    constructor() {
-      super();
-      this._title = "\u7E26\u5E45";
-      this._direction = "y";
-    }
-  };
-
   // src/igo/state/state.ts
   var State = class {
-    color = new ColorState();
-    character = new CharacterState();
-    vertical = new VCoordinatesState();
-    holizontal = new HCoordinatesState();
-    width = new WidthState();
-    height = new HeightState();
+    fields = {
+      color: new Color(),
+      character: new Character(),
+      vertical: new Coordinates2(),
+      horizontal: new Coordinates2(),
+      width: new Length(),
+      height: new Length()
+    };
+    // 状態変更の記録用
     #type = null;
     #oldVal = null;
     #newVal = null;
-    reset() {
-      this.#type = null;
-      this.#oldVal = null;
-      this.#newVal = null;
-    }
-    get isChange() {
-      return this.#newVal !== null;
-    }
-    updateStart() {
-      this.reset();
-    }
-    updateEnd() {
-      this.reset();
-    }
     get type() {
       return this.#type;
     }
@@ -671,45 +670,33 @@
     get newVal() {
       return this.#newVal;
     }
-    onClick(target) {
-      const type = target.dataset.gostateType;
-      const value = target.dataset.gostateValue;
-      if (typeof value === "undefined") return;
-      switch (type) {
-        case "color":
-        case "character":
-        case "vertical":
-        case "holizontal":
-          this.#type = type;
-          this.#oldVal = this[type].value;
-          this[type].value = value;
-          if (this[type].value !== this.#oldVal) {
-            this.#newVal = this[type].value;
-          }
-          break;
-      }
+    get isChange() {
+      return this.#newVal !== null;
     }
-    onChange(target) {
-      const type = target.dataset.gostateType;
-      const dir = target.dataset.gostateDir;
-      const value = target.value;
-      if (type === "range") {
-        if (dir === "x") {
-          this.#type = "width";
-          this.#oldVal = this.width.value;
-          this.width.value = value;
-          if (this.width.value !== this.#oldVal) {
-            this.#newVal = this.width.value;
-          }
-        } else if (dir === "y") {
-          this.#type = "height";
-          this.#oldVal = this.height.value;
-          this.height.value = value;
-          if (this.height.value !== this.#oldVal) {
-            this.#newVal = this.height.value;
-          }
+    reset() {
+      this.#type = null;
+      this.#oldVal = null;
+      this.#newVal = null;
+    }
+    updateEnd() {
+      this.reset();
+    }
+    updateStart(type, value) {
+      this.reset();
+      if (this.#isValidKey(type)) {
+        const field = this.fields[type];
+        const currentVal = field.state;
+        if (currentVal !== value) {
+          this.#type = type;
+          this.#oldVal = currentVal;
+          field.state = value;
+          this.#newVal = field.state;
         }
       }
+    }
+    // 型ガードをメソッドとして分離
+    #isValidKey(key) {
+      return key in this.fields;
     }
   };
 

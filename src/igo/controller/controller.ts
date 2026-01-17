@@ -1,6 +1,7 @@
 import { State } from "../state/state";
 import { Buttons } from "./buttons";
 import { Ranges } from "./ranges";
+import { init_data } from "./init_data";
 
 export class Controller {
     
@@ -11,21 +12,21 @@ export class Controller {
     }[];
     dom: HTMLDivElement;
     
-    constructor(state: State) {
+    constructor() {
         this.buttons = [];
-        const color_buttons = new Buttons('color', state.color);
+        const color_buttons = new Buttons('color', init_data.color);
         this.buttons = color_buttons.pushButtons(this.buttons);
-        const character_buttons = new Buttons('character', state.character);
+        const character_buttons = new Buttons('character', init_data.color);
         this.buttons = character_buttons.pushButtons(this.buttons);
-        const hollizontal_buttons = new Buttons('holizontal', state.holizontal);
+        const hollizontal_buttons = new Buttons('holizontal', init_data.color);
         this.buttons = hollizontal_buttons.pushButtons(this.buttons);
-        const vertical_buttons = new Buttons('vertical', state.vertical);
+        const vertical_buttons = new Buttons('vertical', init_data.color);
         this.buttons = vertical_buttons.pushButtons(this.buttons);
         
         this.ranges = [];
-        const width_range = new Ranges(state.width);
+        const width_range = new Ranges(init_data.color);
         this.ranges = width_range.pushRanges(this.ranges);
-        const height_range = new Ranges(state.height);
+        const height_range = new Ranges(init_data.color);
         this.ranges = height_range.pushRanges(this.ranges);
         
         this.dom =  document.createElement('div');

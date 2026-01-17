@@ -1,54 +1,69 @@
 import { config } from "./config";
+import { Color, Character } from "../state/holders";
+
+type ColorPattern = 'empty'|'onlyChar'|'black'|'white';
+interface ColorStyle {
+    circle_fill: string;
+    circle_stroke: string;
+    text_fill: string;
+}
 
 export class Stone {
-    #color: 0|1|2 = 0;
-    #character: string;
+    #color = new Color();
+    #character = new Character();
 
-    g: SVGGElement;
-    
+    #g: SVGGElement;
     #circle: SVGCircleElement;
     #text: SVGTextElement;
+    
+    #patternMap: Record<ColorPattern, ColorStyle> = Object.freeze({
+        empty: {
+            circle_fill: 'transparent',
+            circle_stroke: 'transparent',
+            text_fill: 'transparent',
+        },
+        onlyChar:{
+            circle_fill: '#fff',
+            circle_stroke: '#fff',
+            text_fill: config.color,
+        },
+        black:{
+            circle_fill: config.color,
+            circle_stroke: config.color,
+            text_fill: '#fff',
+        },
+        white:{
+            circle_fill: '#fff',
+            circle_stroke: config.color,
+            text_fill: config.color,
+        },
+    } as const );
 
     constructor(
         row:number,
         col:number,
-        color:number,
-        character:string = ''
+        color:any,
+        character:any,
     ) {
-        this.g = document.createElementNS(config.ns, 'g') as SVGGElement;
+        this.#g = document.createElementNS(config.ns, 'g') as SVGGElement;
         this.#circle = this.#createCircle(row, col);
-        this.g.appendChild(this.#circle);
+        this.#g.appendChild(this.#circle);
         this.#text = this.#createText(row, col);
-        this.g.appendChild(this.#text);
-        this.color = color;
-        this.#character = character;
+        this.#g.appendChild(this.#text);
+        this.#color.state = color;
+        this.#character.state = character;
         this.#render();
     }
-
-    set color(color:string|number) {
-        const color_string = `${color}`
-        switch (color_string) {
-            case '1':
-                this.#color = 1;
-                break;
-            case '2':
-                this.#color = 2;
-                break;
-            default:
-                this.#color = 0;
-        }
-    }
+    get g():SVGGElement { return this.#g }
 
     onChange(color:string, character:string):void {
-        const same_color = color === `${this.#color}`;
-        const same_char = character === this.#character;
-        if(same_color && same_char) {
-            this.#color = 0;
-            this.#character = '';
-        } else {
-            this.color = color;
-            this.#character = character;
-        }
+        const same_color = color === `${this.#color.state}`;
+        const same_char = character === this.#character.state;
+        const is_same = same_color && same_char;
+
+        this.#color.state = is_same ? 0 : color;
+        this.#character.state = is_same ? '' : character;
+
         this.#render();
     }
 
@@ -79,30 +94,25 @@ export class Stone {
     }
 
     #render():void {
-        const color = this.#color;
-        const character = this.#character;
-        const line_color = config.color;
+        const color = this.#color.state;
+        const character = this.#character.state;
 
-        let circle_fill = 'transparent',
-            circle_stroke = 'transparent',
-            text_fill = 'transparent';
-        if(color === 0 && character === '') {
-            circle_fill = 'transparent';
-            circle_stroke = 'transparent';
-            text_fill = 'transparent';
-        }else if(color === 0) {
-            circle_fill = '#fff';
-            circle_stroke = '#fff';
-            text_fill = line_color;
-        }else if(color === 1) {
-            circle_fill = line_color;
-            circle_stroke = line_color;
-            text_fill = '#fff';
-        }else if(color === 2) {
-            circle_fill = '#fff';
-            circle_stroke = line_color;
-            text_fill = line_color;
+        let colorPattern: ColorPattern = 'empty';
+        if(color === '0' && character === '') {
+            colorPattern = 'empty';
+        }else if(color === '0') {
+            colorPattern = 'onlyChar';
+        }else if(color === '1') {
+            colorPattern = 'black';
+        }else if(color === '2') {
+            colorPattern = 'white';
         }
+
+        const {
+            circle_fill,
+            circle_stroke,
+            text_fill
+        } = this.#patternMap[colorPattern];
 
         this.#circle.setAttribute('fill', circle_fill);
         this.#circle.setAttribute('stroke', circle_stroke);
