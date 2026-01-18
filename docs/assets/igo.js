@@ -754,105 +754,75 @@
   // src/igo/index.ts
   customElements.define("board-controller", BoardController);
   document.addEventListener("DOMContentLoaded", () => {
-    const perPageButtons = [];
-    document.querySelectorAll("#display-per-page button").forEach(
-      (button) => {
-        if (button instanceof HTMLButtonElement) {
-          perPageButtons.push(button);
-        }
-      }
-    );
-    const toggleButtons = [];
-    document.querySelectorAll("#toggle-display button").forEach(
-      (button) => {
-        if (button instanceof HTMLButtonElement) {
-          toggleButtons.push(button);
-        }
-      }
-    );
-    const save = document.querySelector("#save");
-    const load = document.querySelector("#load");
-    const boardControllers = [];
-    document.querySelectorAll("board-controller").forEach(
-      (boardCon) => {
-        if (boardCon instanceof BoardController) {
-          boardControllers.push(boardCon);
-        }
-      }
-    );
-    displayPerPage(
-      perPageButtons,
-      toggleButtons,
-      boardControllers
-    );
-    toggleDisplayBoard(
-      toggleButtons,
-      boardControllers
-    );
+    displayShowHide();
+    saveLoad();
   }, false);
-  function toggleActiveClass(button, buttons) {
-    buttons.forEach((btn) => {
-      if (button === btn) {
-        btn.classList.add("active");
+  function displayShowHide() {
+    const zoomBase = { inRange: true, size: "small" };
+    const state = {
+      perPageLimit: 6,
+      zoomIdx: -1,
+      zooms: Array.from({ length: 6 }, () => ({ ...zoomBase }))
+    };
+    const dom = {
+      perPageBtns: [],
+      overviewZoomBtns: [],
+      bCons: []
+    };
+    dom.perPageBtns = [...document.querySelectorAll("#display-per-page button")];
+    dom.overviewZoomBtns = [...document.querySelectorAll("#display-overview-zoom button")];
+    dom.bCons = [...document.querySelectorAll("board-controller")];
+    dom.perPageBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        toggleActiveClass(btn, dom.perPageBtns);
+        const input = Number(btn.dataset.godisplayPerPage ?? 6);
+        state.perPageLimit = input === 4 ? 4 : 6;
+        update(dom, state);
+      });
+    });
+    dom.overviewZoomBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        toggleActiveClass(btn, dom.overviewZoomBtns);
+        const input = Number(btn.dataset.godisplayIdx ?? -1);
+        state.zoomIdx = -1 < input && input <= state.perPageLimit ? input : -1;
+        update(dom, state);
+      });
+    });
+  }
+  function update(dom, state) {
+    const isOverview = state.zoomIdx === -1;
+    state.zooms.forEach((zoom, i) => {
+      zoom.inRange = i < state.perPageLimit;
+      const isZoom = state.zoomIdx === i;
+      if (isOverview) {
+        zoom.size = "small";
+      } else if (isZoom) {
+        zoom.size = "large";
       } else {
-        btn.classList.remove("active");
+        zoom.size = "none";
       }
     });
-  }
-  function displayPerPage(perPageButtons, toggleButtons, boardControllers) {
-    perPageButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        toggleActiveClass(button, perPageButtons);
-        const length = Number(button.dataset.godisplayPerPage);
-        toggleButtons.forEach((tButton, idx) => {
-          if (idx <= length) {
-            tButton.style.display = "block";
-          } else {
-            tButton.style.display = "none";
-          }
-        });
-        boardControllers.forEach((bCon, idx) => {
-          if (idx <= length) {
-            bCon.dataset.display = "true";
-          } else {
-            bCon.dataset.display = "false";
-          }
-        });
-      }, false);
-    });
-  }
-  function toggleDisplayBoard(toggleButtons, boardControllers) {
-    toggleButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        toggleActiveClass(button, toggleButtons);
-        const num = Number(button.dataset.godisplayIdx);
-        if (num < 0) {
-          displayOverview(boardControllers);
-        } else {
-          displayZoomboard(num, boardControllers);
-        }
-      }, false);
-    });
-  }
-  function displayOverview(boardControllers) {
-    const num = 6;
-    boardControllers.forEach((bCon, idx) => {
-      if (idx < num) {
-        bCon.dataset.display = "true";
-        bCon.dataset.size = "small";
-      } else {
-        bCon.dataset.display = "false";
+    dom.overviewZoomBtns.forEach((btn, i) => {
+      if (i > 0) {
+        btn.classList.toggle("hidden", !state.zooms[i - 1].inRange);
       }
     });
+    dom.bCons.forEach((bcon, i) => {
+      const inRange = state.zooms[i].inRange;
+      bcon.dataset.display = inRange ? state.zooms[i].size : "none";
+    });
   }
-  function displayZoomboard(num, boardControllers) {
-    boardControllers.forEach((bCon, idx) => {
-      if (num === idx) {
-        bCon.dataset.display = "true";
-        bCon.dataset.size = "large";
-      } else {
-        bCon.dataset.display = "false";
-      }
+  function toggleActiveClass(btn, btns) {
+    btns.forEach((b) => {
+      const shouldActive = b === btn;
+      b.classList.toggle("active", shouldActive);
+    });
+  }
+  function saveLoad() {
+    const saveBtn = document.querySelector("button#save");
+    const loadInput = document.querySelector("input#load");
+    loadInput.addEventListener("change", (ev) => {
+      console.log(ev);
     });
   }
 })();
