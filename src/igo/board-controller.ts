@@ -14,7 +14,7 @@ export class BoardController extends HTMLElement {
 
         const state = new State();
         const board = new Board();
-        const controller = new Controller(state);
+        const controller = new Controller();
 
         this.appendChild(controller.dom);
         this.appendChild(board.dom);
@@ -27,12 +27,11 @@ export class BoardController extends HTMLElement {
             button.addEventListener('click', (ev: PointerEvent) => {
                 const target = ev.target;
                 if(!(target instanceof HTMLButtonElement)) return;
+                const inputType:string = `${target.dataset.gostateType}`;
+                const inputVal:string = `${target.dataset.gostateValue}`;
 
-                state.updateStart();
-                state.onClick(target);
-                if(state.isChange) {
-                    controller.onClick(state);
-                }
+                state.updateStart(inputType, inputVal);
+                controller.onClick(state);
                 state.updateEnd();
             }, false);
         });

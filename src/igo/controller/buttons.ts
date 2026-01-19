@@ -39,6 +39,7 @@ export class Buttons<T> {
     ):HTMLButtonElement[] {
         return data.data.map(dat => {
             const button = document.createElement('button');
+            button.type = 'button';
             button.dataset.gostateType = type;
             button.dataset.gostateValue = `${dat.value}`;
             button.textContent = dat.text;
