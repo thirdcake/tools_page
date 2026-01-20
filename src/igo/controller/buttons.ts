@@ -1,4 +1,5 @@
 import { ButtonsData } from "./init_data";
+type Btn = HTMLButtonElement;
 
 export class Buttons<T> {
     dom: HTMLUListElement;
@@ -20,7 +21,7 @@ export class Buttons<T> {
         });
     }
     
-    pushButtons(parentButtons:HTMLButtonElement[]):HTMLButtonElement[] {
+    pushButtons(parentButtons:Btn[]):Btn[] {
         this.#buttons.forEach(button => {
             parentButtons.push(button);
         });
@@ -36,7 +37,7 @@ export class Buttons<T> {
     #createButtons(
         type: string,
         data: ButtonsData<T>,
-    ):HTMLButtonElement[] {
+    ):Btn[] {
         return data.data.map(dat => {
             const button = document.createElement('button');
             button.type = 'button';
