@@ -70,13 +70,13 @@
                 class="active">６つ</button></li>
         </ul>
         <ul id="display-overview-zoom" class="go-form-ul">
-            <li><button type="button" data-godisplay-idx="-1" class="active">全体を俯瞰</button></li>
-            <li><button type="button" data-godisplay-idx="0">１つ目を拡大</button></li>
-            <li><button type="button" data-godisplay-idx="1">２つ目を拡大</button></li>
-            <li><button type="button" data-godisplay-idx="2">３つ目を拡大</button></li>
-            <li><button type="button" data-godisplay-idx="3">４つ目を拡大</button></li>
-            <li><button type="button" data-godisplay-idx="4">５つ目を拡大</button></li>
-            <li><button type="button" data-godisplay-idx="5">６つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="0" class="active">全体を俯瞰</button></li>
+            <li><button type="button" data-go-idx="1">１つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="2">２つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="3">３つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="4">４つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="5">５つ目を拡大</button></li>
+            <li><button type="button" data-go-idx="6">６つ目を拡大</button></li>
         </ul>
         <hr>
         <div>
@@ -86,12 +86,12 @@
         <hr>
     </div>
     <div id="input">
-        <board-controller data-goboard-num="1"></board-controller>
-        <board-controller data-goboard-num="2"></board-controller>
-        <board-controller data-goboard-num="3"></board-controller>
-        <board-controller data-goboard-num="4"></board-controller>
-        <board-controller data-goboard-num="5"></board-controller>
-        <board-controller data-goboard-num="6"></board-controller>
+        <board-controller data-go-idx="1" data-display="small"></board-controller>
+        <board-controller data-go-idx="2" data-display="small"></board-controller>
+        <board-controller data-go-idx="3" data-display="small"></board-controller>
+        <board-controller data-go-idx="4" data-display="small"></board-controller>
+        <board-controller data-go-idx="5" data-display="small"></board-controller>
+        <board-controller data-go-idx="6" data-display="small"></board-controller>
     </div>
 </body>
 </html>

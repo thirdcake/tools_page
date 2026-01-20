@@ -1,7 +1,6 @@
 import { Board } from "./board/board";
 import { Controller } from "./controller/controller";
 import { State } from "./state/state";
-import { TYPE_DATA, StateType } from "./constants";
 
 export class BoardController extends HTMLElement {
 
@@ -14,8 +13,8 @@ export class BoardController extends HTMLElement {
         super();
 
         const state = new State();
-        const board = new Board();
-        const controller = new Controller();
+        const board = new Board(state);
+        const controller = new Controller(state);
 
         this.appendChild(controller.dom);
         this.appendChild(board.dom);

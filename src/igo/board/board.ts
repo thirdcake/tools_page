@@ -3,11 +3,12 @@ import { Grid } from "./grid";
 import { Coordinates } from "./coordinates";
 import { Stones } from "./stones";
 import { Svg } from "./svg";
-import { State } from "../state/state";
+import { State } from "../state";
 import { CoordinatesState } from "../constants";
 
 export class Board {
     #positions: number[];
+    #state: State;
     
     #parent: Svg;
     #child: Svg;
@@ -15,8 +16,9 @@ export class Board {
     #coorinates: Coordinates;
     #stones: Stones;
     
-    constructor() {
+    constructor(state: State) {
         this.#positions = this.#createPositions();
+        this.#state = state;
         
         this.#parent = new Svg('board');
         this.#child = new Svg();
@@ -34,13 +36,14 @@ export class Board {
     }
     
     get dom():SVGSVGElement { return this.#parent.dom }
-    
-    onClickBoard(ev: PointerEvent, state: State):string {
+
+    onClickBoard(ev: PointerEvent):string {
         const [x, y] = this.#child.getClickedXY(ev.clientX, ev.clientY);
-        return this.#stones.onClick(x, y, state);
+        return this.#stones.onClick(x, y);
     }
     
-    onChangeViewBox(state: State) {
+    onChangeViewBox() {
+        const state = this.#state;
         if(!state.isChange) return;
         if(state.type === 'width' || state.type === 'height') {
             this.#onChangeBoardSize(state, state.type);
