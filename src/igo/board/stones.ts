@@ -1,16 +1,19 @@
 import { config } from "./config";
 import { Stone } from "./stone";
-import { State } from "../state/state";
+import { State, ColorData } from "../state";
 
 export class Stones {
     #positions: number[];
+    #state: State;
 
     stones: Stone[][];
     dom: SVGGElement;
     data: [0|1|2, string][][];
 
-    constructor(positions: number[]) {
+    constructor(positions: number[], state: State) {
         this.#positions = positions;
+        this.#state = state;
+
         this.stones = this.#createStones(positions);
         const dom = document.createElementNS(config.ns, 'g');
         if(!(dom instanceof SVGGElement)) {
@@ -19,7 +22,7 @@ export class Stones {
         this.dom = dom;
         this.stones.forEach(row => {
             row.forEach(stone => {
-                this.dom.appendChild(stone.g);
+                this.dom.appendChild(stone.dom);
             })
         });
         this.data = this.#createBlankData();
@@ -41,8 +44,8 @@ export class Stones {
         }
         const col = positions.reduce(minDist, init_x).idx;
         const row = positions.reduce(minDist, init_y).idx;
-        const color = state.color.value;
-        const character = state.character.value;
+        const color = this.#state.color.input.init[this.#state.color.input.active].value as ColorData;
+        const character = this.#state.character.input.init[this.#state.character.input.active].value;
         this.stones[row][col].onChange(color, character);
         return JSON.stringify(this.data);
     }
@@ -50,7 +53,7 @@ export class Stones {
     #createStones(positions: number[]): Stone[][] {
         return positions.map(row_pos => 
             positions.map(col_pos => 
-                new Stone(row_pos, col_pos, 0, '')
+                new Stone(row_pos, col_pos, '0', '', this.#state)
             )
         );
     }

@@ -1,22 +1,17 @@
 import { config } from "./config";
-import { Color, Character } from "../state/holders";
+import { State, ColorData, StoneData } from "../state";
 
 type ColorPattern = 'empty'|'onlyChar'|'black'|'white';
-interface ColorStyle {
-    circle_fill: string;
-    circle_stroke: string;
-    text_fill: string;
-}
 
 export class Stone {
-    #color = new Color();
-    #character = new Character();
+    #data: StoneData = ['0', ''];
+    #state: State;
 
-    #g: SVGGElement;
+    #dom: SVGGElement;
     #circle: SVGCircleElement;
     #text: SVGTextElement;
     
-    #patternMap: Record<ColorPattern, ColorStyle> = Object.freeze({
+    #patternMap = Object.freeze({
         empty: {
             circle_fill: 'transparent',
             circle_stroke: 'transparent',
@@ -42,27 +37,32 @@ export class Stone {
     constructor(
         row:number,
         col:number,
-        color:any,
-        character:any,
+        color:unknown,
+        character:unknown,
+        state: State,
     ) {
-        this.#g = document.createElementNS(config.ns, 'g') as SVGGElement;
+        this.#state = state;
+        this.#dom = document.createElementNS(config.ns, 'g') as SVGGElement;
         this.#circle = this.#createCircle(row, col);
-        this.#g.appendChild(this.#circle);
+        this.#dom.appendChild(this.#circle);
         this.#text = this.#createText(row, col);
-        this.#g.appendChild(this.#text);
-        this.#color.state = color;
-        this.#character.state = character;
+        this.#dom.appendChild(this.#text);
+
+        this.#data = [
+            (color==='1'||color==='2') ? color: '0',
+            (`${character}`.length > 0) ? `${character}`[0] : '',
+        ];
         this.#render();
     }
-    get g():SVGGElement { return this.#g }
+    get dom():SVGGElement { return this.#dom }
 
-    onChange(color:string, character:string):void {
-        const same_color = color === `${this.#color.state}`;
-        const same_char = character === this.#character.state;
+    onChange(color: ColorData, character: string):void {
+        const same_color = color === this.#data[0];
+        const same_char = character === this.#data[1];
         const is_same = same_color && same_char;
 
-        this.#color.state = is_same ? 0 : color;
-        this.#character.state = is_same ? '' : character;
+        this.#data[0] = is_same ? '0' : color;
+        this.#data[1] = is_same ? '' : character;
 
         this.#render();
     }
@@ -94,8 +94,8 @@ export class Stone {
     }
 
     #render():void {
-        const color = this.#color.state;
-        const character = this.#character.state;
+        const color = this.#state.color.input.init[this.#state.color.input.active].value as ColorData;
+        const character = this.#state.character.input.init[this.#state.character.input.active].value;
 
         let colorPattern: ColorPattern = 'empty';
         if(color === '0' && character === '') {

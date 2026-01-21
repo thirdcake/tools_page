@@ -17,7 +17,7 @@ export class Svg {
     }
     
     constructor(...classNames: string[]) {
-        this.dom = document.createElementNS(config.ns, 'svg') as SVGSVGElement;
+        this.dom = document.createElementNS(config.ns, 'svg');
         this.#updateViewBox();
         this.dom.classList.add(...classNames);
     }

@@ -5,9 +5,6 @@ export class Grid {
 
     constructor(positions: number[]) {
         const dom = document.createElementNS(config.ns, 'g');
-        if(!(dom instanceof SVGGElement)) {
-            throw new Error('Grid の作成に失敗しました。');
-        }
         this.dom = dom;
         this.dom = this.#drawLines(this.dom, positions);
         this.dom = this.#drawDots(this.dom, positions);

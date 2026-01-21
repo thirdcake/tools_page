@@ -1,50 +1,46 @@
-import { RangeData } from "./init_data";
-
-type RangeType = {
-    input: HTMLInputElement,
-    span: HTMLSpanElement,
-}
+import { State } from "../state";
 
 export class Ranges {
     
     dom: HTMLDivElement;
-    #ranges: RangeType[];
-    constructor(rangeData: RangeData) {
-        this.#ranges = [];
+    #input: HTMLInputElement;
+    #span: HTMLSpanElement;
+    #state: State;
+
+    constructor(
+        type: 'width' | 'height',
+        state: State,
+    ) {
         this.dom = document.createElement('div');
         this.dom.classList.add('go-form-range');
 
-        const label = document.createElement('label');
+        this.#state = state;
+
+        const input = state[type].input;
 
         const title = document.createElement('span');
-        title.textContent = rangeData.title;
-        label.appendChild(title);
-        
-        const input = document.createElement('input');
-        input.type = 'range';
-        input.dataset.gostateType = 'range';
-        input.dataset.gostateDir = rangeData.direction;
-        input.value = rangeData.value;
-        input.min = rangeData.min;
-        input.max = rangeData.max;
-        label.appendChild(input);
-        
-        const span = document.createElement('span');
-        span.textContent = rangeData.value;
-        label.appendChild(span);
-        
-        this.dom.appendChild(label);
-        
-        this.#ranges.push({
-            input: input,
-            span: span,
-        });
+        title.textContent = input.title;
+        this.dom.appendChild(title);
+
+        this.#input = document.createElement('input');
+        this.#input.type = 'range';
+        this.#input.min = `${input.min}`;
+        this.#input.max = `${input.max}`;
+        this.#input.value = `${input.value}`;
+        this.dom.appendChild(this.#input);
+
+        this.#span = document.createElement('span');
+        this.#span.textContent = `${input.value}`;
+
+        this.dom.addEventListener('change', ()=>{
+            const num = Number(this.#input.value);
+            this.#span.textContent = this.#input.value;
+
+            if(input.min <= num && num <= input.max) {
+                input.value = num;
+            }
+        }, false);
+
     }
-    
-    pushRanges(parentRanges: RangeType[]): RangeType[] {
-        this.#ranges.forEach(range => {
-            parentRanges.push(range);
-        });
-        return parentRanges;
-    }
+
 }

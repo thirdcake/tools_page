@@ -1,8 +1,11 @@
 import { Board } from "./board/board";
 import { Controller } from "./controller/controller";
-import { State } from "./state/state";
+import { TextArea } from "./controller/textarea";
+import { State } from "./state";
 
 export class BoardController extends HTMLElement {
+
+    #state: State;
 
     static observedAttributes = [
         // "data-gostate-data",
@@ -12,44 +15,20 @@ export class BoardController extends HTMLElement {
     constructor() {
         super();
 
-        const state = new State();
-        const board = new Board(state);
-        const controller = new Controller(state);
+        this.#state = new State();
+        const controller = new Controller(this.#state);
+        const board = new Board(this.#state);
+        const textarea = new TextArea(this.#state);
 
         this.appendChild(controller.dom);
         this.appendChild(board.dom);
+        this.appendChild(textarea.dom);
         
         board.dom.addEventListener('click', (ev: PointerEvent)=>{
             if(this.classList.contains('large')) {
-                this.dataset.gostateData = board.onClickBoard(ev, state);
+                this.dataset.gostateData = board.onClickBoard(ev, this.#state);
             }
         }, false);
-
-        controller.dom.addEventListener('click', (ev: PointerEvent) => {
-            const target = ev.target;
-            if(!(target instanceof HTMLElement)) return;
-            const button = target.closest('button');
-            if(!(button instanceof HTMLButtonElement)) return;
-            const inputType:string = `${button.dataset.gostateType}`;
-            const inputVal:string = `${button.dataset.gostateValue}`;
-
-            state.updateStart(inputType, inputVal);
-            state.updateEnd();
-        }, false);
-
-        controller.dom.addEventListener('change', (ev: Event) => {
-            const target = ev.target;
-            if(!(target instanceof HTMLElement)) return;
-            const inputRange = target.closest('input[type="range"]');
-            if(!(inputRange instanceof HTMLInputElement)) return;
-            const inputType:string = `${inputRange.dataset.gostateType}`;
-            if(!(inputType in controller.fields)) return;
-            const inputVal:string = `${inputRange.value}`;
-
-            state.updateStart(inputType, inputVal);
-            state.updateEnd();
-        }, false);
-
     }
 
     // document に接続時実行
@@ -64,8 +43,8 @@ export class BoardController extends HTMLElement {
             case 'data-display':
                 ['none', 'small', 'large'].forEach(className => {
                     this.classList.toggle(className, className === newVal);
-                    this.querySelector('svg.board')?.classList.toggle(className, className === newVal);
-                    this.querySelector('div.controller')?.classList.toggle(className, className === newVal);
+                    //this.querySelector('svg.board')?.classList.toggle(className, className === newVal);
+                    //this.querySelector('div.controller')?.classList.toggle(className, className === newVal);
                 });
                 break;
         }

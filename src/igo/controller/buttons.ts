@@ -1,51 +1,49 @@
-import { ButtonsData } from "./init_data";
-type Btn = HTMLButtonElement;
+import { State } from "../state";
 
-export class Buttons<T> {
+export class Buttons {
     dom: HTMLUListElement;
     #buttons: HTMLButtonElement[];
+    #state: State;
 
     constructor(
-        type: string,
-        data: ButtonsData<T>
+        type: 'color' | 'character' | 'vertical' | 'horizontal',
+        state: State,
     ) {
         this.dom = document.createElement('ul');
         this.dom.classList.add('go-form-ul');
-        this.dom.appendChild(this.#createTitle(data.title));
-        this.#buttons = this.#createButtons(type, data)
-        this.#buttons[data.active].classList.add('active');
-        this.#buttons.forEach(button => {
+
+        this.#state = state;
+        const input = state[type].input;
+
+        const title = document.createElement('li');
+        title.textContent = input.title;
+        this.dom.appendChild(title);
+
+        this.#buttons = input.init.map(ipt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.dataset.type = type;
+            btn.dataset.value = ipt.value;
+            btn.textContent = ipt.text;
+            return btn;
+        });
+
+        this.#buttons[input.active].classList.add('active');
+        this.#buttons.forEach(btn => {
             const li = document.createElement('li');
-            li.appendChild(button);
+            li.appendChild(btn);
             this.dom.appendChild(li);
         });
-    }
-    
-    pushButtons(parentButtons:Btn[]):Btn[] {
-        this.#buttons.forEach(button => {
-            parentButtons.push(button);
-        });
-        return parentButtons;
-    }
-    
-    #createTitle(title: string): HTMLLIElement {
-        const li = document.createElement('li');
-        li.textContent = title;
-        return li;
-    }
-    
-    #createButtons(
-        type: string,
-        data: ButtonsData<T>,
-    ):Btn[] {
-        return data.data.map(dat => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.dataset.gostateType = type;
-            button.dataset.gostateValue = `${dat.value}`;
-            button.textContent = dat.text;
-            return button;
+
+        this.#buttons.forEach((btn, idx) => {
+            btn.addEventListener('click', () => {
+                this.#buttons.forEach(b => {
+                    b.classList.toggle('active', b === btn);
+                });
+            }, false);
+
+            input.active = idx;
         });
     }
-    
+
 }

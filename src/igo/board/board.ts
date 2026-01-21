@@ -1,97 +1,46 @@
-import { config } from "./config";
-import { Grid } from "./grid";
-import { Coordinates } from "./coordinates";
-import { Stones } from "./stones";
-import { Svg } from "./svg";
 import { State } from "../state";
-import { CoordinatesState } from "../constants";
+import { config } from "./config";
+import { Coordinates } from "./coordinates";
+import { Grid } from "./grid";
+import { Svg } from "./svg";
+import { Stones } from "./stones";
+
 
 export class Board {
-    #positions: number[];
-    #state: State;
-    
-    #parent: Svg;
-    #child: Svg;
-    #grid: Grid;
-    #coorinates: Coordinates;
-    #stones: Stones;
-    
+    dom: SVGSVGElement;
+
+    innerSvg: Svg;
+    stones: Stones;
+
     constructor(state: State) {
-        this.#positions = this.#createPositions();
-        this.#state = state;
-        
-        this.#parent = new Svg('board');
-        this.#child = new Svg();
-        
-        this.#parent.dom.appendChild(this.#child.dom);
+        const positions = Array.from(
+            {length: config.size},
+            (_, i)=> Math.floor(config.interval/2)+i*config.interval
+        );
 
-        this.#coorinates = new Coordinates(this.#positions);
-        this.#parent.dom.appendChild(this.#coorinates.dom);
- 
-        this.#grid = new Grid(this.#positions);
-        this.#child.dom.appendChild(this.#grid.dom);
+        const outerSvg = new Svg('board');
+        this.dom = outerSvg.dom;
 
-        this.#stones = new Stones(this.#positions);
-        this.#child.dom.appendChild(this.#stones.dom);
-    }
-    
-    get dom():SVGSVGElement { return this.#parent.dom }
+        const innerSvg = new Svg();
+        this.innerSvg = innerSvg;
+        this.dom.appendChild(innerSvg.dom);
 
-    onClickBoard(ev: PointerEvent):string {
-        const [x, y] = this.#child.getClickedXY(ev.clientX, ev.clientY);
-        return this.#stones.onClick(x, y);
-    }
-    
-    onChangeViewBox() {
-        const state = this.#state;
-        if(!state.isChange) return;
-        if(state.type === 'width' || state.type === 'height') {
-            this.#onChangeBoardSize(state, state.type);
-        }else if(state.type === 'vertical' || state.type === 'horizontal') {
-            this.#onChangeCoordinates(state, state.type);
-        }
-    }
-    
-    #onChangeBoardSize(state: State, type:'width'|'height') {
-        const idx = Number(state.newVal);
-        if(idx <= 0 || config.size < idx) return;
+        const grid = new Grid(positions);
+        innerSvg.dom.appendChild(grid.dom);
 
-        const length = idx * config.interval;
-        const oppositMap = {
-            width: 'vertical',
-            height: 'horizontal',
-        } as const;
-        const oppositType = oppositMap[type];
-        const hasCoord:boolean = state.fields[oppositType].state !== 'null'
-        this.#child[type] = length;
-        this.#parent[type] = hasCoord ? length + config.interval : length;
-    }
-    
-    #onChangeCoordinates(state: State, type: 'vertical'|'horizontal') {
-        const newVal = state.newVal as CoordinatesState;
-        const hasCoord = newVal !== 'null';
-        let min: number = hasCoord ? -config.interval : 0;
-        let length: number = hasCoord ? config.interval : 0;
-        const oppositMap = {
-            vertical: {
-                opMin: 'min_x',
-                opLength: 'width',
-            },
-            horizontal: {
-                opMin: 'min_y',
-                opLength: 'height',
-            }
-        } as const;
-        const {opMin, opLength} = oppositMap[type];
-        this.#parent[opMin] = min;
-        this.#parent[opLength] = length + this.#child[opLength];
+        const stones = new Stones(positions, state);
+        this.stones = stones;
+        innerSvg.dom.appendChild(stones.dom);
+
+        const coordinates = new Coordinates(positions);
+        this.dom.appendChild(coordinates.dom);
+
     }
 
-    #createPositions():number[] {
-        const margin = Math.floor(config.interval / 2);
-        const func = (_:undefined, i:number) => margin + config.interval * i;
-        const positions = Array.from({length: config.size}, func);
-        return positions;
+    onClickBoard(ev: PointerEvent, state: State):string {
+        const [x, y] = this.innerSvg.getClickedXY(ev.clientX, ev.clientY);
+        const json = '';
+        return json;
     }
 
 }
