@@ -1,16 +1,15 @@
 import { config } from "./config";
-import { State, ColorData, StoneData } from "../state";
 
 type ColorPattern = 'empty'|'onlyChar'|'black'|'white';
+type StoneData = [string, string];
 
 export class Stone {
+    dom = document.createElementNS(config.ns, 'g') as SVGGElement;
     #data: StoneData = ['0', ''];
-    #state: State;
 
-    #dom: SVGGElement;
     #circle: SVGCircleElement;
     #text: SVGTextElement;
-    
+
     #patternMap = Object.freeze({
         empty: {
             circle_fill: 'transparent',
@@ -37,34 +36,15 @@ export class Stone {
     constructor(
         row:number,
         col:number,
-        color:unknown,
-        character:unknown,
-        state: State,
+        color:string,
+        character:string,
     ) {
-        this.#state = state;
-        this.#dom = document.createElementNS(config.ns, 'g') as SVGGElement;
         this.#circle = this.#createCircle(row, col);
-        this.#dom.appendChild(this.#circle);
+        this.dom.appendChild(this.#circle);
         this.#text = this.#createText(row, col);
-        this.#dom.appendChild(this.#text);
+        this.dom.appendChild(this.#text);
 
-        this.#data = [
-            (color==='1'||color==='2') ? color: '0',
-            (`${character}`.length > 0) ? `${character}`[0] : '',
-        ];
-        this.#render();
-    }
-    get dom():SVGGElement { return this.#dom }
-
-    onChange(color: ColorData, character: string):void {
-        const same_color = color === this.#data[0];
-        const same_char = character === this.#data[1];
-        const is_same = same_color && same_char;
-
-        this.#data[0] = is_same ? '0' : color;
-        this.#data[1] = is_same ? '' : character;
-
-        this.#render();
+        this.#data = [color, character];
     }
 
     #createCircle(row:number, col:number): SVGCircleElement {
@@ -93,9 +73,7 @@ export class Stone {
         return text;
     }
 
-    #render():void {
-        const color = this.#state.color.input.init[this.#state.color.input.active].value as ColorData;
-        const character = this.#state.character.input.init[this.#state.character.input.active].value;
+    render(color: string, character: string):void {
 
         let colorPattern: ColorPattern = 'empty';
         if(color === '0' && character === '') {

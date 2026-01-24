@@ -7,4 +7,5 @@ export const config = Object.freeze({
     interval: 48,
     text_size: 36,
     radius: 20,
-} as const );
+    positions: Array.from({length: 19}, (_,i) => Math.floor(48/2) + i*48),
+});

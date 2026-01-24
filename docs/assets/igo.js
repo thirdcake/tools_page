@@ -1,6 +1,162 @@
 "use strict";
 (() => {
-  // src/igo/board/config.ts
+  // src/igo/render/header/buttons.ts
+  function createColorButtons() {
+    const data = {
+      type: "color",
+      title: "\u7881\u77F3\u306E\u8272\uFF1A",
+      init: [
+        { value: "0", text: "\u900F\u660E" },
+        { value: "1", text: "\u9ED2" },
+        { value: "2", text: "\u767D" }
+      ]
+    };
+    return createButtons(data);
+  }
+  function createCharacterButtons() {
+    const data = {
+      type: "character",
+      title: "\u6587\u5B57\uFF1A",
+      init: [
+        { value: "", text: "\uFF08\u7121\u3057\uFF09" },
+        { value: "A", text: "A" },
+        { value: "B", text: "B" },
+        { value: "C", text: "C" },
+        { value: "D", text: "D" },
+        { value: "E", text: "E" },
+        { value: "\u25B3", text: "\u25B3" },
+        { value: "1", text: "1" },
+        { value: "2", text: "2" },
+        { value: "3", text: "3" },
+        { value: "4", text: "4" },
+        { value: "5", text: "5" }
+      ]
+    };
+    return createButtons(data);
+  }
+  function createVerticalButtons() {
+    const data = {
+      type: "vertical",
+      title: "\u7E26\u5EA7\u6A19\uFF1A",
+      init: [
+        { value: "null", text: "\uFF08\u7121\u3057\uFF09" },
+        { value: "nums", text: "1,2,3,..." },
+        { value: "aiu", text: "\u3042,\u3044,\u3046,..." },
+        { value: "iroha", text: "\u30A4,\u30ED,\u30CF,..." }
+      ]
+    };
+    return createButtons(data);
+  }
+  function createHorizontalButtons() {
+    const data = {
+      type: "horizontal",
+      title: "\u7E26\u5EA7\u6A19\uFF1A",
+      init: [
+        { value: "null", text: "\uFF08\u7121\u3057\uFF09" },
+        { value: "nums", text: "1,2,3,..." },
+        { value: "aiu", text: "\u3042,\u3044,\u3046,..." },
+        { value: "iroha", text: "\u30A4,\u30ED,\u30CF,..." }
+      ]
+    };
+    return createButtons(data);
+  }
+  function createButtons(data) {
+    const dom = document.createElement("ul");
+    dom.classList.add("go-form-ul");
+    const li = document.createElement("li");
+    li.textContent = data.title;
+    dom.appendChild(li);
+    const buttons = data.init.map((dat) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.value = dat.value;
+      btn.textContent = dat.text;
+      return btn;
+    });
+    buttons[0].classList.add("active");
+    buttons.forEach((btn) => {
+      const li2 = document.createElement("li");
+      li2.appendChild(btn);
+      dom.appendChild(li2);
+    });
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((button) => {
+          button.classList.toggle("active", button === btn);
+        });
+        const event = new CustomEvent("change-state", {
+          bubbles: true,
+          detail: {
+            type: data.type,
+            value: btn.value
+          }
+        });
+        btn.dispatchEvent(event);
+      }, false);
+    });
+    return dom;
+  }
+
+  // src/igo/render/header/ranges.ts
+  function createRange(type, title) {
+    const data = {
+      type,
+      title,
+      value: 19,
+      min: 5,
+      max: 19
+    };
+    const div = document.createElement("div");
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = title;
+    const input = document.createElement("input");
+    input.type = "range";
+    input.value = `${data.value}`;
+    input.min = `${data.min}`;
+    input.max = `${data.max}`;
+    const valueSpan = document.createElement("span");
+    valueSpan.textContent = input.value;
+    div.appendChild(titleSpan);
+    div.appendChild(input);
+    div.appendChild(valueSpan);
+    input.addEventListener("change", () => {
+      valueSpan.textContent = input.value;
+      const event = new CustomEvent("change-state", {
+        bubbles: true,
+        detail: {
+          type,
+          value: input.value
+        }
+      });
+      input.dispatchEvent(event);
+    });
+    return div;
+  }
+
+  // src/igo/render/header.ts
+  var Header = class {
+    dom = document.createElement("div");
+    #state;
+    constructor(state) {
+      this.#state = state;
+      this.dom.appendChild(createColorButtons());
+      this.dom.appendChild(createCharacterButtons());
+      this.dom.appendChild(createRange("width", "\u6A2A\u5E45\uFF1A"));
+      this.dom.appendChild(createRange("height", "\u9AD8\u3055\uFF1A"));
+      this.dom.appendChild(createVerticalButtons());
+      this.dom.appendChild(createHorizontalButtons());
+    }
+    render(state) {
+      if (this.#state === state) return;
+      if (state.color !== this.#state.color) {
+      }
+      if (state.character !== this.#state.character) {
+      }
+      this.#state = state;
+    }
+  };
+
+  // src/igo/render/body/config.ts
   var config = Object.freeze({
     ns: "http://www.w3.org/2000/svg",
     color: "#333",
@@ -9,211 +165,87 @@
     size: 19,
     interval: 48,
     text_size: 36,
-    radius: 20
+    radius: 20,
+    positions: Array.from({ length: 19 }, (_, i) => Math.floor(48 / 2) + i * 48)
   });
 
-  // src/igo/board/grid.ts
-  var Grid = class {
-    dom;
-    constructor(positions) {
-      const dom = document.createElementNS(config.ns, "g");
-      if (!(dom instanceof SVGGElement)) {
-        throw new Error("Grid \u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002");
-      }
-      this.dom = dom;
-      this.dom = this.#drawLines(this.dom, positions);
-      this.dom = this.#drawDots(this.dom, positions);
-    }
-    #drawLines(dom, positions) {
-      const start = Math.floor(config.interval / 2) - Math.floor(config.thick / 2);
-      const end = config.interval * config.size - start;
-      return positions.reduce((group, pos, i) => {
-        const isFirstOrLast = i === 0 || i === positions.length - 1;
-        const sw = isFirstOrLast ? config.thick : config.thin;
-        group.appendChild(this.#createLine(start, end, pos, pos, sw));
-        group.appendChild(this.#createLine(pos, pos, start, end, sw));
-        return group;
-      }, dom);
-    }
-    #drawDots(dom, positions) {
-      const isDotPos = (_, i) => i === 3 || i === 9 || i === 15;
-      const filterPositions = positions.filter(isDotPos);
-      filterPositions.forEach((pos_r) => {
-        filterPositions.forEach((pos_c) => {
-          dom.appendChild(this.#createDot(pos_r, pos_c));
-        });
+  // src/igo/render/body/grid.ts
+  function createGrid() {
+    let dom = document.createElementNS(config.ns, "g");
+    dom = drawLines(dom);
+    dom = drawDots(dom);
+    return dom;
+  }
+  function drawLines(dom) {
+    const start = Math.floor(config.interval / 2) - Math.floor(config.thick / 2);
+    const end = config.interval * config.size - start;
+    return config.positions.reduce((group, pos, i) => {
+      const isFirstOrLast = i === 0 || i === config.positions.length - 1;
+      const sw = isFirstOrLast ? config.thick : config.thin;
+      group.appendChild(createLine(start, end, pos, pos, sw));
+      group.appendChild(createLine(pos, pos, start, end, sw));
+      return group;
+    }, dom);
+  }
+  function drawDots(dom) {
+    const isDotPos = (_, i) => i === 3 || i === 9 || i === 15;
+    const filterPositions = config.positions.filter(isDotPos);
+    filterPositions.forEach((pos_r) => {
+      filterPositions.forEach((pos_c) => {
+        dom.appendChild(createDot(pos_r, pos_c));
       });
-      return dom;
-    }
-    #createLine(x1, x2, y1, y2, sw) {
-      const line = document.createElementNS(config.ns, "line");
-      line.setAttribute("x1", `${x1}`);
-      line.setAttribute("x2", `${x2}`);
-      line.setAttribute("y1", `${y1}`);
-      line.setAttribute("y2", `${y2}`);
-      line.setAttribute("stroke", config.color);
-      line.setAttribute("stroke-width", `${sw}`);
-      return line;
-    }
-    #createDot(cx, cy) {
-      const dot = document.createElementNS(config.ns, "circle");
-      dot.setAttribute("cx", `${cx}`);
-      dot.setAttribute("cy", `${cy}`);
-      const r = Math.floor(config.thick * 1.5);
-      dot.setAttribute("r", `${r}`);
-      dot.setAttribute("fill", config.color);
-      return dot;
-    }
-  };
+    });
+    return dom;
+  }
+  function createLine(x1, x2, y1, y2, sw) {
+    const line = document.createElementNS(config.ns, "line");
+    line.setAttribute("x1", `${x1}`);
+    line.setAttribute("x2", `${x2}`);
+    line.setAttribute("y1", `${y1}`);
+    line.setAttribute("y2", `${y2}`);
+    line.setAttribute("stroke", config.color);
+    line.setAttribute("stroke-width", `${sw}`);
+    return line;
+  }
+  function createDot(cx, cy) {
+    const dot = document.createElementNS(config.ns, "circle");
+    dot.setAttribute("cx", `${cx}`);
+    dot.setAttribute("cy", `${cy}`);
+    const r = Math.floor(config.thick * 1.5);
+    dot.setAttribute("r", `${r}`);
+    dot.setAttribute("fill", config.color);
+    return dot;
+  }
 
-  // src/igo/board/coordinates.ts
-  var Coordinates = class {
-    dom;
-    #aiu = "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split("");
-    #iroha = "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split("");
-    #nums = Array.from({ length: 19 }, (_, i) => `${i + 1}`);
-    #verticalChars;
-    #holizontalChars;
-    constructor(positions) {
-      const dom = document.createElementNS(config.ns, "g");
-      if (!(dom instanceof SVGGElement)) {
-        throw new Error("coordinates error");
-      }
-      this.dom = dom;
-      this.#verticalChars = this.#createVerticalChars(positions);
-      this.#holizontalChars = this.#createHolizontalChars(positions);
-      this.dom = this.#setChars(this.dom, this.#verticalChars);
-      this.dom = this.#setChars(this.dom, this.#holizontalChars);
+  // src/igo/render/body/viewbox.ts
+  function innerViewBox(state) {
+    const max = config.size * config.interval;
+    const minx = 0;
+    const width = state.width * config.interval;
+    const height = state.height * config.interval;
+    const miny = max - height;
+    return [minx, miny, width, height].join(" ");
+  }
+  function outerViewBox(state) {
+    const max = config.size * config.interval;
+    let width = state.width * config.interval;
+    let height = state.height * config.interval;
+    let minx = 0;
+    let miny = max - height;
+    if (state.vertical !== "null") {
+      minx -= config.interval;
+      width += config.interval;
     }
-    onChangeCoord(type, value) {
-      const arr = this.#changeChars(value);
-      if (arr === null) return;
-      if (type === "vertical") {
-        arr.forEach((c, i) => {
-          this.#verticalChars[i].textContent = c;
-        });
-      } else {
-        arr.forEach((c, i) => {
-          this.#holizontalChars[i].textContent = c;
-        });
-      }
+    if (state.horizontal !== "null") {
+      height += config.interval;
     }
-    #createVerticalChars(positions) {
-      const createVChar = (pos) => {
-        const text = this.#createChar();
-        const x = -Math.floor(config.interval / 2);
-        const base_line = config.radius * 0.6;
-        const y = pos + base_line;
-        text.setAttribute("x", `${x}`);
-        text.setAttribute("y", `${y}`);
-        return text;
-      };
-      const arr = positions.toReversed().map(createVChar);
-      return arr;
-    }
-    #createHolizontalChars(positions) {
-      const createHChar = (pos) => {
-        const text = this.#createChar();
-        const base_line = config.radius * 0.6;
-        const y = config.size * config.interval + Math.floor(config.interval / 2) + base_line;
-        text.setAttribute("x", `${pos}`);
-        text.setAttribute("y", `${y}`);
-        return text;
-      };
-      const arr = positions.map(createHChar);
-      return arr;
-    }
-    #createChar() {
-      const text = document.createElementNS(config.ns, "text");
-      const style = `font:normal ${config.text_size}px sans-serif;`;
-      text.setAttribute("style", style);
-      text.setAttribute("fill", config.color);
-      text.setAttribute("text-anchor", "middle");
-      return text;
-    }
-    #setChars(group, chars) {
-      return chars.reduce((group2, char) => {
-        group2.appendChild(char);
-        return group2;
-      }, group);
-    }
-    #changeChars(value) {
-      switch (value) {
-        case "aiu":
-          return this.#aiu;
-        case "iroha":
-          return this.#iroha;
-        case "nums":
-          return this.#nums;
-        default:
-          return null;
-      }
-    }
-  };
+    return [minx, miny, width, height].join(" ");
+  }
 
-  // src/igo/constants.ts
-  var COORDINATES_DATA = Object.freeze(
-    ["null", "nums", "aiu", "iroha"]
-  );
-
-  // src/igo/state/holders.ts
-  var isCoordinatesState = (str) => COORDINATES_DATA.includes(str);
-  var StateHolder = class {
-  };
-  var Color = class extends StateHolder {
-    _state = 0;
-    get state() {
-      return `${this._state}`;
-    }
-    set state(input) {
-      const str = `${input}`;
-      if (str === "1" || str === "2") {
-        this._state = Number(str);
-      } else {
-        this._state = 0;
-      }
-    }
-  };
-  var Character = class extends StateHolder {
-    _state = "";
-    get state() {
-      return this._state;
-    }
-    set state(input) {
-      const str = `${input}`;
-      this._state = str.length > 0 ? str[0] : "";
-    }
-  };
-  var Coordinates2 = class extends StateHolder {
-    _state = "null";
-    get state() {
-      return this._state;
-    }
-    set state(input) {
-      const str = `${input}`;
-      this._state = isCoordinatesState(str) ? str : COORDINATES_DATA[0];
-    }
-  };
-  var Length = class extends StateHolder {
-    _state = 19;
-    MAX = 19;
-    MIN = 1;
-    get state() {
-      return `${this._state}`;
-    }
-    set state(input) {
-      const num = Number(input);
-      if (num >= this.MIN && num <= this.MAX) {
-        this._state = num;
-      }
-    }
-  };
-
-  // src/igo/board/stone.ts
+  // src/igo/render/body/stone.ts
   var Stone = class {
-    #color = new Color();
-    #character = new Character();
-    #g;
+    dom = document.createElementNS(config.ns, "g");
+    #data = ["0", ""];
     #circle;
     #text;
     #patternMap = Object.freeze({
@@ -239,25 +271,11 @@
       }
     });
     constructor(row, col, color, character) {
-      this.#g = document.createElementNS(config.ns, "g");
       this.#circle = this.#createCircle(row, col);
-      this.#g.appendChild(this.#circle);
+      this.dom.appendChild(this.#circle);
       this.#text = this.#createText(row, col);
-      this.#g.appendChild(this.#text);
-      this.#color.state = color;
-      this.#character.state = character;
-      this.#render();
-    }
-    get g() {
-      return this.#g;
-    }
-    onChange(color, character) {
-      const same_color = color === `${this.#color.state}`;
-      const same_char = character === this.#character.state;
-      const is_same = same_color && same_char;
-      this.#color.state = is_same ? 0 : color;
-      this.#character.state = is_same ? "" : character;
-      this.#render();
+      this.dom.appendChild(this.#text);
+      this.#data = [color, character];
     }
     #createCircle(row, col) {
       const circle = document.createElementNS(config.ns, "circle");
@@ -283,9 +301,7 @@
       text.textContent = "";
       return text;
     }
-    #render() {
-      const color = this.#color.state;
-      const character = this.#character.state;
+    render(color, character) {
       let colorPattern = "empty";
       if (color === "0" && character === "") {
         colorPattern = "empty";
@@ -308,455 +324,441 @@
     }
   };
 
-  // src/igo/board/stones.ts
+  // src/igo/render/body/stones.ts
   var Stones = class {
-    #positions;
-    stones;
-    dom;
+    dom = document.createElementNS(config.ns, "g");
     data;
-    constructor(positions) {
-      this.#positions = positions;
-      this.stones = this.#createStones(positions);
-      const dom = document.createElementNS(config.ns, "g");
-      if (!(dom instanceof SVGGElement)) {
-        throw new Error("stones error");
-      }
-      this.dom = dom;
-      this.stones.forEach((row) => {
-        row.forEach((stone) => {
-          this.dom.appendChild(stone.g);
-        });
-      });
-      this.data = this.#createBlankData();
-    }
-    onClick(x, y, state) {
-      if (x < 0) return JSON.stringify(this.data);
-      const max_height = config.size * config.interval;
-      if (max_height < y) return JSON.stringify(this.data);
-      const positions = this.#positions;
-      const init_x = { idx: 0, dist: Math.abs(positions[0] - x), now: x };
-      const init_y = { idx: 0, dist: Math.abs(positions[0] - y), now: y };
-      const minDist = (obj, pos, i) => {
-        if (Math.abs(pos - obj.now) < obj.dist) {
-          obj.idx = i;
-          obj.dist = Math.abs(pos - obj.now);
-        }
-        return obj;
-      };
-      const col = positions.reduce(minDist, init_x).idx;
-      const row = positions.reduce(minDist, init_y).idx;
-      const color = state.color.value;
-      const character = state.character.value;
-      this.stones[row][col].onChange(color, character);
-      return JSON.stringify(this.data);
-    }
-    #createStones(positions) {
-      return positions.map(
-        (row_pos) => positions.map(
-          (col_pos) => new Stone(row_pos, col_pos, 0, "")
+    stones;
+    constructor(state) {
+      this.data = state.data;
+      this.stones = config.positions.map(
+        (row) => config.positions.map(
+          (col) => new Stone(row, col, "0", "")
         )
       );
     }
-    #createBlankData() {
-      return Array.from(
-        { length: config.size },
-        () => Array.from({ length: config.size }, () => [0, ""])
-      );
+    /*
+    onClick(x:number, y:number, state:State):string {
+        
+        if(x < 0) return JSON.stringify(this.data);
+        const max_height = config.size * config.interval;
+        if(max_height < y) return JSON.stringify(this.data);
+        const positions = this.#positions;
+        const init_x = {idx: 0, dist: Math.abs(positions[0] - x), now: x};
+        const init_y = {idx: 0, dist: Math.abs(positions[0] - y), now: y};
+        const minDist = (obj:{idx:number, dist:number, now:number}, pos:number, i:number) => {
+            if(Math.abs(pos - obj.now) < obj.dist) {
+                obj.idx = i;
+                obj.dist = Math.abs(pos - obj.now);
+            }
+            return obj;
+        }
+        const col = positions.reduce(minDist, init_x).idx;
+        const row = positions.reduce(minDist, init_y).idx;
+        const color = this.#state.color.input.init[this.#state.color.input.active].value as ColorData;
+        const character = this.#state.character.input.init[this.#state.character.input.active].value;
+        this.stones[row][col].onChange(color, character);
+        return JSON.stringify(this.data);
+    }
+    */
+    render(state) {
+      if (this.data === state.data) return;
+      this.data.forEach((row, ridx) => {
+        if (row !== state.data[ridx]) {
+          row.forEach((cell, cidx) => {
+            if (cell !== state.data[ridx][cidx]) {
+              this.stones[ridx][cidx].render(cell[0], cell[1]);
+            }
+          });
+        }
+      });
     }
   };
 
-  // src/igo/board/svg.ts
-  var Svg = class {
-    dom;
-    #viewBox = {
-      min_x: 0,
-      min_y: 0,
-      width: config.size * config.interval,
-      height: config.size * config.interval
-    };
-    constructor(...classNames) {
-      this.dom = document.createElementNS(config.ns, "svg");
-      this.#updateViewBox();
-      this.dom.classList.add(...classNames);
-    }
-    getClickedXY(clientX, clientY) {
-      const pt = this.dom.createSVGPoint();
-      pt.x = clientX;
-      pt.y = clientY;
-      const { x, y } = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
-      return [x, y];
-    }
-    set min_x(num) {
-      this.#viewBox.min_x = num;
-      this.#updateViewBox();
-    }
-    set min_y(num) {
-      this.#viewBox.min_y = num;
-      this.#updateViewBox();
-    }
-    set width(num) {
-      this.#viewBox.width = num;
-      this.#updateViewBox();
-    }
-    set height(num) {
-      this.#viewBox.height = num;
-      this.#updateViewBox();
-    }
-    #updateViewBox() {
-      const {
-        min_x,
-        min_y,
-        width,
-        height
-      } = this.#viewBox;
-      const viewBox = [min_x, min_y, width, height].join(" ");
-      this.dom.setAttribute("viewBox", viewBox);
-    }
-  };
-
-  // src/igo/board/board.ts
+  // src/igo/render/body/board.ts
   var Board = class {
-    #positions;
-    #parent;
-    #child;
-    #grid;
-    #coorinates;
-    #stones;
-    constructor() {
-      this.#positions = this.#createPositions();
-      this.#parent = new Svg("board");
-      this.#child = new Svg();
-      this.#parent.dom.appendChild(this.#child.dom);
-      this.#coorinates = new Coordinates(this.#positions);
-      this.#parent.dom.appendChild(this.#coorinates.dom);
-      this.#grid = new Grid(this.#positions);
-      this.#child.dom.appendChild(this.#grid.dom);
-      this.#stones = new Stones(this.#positions);
-      this.#child.dom.appendChild(this.#stones.dom);
-    }
-    get dom() {
-      return this.#parent.dom;
-    }
-    onClickBoard(ev, state) {
-      const [x, y] = this.#child.getClickedXY(ev.clientX, ev.clientY);
-      return this.#stones.onClick(x, y, state);
-    }
-    onChangeViewBox(state) {
-      if (!state.isChange) return;
-      if (state.type === "width" || state.type === "height") {
-        this.#onChangeBoardSize(state, state.type);
-      } else if (state.type === "vertical" || state.type === "horizontal") {
-        this.#onChangeCoordinates(state, state.type);
-      }
-    }
-    #onChangeBoardSize(state, type) {
-      const idx = Number(state.newVal);
-      if (idx <= 0 || config.size < idx) return;
-      const length = idx * config.interval;
-      const oppositMap = {
-        width: "vertical",
-        height: "horizontal"
-      };
-      const oppositType = oppositMap[type];
-      const hasCoord = state.fields[oppositType].state !== "null";
-      this.#child[type] = length;
-      this.#parent[type] = hasCoord ? length + config.interval : length;
-    }
-    #onChangeCoordinates(state, type) {
-      const newVal = state.newVal;
-      const hasCoord = newVal !== "null";
-      let min = hasCoord ? -config.interval : 0;
-      let length = hasCoord ? config.interval : 0;
-      const oppositMap = {
-        vertical: {
-          opMin: "min_x",
-          opLength: "width"
-        },
-        horizontal: {
-          opMin: "min_y",
-          opLength: "height"
-        }
-      };
-      const { opMin, opLength } = oppositMap[type];
-      this.#parent[opMin] = min;
-      this.#parent[opLength] = length + this.#child[opLength];
-    }
-    #createPositions() {
-      const margin = Math.floor(config.interval / 2);
-      const func = (_, i) => margin + config.interval * i;
-      const positions = Array.from({ length: config.size }, func);
-      return positions;
-    }
-  };
-
-  // src/igo/controller/buttons.ts
-  var Buttons = class {
-    dom;
-    #buttons;
-    constructor(type, data) {
-      this.dom = document.createElement("ul");
-      this.dom.classList.add("go-form-ul");
-      this.dom.appendChild(this.#createTitle(data.title));
-      this.#buttons = this.#createButtons(type, data);
-      this.#buttons[data.active].classList.add("active");
-      this.#buttons.forEach((button) => {
-        const li = document.createElement("li");
-        li.appendChild(button);
-        this.dom.appendChild(li);
-      });
-    }
-    pushButtons(parentButtons) {
-      this.#buttons.forEach((button) => {
-        parentButtons.push(button);
-      });
-      return parentButtons;
-    }
-    #createTitle(title) {
-      const li = document.createElement("li");
-      li.textContent = title;
-      return li;
-    }
-    #createButtons(type, data) {
-      return data.data.map((dat) => {
-        const button = document.createElement("button");
-        button.dataset.gostateType = type;
-        button.dataset.gostateValue = `${dat.value}`;
-        button.textContent = dat.text;
-        return button;
-      });
-    }
-  };
-
-  // src/igo/controller/ranges.ts
-  var Ranges = class {
-    dom;
-    #ranges;
+    dom = document.createElementNS(config.ns, "svg");
+    stones;
     constructor(state) {
-      this.#ranges = [];
-      this.dom = document.createElement("div");
-      this.dom.classList.add("go-form-range");
-      const label = document.createElement("label");
-      const title = document.createElement("span");
-      title.textContent = state.title;
-      label.appendChild(title);
-      const input = document.createElement("input");
-      input.type = "range";
-      input.dataset.gostateType = "range";
-      input.dataset.gostateDir = state.direction;
-      input.value = state.value;
-      input.min = state.min;
-      input.max = state.max;
-      label.appendChild(input);
-      const span = document.createElement("span");
-      span.textContent = state.value;
-      label.appendChild(span);
-      this.dom.appendChild(label);
-      this.#ranges.push({
-        input,
-        span
-      });
+      this.dom.setAttribute("viewBox", innerViewBox(state));
+      this.dom.appendChild(createGrid());
+      this.stones = new Stones(state);
+      this.dom.addEventListener("click", (ev) => {
+        const pt = this.dom.createSVGPoint();
+        pt.x = ev.clientX;
+        pt.y = ev.clientY;
+        const { x, y } = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
+        const event = new CustomEvent("click-board", {
+          bubbles: true,
+          detail: [x, y]
+        });
+        this.dom.dispatchEvent(event);
+      }, false);
     }
-    pushRanges(parentRanges) {
-      this.#ranges.forEach((range) => {
-        parentRanges.push(range);
-      });
-      return parentRanges;
+    render(state) {
+      this.dom.setAttribute("viewBox", innerViewBox(state));
+      this.stones.render(state);
     }
   };
 
-  // src/igo/controller/init_data.ts
-  var init_data = Object.freeze({
-    color: {
-      title: "",
-      active: 0,
-      data: [
-        { value: 0, text: "\u900F\u660E" },
-        { value: 1, text: "\u9ED2" },
-        { value: 2, text: "\u767D" }
-      ]
-    },
-    character: {
-      title: "",
-      active: 0,
-      data: [
-        { value: "", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "A", text: "A" },
-        { value: "B", text: "B" },
-        { value: "C", text: "C" },
-        { value: "D", text: "D" },
-        { value: "E", text: "E" },
-        { value: "\u25B3", text: "\u25B3" },
-        { value: "1", text: "1" },
-        { value: "2", text: "2" },
-        { value: "3", text: "3" },
-        { value: "4", text: "4" }
-      ]
-    },
-    length: {
-      title: "",
-      active: 0,
-      data: []
-    },
-    coordinates: {
-      title: "",
-      active: 0,
-      data: []
-    }
-  });
-
-  // src/igo/controller/controller.ts
-  var Controller = class {
-    buttons;
-    ranges;
-    dom;
-    constructor() {
-      this.buttons = [];
-      const color_buttons = new Buttons("color", init_data.color);
-      this.buttons = color_buttons.pushButtons(this.buttons);
-      const character_buttons = new Buttons("character", init_data.color);
-      this.buttons = character_buttons.pushButtons(this.buttons);
-      const hollizontal_buttons = new Buttons("holizontal", init_data.color);
-      this.buttons = hollizontal_buttons.pushButtons(this.buttons);
-      const vertical_buttons = new Buttons("vertical", init_data.color);
-      this.buttons = vertical_buttons.pushButtons(this.buttons);
-      this.ranges = [];
-      const width_range = new Ranges(init_data.color);
-      this.ranges = width_range.pushRanges(this.ranges);
-      const height_range = new Ranges(init_data.color);
-      this.ranges = height_range.pushRanges(this.ranges);
-      this.dom = document.createElement("div");
-      this.dom.appendChild(color_buttons.dom);
-      this.dom.appendChild(character_buttons.dom);
-      this.dom.appendChild(width_range.dom);
-      this.dom.appendChild(height_range.dom);
-      this.dom.appendChild(hollizontal_buttons.dom);
-      this.dom.appendChild(vertical_buttons.dom);
-    }
-    onClick(state) {
-      this.buttons.forEach((button) => {
-        const isSameType = button.dataset.gostateType === state.type;
-        const isSameValue = button.dataset.gostateValue === state.newVal;
-        if (isSameType) {
-          if (isSameValue) {
-            button.classList.add("active");
-          } else {
-            button.classList.remove("active");
-          }
-        }
-      });
-    }
-  };
-
-  // src/igo/state/state.ts
-  var State = class {
-    fields = {
-      color: new Color(),
-      character: new Character(),
-      vertical: new Coordinates2(),
-      horizontal: new Coordinates2(),
-      width: new Length(),
-      height: new Length()
+  // src/igo/render/body/coordinates.ts
+  var Coordinates = class {
+    dom = document.createElementNS(config.ns, "g");
+    init_data = {
+      aiu: "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split(""),
+      iroha: "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split(""),
+      nums: Array.from({ length: 19 }, (_, i) => `${i + 1}`)
     };
-    // 状態変更の記録用
-    #type = null;
-    #oldVal = null;
-    #newVal = null;
-    get type() {
-      return this.#type;
+    groups = {
+      aiu: document.createElementNS(config.ns, "g"),
+      iroha: document.createElementNS(config.ns, "g"),
+      nums: document.createElementNS(config.ns, "g")
+    };
+    init(type) {
+      this.groups[type] = this.setChars(
+        this.groups[type],
+        this.init_data[type],
+        this.positions
+      );
+      this.dom.appendChild(this.groups[type]);
     }
-    get oldVal() {
-      return this.#oldVal;
-    }
-    get newVal() {
-      return this.#newVal;
-    }
-    get isChange() {
-      return this.#newVal !== null;
-    }
-    reset() {
-      this.#type = null;
-      this.#oldVal = null;
-      this.#newVal = null;
-    }
-    updateEnd() {
-      this.reset();
-    }
-    updateStart(type, value) {
-      this.reset();
-      if (this.#isValidKey(type)) {
-        const field = this.fields[type];
-        const currentVal = field.state;
-        if (currentVal !== value) {
-          this.#type = type;
-          this.#oldVal = currentVal;
-          field.state = value;
-          this.#newVal = field.state;
+    switchCoord(type) {
+      for (const [gtype, element] of Object.entries(this.groups)) {
+        let opacity = "0";
+        let pointer = "";
+        if (gtype === type) {
+          opacity = "1";
+          pointer = "none";
         }
+        element.style.opacity = opacity;
       }
     }
-    // 型ガードをメソッドとして分離
-    #isValidKey(key) {
-      return key in this.fields;
+    setChars(group, chars, positions) {
+      return chars.reduce((gro, char, idx) => {
+        const [x, y] = positions[idx];
+        const text = document.createElementNS(
+          config.ns,
+          "text"
+        );
+        text.setAttribute("x", `${x}`);
+        text.setAttribute("y", `${y}`);
+        const style = `font:normal ${config.text_size}px sans-serif;`;
+        text.setAttribute("style", style);
+        text.setAttribute("fill", "currentColor");
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = char;
+        gro.appendChild(text);
+        return gro;
+      }, group);
+    }
+  };
+  var Vertical = class extends Coordinates {
+    vertical;
+    constructor(state) {
+      super();
+      this.vertical = state.vertical;
+      this.init("aiu");
+      this.init("iroha");
+      this.init("nums");
+    }
+    get positions() {
+      return config.positions.toReversed().map((row) => {
+        const x = 0 - Math.floor(config.interval / 2);
+        const y = row + config.radius * 0.6;
+        return [x, y];
+      });
+    }
+    render(state) {
+      if (this.vertical === state.vertical) return;
+      this.vertical = state.vertical;
+      this.switchCoord(this.vertical);
+    }
+  };
+  var Horizontal = class extends Coordinates {
+    horizontal;
+    constructor(state) {
+      super();
+      this.horizontal = state.horizontal;
+      this.init("aiu");
+      this.init("iroha");
+      this.init("nums");
+    }
+    get positions() {
+      return config.positions.map((col) => {
+        const y = (config.size + 1) * config.interval - config.radius * 0.6;
+        const x = col;
+        return [x, y];
+      });
+    }
+    render(state) {
+      if (this.horizontal === state.horizontal) return;
+      this.horizontal = state.horizontal;
+      this.switchCoord(this.horizontal);
+    }
+  };
+
+  // src/igo/render/body.ts
+  var Body = class {
+    dom = document.createElementNS(config.ns, "svg");
+    #state;
+    board;
+    vertical;
+    horizontal;
+    constructor(state) {
+      this.#state = state;
+      this.dom.setAttribute("viewBox", outerViewBox(state));
+      this.board = new Board(state);
+      this.dom.appendChild(this.board.dom);
+      this.vertical = new Vertical(state);
+      this.dom.appendChild(this.vertical.dom);
+      this.horizontal = new Horizontal(state);
+      this.dom.appendChild(this.horizontal.dom);
+    }
+    render(state) {
+      if (state === this.#state) return;
+      if (this.#state.data !== state.data) {
+        this.board.render(state);
+      }
+      if (this.#state.width !== state.width || this.#state.height !== state.height || this.#state.vertical !== state.vertical || this.#state.horizontal !== state.horizontal) {
+        this.dom.setAttribute("viewBox", outerViewBox(state));
+        this.vertical.render(state);
+        this.horizontal.render(state);
+      }
+      this.#state = state;
+    }
+  };
+
+  // src/igo/render/footer.ts
+  var Footer = class {
+    dom = document.createElement("div");
+    textarea = document.createElement("textarea");
+    paragraph = document.createElement("p");
+    constructor(state) {
+      this.textarea.placeholder = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
+      this.textarea.value = state.textarea;
+      this.textarea.style.display = "none";
+      this.paragraphText = state.textarea;
+      this.dom.appendChild(this.textarea);
+      this.dom.appendChild(this.paragraph);
+      this.paragraph.addEventListener("click", () => {
+        this.paragraph.style.display = "none";
+        this.textarea.style.display = "block";
+        this.textarea.focus();
+      });
+      this.textarea.addEventListener("blur", () => {
+        this.paragraphText = this.textarea.value;
+        this.textarea.style.display = "none";
+        this.paragraph.style.display = "block";
+        const event = new CustomEvent("blur-textarea", {
+          bubbles: true,
+          detail: this.textarea.value
+        });
+        this.dom.dispatchEvent(event);
+      });
+    }
+    set paragraphText(text) {
+      if (text === "") {
+        this.paragraph.textContent = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
+      } else {
+        this.paragraph.textContent = text;
+      }
+    }
+    render(state) {
+    }
+  };
+
+  // src/igo/update.ts
+  var Update = class {
+    static color(state, color) {
+      if (typeof color !== "string") return state;
+      if (state.color === color) return state;
+      if (!["0", "1", "2"].includes(color)) return state;
+      return {
+        ...state,
+        color
+      };
+    }
+    static character(state, value) {
+      if (typeof value !== "string") return state;
+      if (state.character === value) return state;
+      const character = value.length > 0 ? value[0] : "";
+      return {
+        ...state,
+        character
+      };
+    }
+    static width(state, range) {
+      if (typeof range !== "number") return state;
+      const width = 1 <= range && range <= 19 ? range : 19;
+      return {
+        ...state,
+        width
+      };
+    }
+    static height(state, range) {
+      if (typeof range !== "number") return state;
+      const height = 1 <= range && range <= 19 ? range : 19;
+      return {
+        ...state,
+        height
+      };
+    }
+    static vertical(state, coord) {
+      if (typeof coord !== "string") return state;
+      const coordArr = ["nums", "aiu", "iroha"];
+      const vertical = coordArr.includes(coord) ? coord : "null";
+      return {
+        ...state,
+        vertical
+      };
+    }
+    static horizontal(state, coord) {
+      if (typeof coord !== "string") return state;
+      const coordArr = ["nums", "aiu", "iroha"];
+      const horizontal = coordArr.includes(coord) ? coord : "null";
+      return {
+        ...state,
+        horizontal
+      };
+    }
+    static data(state, input) {
+      if (!Array.isArray(input) || input.length !== 2) return state;
+      const [x, y] = input;
+      if (typeof x !== "number" || typeof y !== "number") return state;
+      if (!Number.isInteger(x) || !Number.isInteger(y)) return state;
+      if (x < 1 || 19 < x || y < 1 || 19 < y) return state;
+      const [col, row] = [x - 1, y - 1];
+      const oldCell = state.data[row][col];
+      let newCell = [state.color, state.character];
+      if (state.color === oldCell[0] && state.character === oldCell[1]) {
+        newCell = ["0", ""];
+      }
+      const newRow = [...state.data[row]];
+      newRow[col] = newCell;
+      const newData = [...state.data];
+      newData[row] = newRow;
+      return {
+        ...state,
+        data: newData
+      };
+    }
+    static textarea(state, text) {
+      if (state.textarea === text) return state;
+      return {
+        ...state,
+        textarea: text
+      };
+    }
+  };
+
+  // src/igo/wrapper.ts
+  var Wrapper = class {
+    dom = document.createElement("div");
+    #state = {
+      color: "0",
+      character: "",
+      width: 19,
+      height: 19,
+      vertical: "null",
+      horizontal: "null",
+      size: "small",
+      data: Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => ["0", ""])),
+      textarea: ""
+    };
+    #header;
+    #body;
+    #footer;
+    constructor() {
+      this.#header = new Header(this.#state);
+      this.#body = new Body(this.#state);
+      this.#footer = new Footer(this.#state);
+      this.dom.appendChild(this.#header.dom);
+      this.dom.appendChild(this.#body.dom);
+      this.dom.appendChild(this.#footer.dom);
+      this.dom.addEventListener("change-state", (ev) => {
+        const detail = ev.detail;
+        switch (detail.type) {
+          case "color":
+            this.#state = Update.color(this.#state, detail.value);
+            break;
+          case "character":
+            this.#state = Update.character(this.#state, detail.value);
+            break;
+          case "width":
+            this.#state = Update.width(this.#state, detail.value);
+            this.#render();
+            break;
+          case "height":
+            this.#state = Update.height(this.#state, detail.value);
+            this.#render();
+            break;
+          case "vertical":
+            this.#state = Update.vertical(this.#state, detail.value);
+            this.#render();
+            break;
+          case "horizontal":
+            this.#state = Update.horizontal(this.#state, detail.value);
+            this.#render();
+            break;
+        }
+      }, false);
+      this.dom.addEventListener("click-board", (ev) => {
+        this.#state = Update.data(this.#state, ev.detail);
+        this.#render();
+      }, false);
+      this.dom.addEventListener("blur-textarea", (ev) => {
+        const detail = ev.detail;
+        this.#state = Update.textarea(this.#state, detail);
+      }, false);
+    }
+    changeSize(size) {
+      if (["none", "small", "large"].includes(size)) {
+        this.#state.size = size;
+        this.#render();
+      }
+    }
+    bulkUpdate(input) {
+      const [rowData, rowTextarea] = input;
+      this.#render();
+    }
+    get data() {
+      return [this.#state.data, this.#state.textarea];
+    }
+    #render() {
+      this.#header.render(this.#state);
+      this.#body.render(this.#state);
+      this.#footer.render(this.#state);
     }
   };
 
   // src/igo/board-controller.ts
   var BoardController = class extends HTMLElement {
+    #wrapper;
     static observedAttributes = [
-      "data-gostate-data"
+      // "data-gostate-data",
+      "data-display"
     ];
     constructor() {
       super();
-      const state = new State();
-      const board = new Board();
-      const controller = new Controller(state);
-      this.appendChild(controller.dom);
-      this.appendChild(board.dom);
-      board.dom.addEventListener("click", (ev) => {
-        this.dataset.gostateData = board.onClick(ev, state);
-      }, false);
-      controller.buttons.forEach((button) => {
-        button.addEventListener("click", (ev) => {
-          const target = ev.target;
-          if (!(target instanceof HTMLButtonElement)) return;
-          state.updateStart();
-          state.onClick(target);
-          if (state.isChange) {
-            controller.onClick(state);
-          }
-          state.updateEnd();
-        }, false);
-      });
-      controller.ranges.forEach((range) => {
-        range.input.addEventListener("change", (ev) => {
-          const target = ev.target;
-          if (!(target instanceof HTMLInputElement)) return;
-          state.updateStart();
-          state.onChange(target);
-          if (state.isChange) {
-            range.span.textContent = state.newVal;
-          }
-          state.updateEnd();
-        }, false);
-      });
+      this.#wrapper = new Wrapper();
+      this.appendChild(this.#wrapper.dom);
     }
     // document に接続時実行
     connectedCallback() {
     }
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {
-      if (attr === "data-gostate-data") {
-        if (oldVal === newVal) return;
+      switch (attr) {
+        //case 'data-gostate-data':
+        //    break;
+        case "data-display":
+          this.#wrapper.changeSize(newVal);
+          break;
       }
     }
   };
 
-  // src/igo/index.ts
-  customElements.define("board-controller", BoardController);
-  document.addEventListener("DOMContentLoaded", () => {
-    displayShowHide();
-    saveLoad();
-  }, false);
+  // src/igo/displayShowHide.ts
   function displayShowHide() {
     const zoomBase = { inRange: true, size: "small" };
     const state = {
@@ -818,11 +820,57 @@
       b.classList.toggle("active", shouldActive);
     });
   }
-  function saveLoad() {
-    const saveBtn = document.querySelector("button#save");
-    const loadInput = document.querySelector("input#load");
-    loadInput.addEventListener("change", (ev) => {
-      console.log(ev);
-    });
+
+  // src/igo/saveLoad.ts
+  function save() {
+    const bCons = [...document.querySelectorAll("board-controller")];
+    const bConsData = bCons.map((bcon) => ({
+      data: bcon.dataset.stonesData,
+      textarea: bcon.dataset.textArea
+    }));
+    const json = JSON.stringify(bConsData);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const date = /* @__PURE__ */ new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const Y = date.getFullYear();
+    const M = pad(date.getMonth() + 1);
+    const D = pad(date.getDate());
+    const h = pad(date.getHours());
+    const m = pad(date.getMinutes());
+    const s = pad(date.getSeconds());
+    const title = `\u56F2\u7881\u30C7\u30FC\u30BF\uFF1A${Y}-${M}-${D}T${h}:${m}:${s}.json`;
+    a.download = title;
+    a.click();
+    URL.revokeObjectURL(url);
   }
+  async function load(ev) {
+    const target = ev.target;
+    const bCons = [...document.querySelectorAll("board-controller")];
+    const files = target.files;
+    if (!files) return;
+    const file = files[0];
+    try {
+      const jsonText = await file.text();
+      const data = JSON.parse(jsonText);
+      if (Array.isArray(data)) {
+        data.forEach((dat, i) => {
+          bCons[i].dataset.stonesData = dat.data;
+          bCons[i].dataset.textArea = dat.textarea;
+        });
+      }
+    } catch (err) {
+      console.error("JSON\u306E\u30D1\u30FC\u30B9\u306B\u5931\u6557:", err);
+    }
+  }
+
+  // src/igo/index.ts
+  customElements.define("board-controller", BoardController);
+  document.addEventListener("DOMContentLoaded", () => {
+    displayShowHide();
+    document.querySelector("button#save")?.addEventListener("click", save, false);
+    document.querySelector("input#load")?.addEventListener("change", load, false);
+  }, false);
 })();

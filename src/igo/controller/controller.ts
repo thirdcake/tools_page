@@ -1,16 +1,11 @@
-import { State } from "../state";
-import { Buttons } from "./buttons";
-import { Ranges } from "./ranges";
-
 export class Controller {
     
-    dom: HTMLDivElement;
-    state: State;
+    dom: HTMLElement;
 
-    constructor(state: State) {
-        this.dom = document.createElement('div');
-        this.state = state;
+    constructor() {
+        this.dom = document.createElement('section');
 
+        /*
         const colorButtons = new Buttons('color', state);
         this.dom.appendChild(colorButtons.dom);
 
@@ -28,7 +23,9 @@ export class Controller {
 
         const heightRange = new Ranges('height', state);
         this.dom.appendChild(heightRange.dom);
+        */
     }
 
-
+    #render() {
+    }
 }

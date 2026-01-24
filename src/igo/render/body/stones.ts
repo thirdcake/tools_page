@@ -1,34 +1,24 @@
 import { config } from "./config";
 import { Stone } from "./stone";
-import { State, ColorData } from "../state";
+import { State } from "../../wrapper";
 
 export class Stones {
-    #positions: number[];
-    #state: State;
-
+    dom = document.createElementNS(config.ns, 'g') as SVGGElement;
+    data: [string, string][][];
     stones: Stone[][];
-    dom: SVGGElement;
-    data: [0|1|2, string][][];
 
-    constructor(positions: number[], state: State) {
-        this.#positions = positions;
-        this.#state = state;
-
-        this.stones = this.#createStones(positions);
-        const dom = document.createElementNS(config.ns, 'g');
-        if(!(dom instanceof SVGGElement)) {
-            throw new Error('stones error');
-        }
-        this.dom = dom;
-        this.stones.forEach(row => {
-            row.forEach(stone => {
-                this.dom.appendChild(stone.dom);
-            })
-        });
-        this.data = this.#createBlankData();
+    constructor(state: State) {
+        this.data = state.data;
+        this.stones = config.positions.map(
+            row => config.positions.map(
+                col => new Stone(row, col, '0', '')
+            )
+        );
     }
 
+    /*
     onClick(x:number, y:number, state:State):string {
+        
         if(x < 0) return JSON.stringify(this.data);
         const max_height = config.size * config.interval;
         if(max_height < y) return JSON.stringify(this.data);
@@ -49,18 +39,18 @@ export class Stones {
         this.stones[row][col].onChange(color, character);
         return JSON.stringify(this.data);
     }
+    */
 
-    #createStones(positions: number[]): Stone[][] {
-        return positions.map(row_pos => 
-            positions.map(col_pos => 
-                new Stone(row_pos, col_pos, '0', '', this.#state)
-            )
-        );
-    }
-
-    #createBlankData():[0|1|2, string][][] {
-        return Array.from({length: config.size}, ()=>
-            Array.from({length: config.size}, () => [0, ''])
-        );
+    render(state: State):void {
+        if(this.data === state.data) return;
+        this.data.forEach((row, ridx) => {
+            if(row !== state.data[ridx]) {
+                row.forEach((cell, cidx) => {
+                    if(cell !== state.data[ridx][cidx]) {
+                        this.stones[ridx][cidx].render(cell[0], cell[1]);
+                    }
+                });
+            }
+        });
     }
 }

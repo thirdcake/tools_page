@@ -1,6 +1,6 @@
 import { State } from "../state";
 
-export class Buttons {
+export class Button {
     dom: HTMLUListElement;
     #buttons: HTMLButtonElement[];
     #state: State;
