@@ -10,7 +10,7 @@ export const config = Object.freeze({
     positions: Array.from({length: 19}, (_,i) => Math.floor(48/2) + i*48),
 });
 
-export const stonePattern = Object.freeze({
+export const stoneColorPattern = Object.freeze({
     empty: {
         circle_fill: 'transparent',
         circle_stroke: 'transparent',

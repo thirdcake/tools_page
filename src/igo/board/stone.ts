@@ -1,88 +1,71 @@
-import { config, stonePattern } from "./config";
+import { config, stoneColorPattern } from "./config";
 
 type ColorPattern = 'empty'|'onlyChar'|'black'|'white';
-export type Stone = {
-    color: string;
-    character: string;
-}
+export type StoneTupple = [0|1|2, string];
 
-export type StoneFunc = (state: Stone) => void;
-export type StoneTupple = [SVGGElement, StoneFunc];
+export class Stone {
+    dom = document.createElementNS(config.ns, 'g');
+    circle = document.createElementNS(config.ns, 'circle');
+    text = document.createElementNS(config.ns, 'text');
 
-export function createStone(
-    row:number,
-    col:number,
-    color:string,
-    character:string,
-): StoneTupple {
-    const stone = document.createElementNS(config.ns, 'g') as SVGGElement;
-    const circle = createCircle(row, col);
-    const text = createText(row, col);
-    stone.appendChild(circle);
-    stone.appendChild(text);
+    tupple: StoneTupple = [0, ''];
 
-    const func = (newState: Stone):void => {
-        const {color, character} = newState;
-        let colorPattern: ColorPattern = 'empty';
-        if(color==='0' && character==='') {
-            colorPattern = 'empty';
-        }else if(color==='') {
-            colorPattern = 'onlyChar';
-        }else if(color === '1') {
-            colorPattern = 'black';
-        }else if(color === '2') {
-            colorPattern = 'white';
+    constructor(x:number, y:number) {
+        this.initCircle(x, y);
+        this.dom.appendChild(this.circle);
+        this.initText(x, y);
+        this.dom.appendChild(this.text);
+    }
+
+    render(tupple: StoneTupple):void {
+        this.tupple = tupple;
+
+        const [color, character] = tupple;
+        let pattern: ColorPattern = 'empty';
+        if(color===0 && character==='') {
+            pattern = 'empty';
+        }else if(color === 0) {
+            pattern = 'onlyChar';
+        }else if(color === 1) {
+            pattern = 'black';
+        }else if(color === 2) {
+            pattern = 'white';
         }
-        
+
         const {
             circle_fill,
             circle_stroke,
             text_fill
-        } = stonePattern[colorPattern];
+        } = stoneColorPattern[pattern];
 
-        circle.setAttribute('fill', circle_fill);
-        circle.setAttribute('stroke', circle_stroke);
-        text.setAttribute('fill', text_fill);
-        text.textContent = character;
+        this.circle.setAttribute('fill', circle_fill);
+        this.circle.setAttribute('stroke', circle_stroke);
+        this.text.setAttribute('fill', text_fill);
+        this.text.textContent = character;
+        
     }
-    func({color, character});
-    return [stone, func];
+
+    initCircle(x:number, y:number):void {
+        this.circle.setAttribute('cx', `${x}`);
+        this.circle.setAttribute('cy', `${y}`);
+        this.circle.setAttribute('r', `${config.radius}`);
+        this.circle.setAttribute('fill', 'transparent');
+        this.circle.setAttribute('stroke', 'transparent');
+        this.circle.setAttribute('stroke-width', `${config.thick}`);
+    }
+
+    initText(x: number, y: number):void {
+        const text_size = config.text_size;
+        const font_style = `font:normal ${text_size}px sans-serif`;
+        this.text.setAttribute('style', font_style);
+        this.text.setAttribute('x', `${x}`);
+        const base_line = config.radius * 0.6;
+        const base_y = base_line + y;
+        this.text.setAttribute('y', `${base_y}`);
+        this.text.setAttribute('fill', 'transparent');
+        this.text.setAttribute('text-anchor', 'middle');
+        this.text.textContent = '';
+    }
+
 }
 
-/**
- * circle SVG を作成。 - 色が変えられる
- * @param row 縦の中心
- * @param col 横の中心
- * @returns 
- */
-function createCircle(row: number, col: number): SVGCircleElement {
-    const circle = document.createElementNS(config.ns, 'circle') as SVGCircleElement;
-    circle.setAttribute('cx', `${col}`);
-    circle.setAttribute('cy', `${row}`);
-    circle.setAttribute('r', `${config.radius}`);
-    circle.setAttribute('fill', 'transparent');
-    circle.setAttribute('stroke', 'transparent');
-    circle.setAttribute('stroke-width', `${config.thick}`);
-    return circle;
-}
-
-/**
- * text SVG を作成。 - 色と文字が変えられる
- * @param row 縦の中心
- * @param col 横の中心
- * @returns 
- */
-function createText(row:number, col:number): SVGTextElement {
-    const text = document.createElementNS(config.ns, 'text') as SVGTextElement;
-    const text_size = config.text_size;
-    const font_style = `font:normal ${text_size}px sans-serif`;
-    text.setAttribute('style', font_style);
-    text.setAttribute('x', `${col}`);
-    const base_line = config.radius * 0.6;
-    const y = base_line + row;
-    text.setAttribute('y', `${y}`);
-    text.setAttribute('fill', 'transparent');
-    text.setAttribute('text-anchor', 'middle');
-    text.textContent = '';
-    return text;
-}
