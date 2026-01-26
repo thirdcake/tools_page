@@ -1,44 +1,39 @@
-import { StoneData, StonesData } from "../state";
 import { config } from "./config";
 
-export class Helper {
-    static parseData(data: string): StonesData {
-        try {
-            const parsed = JSON.parse(data);
-            return Helper.isValidGrid(parsed) ? parsed : Helper.createBlankData();
-        } catch {
-            // JSON.parse に失敗したとき
-            return Helper.createBlankData();
-        }
+export class ViewBox {
+    #width: number;
+    #height: number;
+    #vertical: number;
+    #horizontal: number;
+
+    constructor() {
+        this.#width = config.size * config.interval;
+        this.#height =config.size * config.interval;
+        this.#vertical = 0;
+        this.#horizontal = 0;
     }
 
-    static isValidGrid(data: unknown): data is StonesData {
-        if (!Array.isArray(data) || data.length !== config.size) {
-            return false;
-        }
-
-        return data.every(row => 
-            Array.isArray(row) && 
-            row.length === config.size && 
-            row.every(cell => Helper.isValidCell(cell))
-        );
+    set width(size: string) {
+        const numSize = Number(size);
+        this.#width = numSize * config.interval;
+    }
+    set height(size: string) {
+        const numSize = Number(size);
+        this.#height = numSize * config.interval;
+    }
+    set vertical(coord: string) {
+        this.#vertical = (coord === 'null') ? 0 : config.interval;
+    }
+    set horizontal(coord: string) {
+        this.#horizontal = (coord === 'null') ? 0 : config.interval;
     }
 
-    static isValidCell(cell: unknown): cell is StoneData {
-        if (!Array.isArray(cell) || cell.length !== 2) {
-            return false;
-        }
-        
-        const [color, char] = cell;
-        const isValidColor = color === '0' || color === '1' || color === '2';
-        const isValidChar = typeof char === 'string' && char.length <= 1;
-
-        return isValidColor && isValidChar;
-    }
-
-    static createBlankData(): StonesData{
-        return Array.from({length: config.size}, ()=>
-            Array.from({length: config.size}, ()=>['0', ''])
-        );
+    get viewBox():string {
+        return [
+            0 - this.#vertical,
+            0 - this.#horizontal,
+            this.#width + this.#vertical,
+            this.#height + this.#horizontal
+        ].join(' ');
     }
 }

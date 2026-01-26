@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/render/header/buttons.ts
   function createColorButtons() {
@@ -872,5 +871,19 @@
     displayShowHide();
     document.querySelector("button#save")?.addEventListener("click", save, false);
     document.querySelector("input#load")?.addEventListener("change", load, false);
+    const [dom, func] = createState();
+    document.querySelector("div.board")?.appendChild(dom);
+    dom.addEventListener("click", (ev) => {
+      console.log(dom);
+      func("active", ev.target === dom);
+    }, false);
   }, false);
+  function createState() {
+    const dom = document.createElement("div");
+    dom.textContent = "test";
+    const func = (className, bool) => {
+      dom.classList.toggle(className, bool);
+    };
+    return [dom, func];
+  }
 })();
