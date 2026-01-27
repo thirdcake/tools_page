@@ -1,161 +1,5 @@
 (() => {
-  // src/igo/render/header/buttons.ts
-  function createColorButtons() {
-    const data = {
-      type: "color",
-      title: "\u7881\u77F3\u306E\u8272\uFF1A",
-      init: [
-        { value: "0", text: "\u900F\u660E" },
-        { value: "1", text: "\u9ED2" },
-        { value: "2", text: "\u767D" }
-      ]
-    };
-    return createButtons(data);
-  }
-  function createCharacterButtons() {
-    const data = {
-      type: "character",
-      title: "\u6587\u5B57\uFF1A",
-      init: [
-        { value: "", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "A", text: "A" },
-        { value: "B", text: "B" },
-        { value: "C", text: "C" },
-        { value: "D", text: "D" },
-        { value: "E", text: "E" },
-        { value: "\u25B3", text: "\u25B3" },
-        { value: "1", text: "1" },
-        { value: "2", text: "2" },
-        { value: "3", text: "3" },
-        { value: "4", text: "4" },
-        { value: "5", text: "5" }
-      ]
-    };
-    return createButtons(data);
-  }
-  function createVerticalButtons() {
-    const data = {
-      type: "vertical",
-      title: "\u7E26\u5EA7\u6A19\uFF1A",
-      init: [
-        { value: "null", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "nums", text: "1,2,3,..." },
-        { value: "aiu", text: "\u3042,\u3044,\u3046,..." },
-        { value: "iroha", text: "\u30A4,\u30ED,\u30CF,..." }
-      ]
-    };
-    return createButtons(data);
-  }
-  function createHorizontalButtons() {
-    const data = {
-      type: "horizontal",
-      title: "\u7E26\u5EA7\u6A19\uFF1A",
-      init: [
-        { value: "null", text: "\uFF08\u7121\u3057\uFF09" },
-        { value: "nums", text: "1,2,3,..." },
-        { value: "aiu", text: "\u3042,\u3044,\u3046,..." },
-        { value: "iroha", text: "\u30A4,\u30ED,\u30CF,..." }
-      ]
-    };
-    return createButtons(data);
-  }
-  function createButtons(data) {
-    const dom = document.createElement("ul");
-    dom.classList.add("go-form-ul");
-    const li = document.createElement("li");
-    li.textContent = data.title;
-    dom.appendChild(li);
-    const buttons = data.init.map((dat) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.value = dat.value;
-      btn.textContent = dat.text;
-      return btn;
-    });
-    buttons[0].classList.add("active");
-    buttons.forEach((btn) => {
-      const li2 = document.createElement("li");
-      li2.appendChild(btn);
-      dom.appendChild(li2);
-    });
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        buttons.forEach((button) => {
-          button.classList.toggle("active", button === btn);
-        });
-        const event = new CustomEvent("change-state", {
-          bubbles: true,
-          detail: {
-            type: data.type,
-            value: btn.value
-          }
-        });
-        btn.dispatchEvent(event);
-      }, false);
-    });
-    return dom;
-  }
-
-  // src/igo/render/header/ranges.ts
-  function createRange(type, title) {
-    const data = {
-      type,
-      title,
-      value: 19,
-      min: 5,
-      max: 19
-    };
-    const div = document.createElement("div");
-    const titleSpan = document.createElement("span");
-    titleSpan.textContent = title;
-    const input = document.createElement("input");
-    input.type = "range";
-    input.value = `${data.value}`;
-    input.min = `${data.min}`;
-    input.max = `${data.max}`;
-    const valueSpan = document.createElement("span");
-    valueSpan.textContent = input.value;
-    div.appendChild(titleSpan);
-    div.appendChild(input);
-    div.appendChild(valueSpan);
-    input.addEventListener("change", () => {
-      valueSpan.textContent = input.value;
-      const event = new CustomEvent("change-state", {
-        bubbles: true,
-        detail: {
-          type,
-          value: input.value
-        }
-      });
-      input.dispatchEvent(event);
-    });
-    return div;
-  }
-
-  // src/igo/render/header.ts
-  var Header = class {
-    dom = document.createElement("div");
-    #state;
-    constructor(state) {
-      this.#state = state;
-      this.dom.appendChild(createColorButtons());
-      this.dom.appendChild(createCharacterButtons());
-      this.dom.appendChild(createRange("width", "\u6A2A\u5E45\uFF1A"));
-      this.dom.appendChild(createRange("height", "\u9AD8\u3055\uFF1A"));
-      this.dom.appendChild(createVerticalButtons());
-      this.dom.appendChild(createHorizontalButtons());
-    }
-    render(state) {
-      if (this.#state === state) return;
-      if (state.color !== this.#state.color) {
-      }
-      if (state.character !== this.#state.character) {
-      }
-      this.#state = state;
-    }
-  };
-
-  // src/igo/render/body/config.ts
+  // src/igo/board/config.ts
   var config = Object.freeze({
     ns: "http://www.w3.org/2000/svg",
     color: "#333",
@@ -167,580 +11,534 @@
     radius: 20,
     positions: Array.from({ length: 19 }, (_, i) => Math.floor(48 / 2) + i * 48)
   });
+  var stoneColorPattern = Object.freeze({
+    empty: {
+      circle_fill: "transparent",
+      circle_stroke: "transparent",
+      text_fill: "transparent"
+    },
+    onlyChar: {
+      circle_fill: "#fff",
+      circle_stroke: "#fff",
+      text_fill: config.color
+    },
+    black: {
+      circle_fill: config.color,
+      circle_stroke: config.color,
+      text_fill: "#fff"
+    },
+    white: {
+      circle_fill: "#fff",
+      circle_stroke: config.color,
+      text_fill: config.color
+    }
+  });
 
-  // src/igo/render/body/grid.ts
+  // src/igo/board/create-grid.ts
   function createGrid() {
-    let dom = document.createElementNS(config.ns, "g");
-    dom = drawLines(dom);
-    dom = drawDots(dom);
-    return dom;
-  }
-  function drawLines(dom) {
-    const start = Math.floor(config.interval / 2) - Math.floor(config.thick / 2);
+    const dom = document.createElementNS(config.ns, "g");
+    const start = Math.floor(config.interval / 2);
     const end = config.interval * config.size - start;
-    return config.positions.reduce((group, pos, i) => {
-      const isFirstOrLast = i === 0 || i === config.positions.length - 1;
-      const sw = isFirstOrLast ? config.thick : config.thin;
-      group.appendChild(createLine(start, end, pos, pos, sw));
-      group.appendChild(createLine(pos, pos, start, end, sw));
-      return group;
-    }, dom);
-  }
-  function drawDots(dom) {
-    const isDotPos = (_, i) => i === 3 || i === 9 || i === 15;
-    const filterPositions = config.positions.filter(isDotPos);
-    filterPositions.forEach((pos_r) => {
-      filterPositions.forEach((pos_c) => {
-        dom.appendChild(createDot(pos_r, pos_c));
+    const background = document.createElementNS(config.ns, "rect");
+    background.setAttribute("x", "0");
+    background.setAttribute("y", "0");
+    background.setAttribute("width", `${config.interval * config.size}`);
+    background.setAttribute("height", `${config.interval * config.size}`);
+    background.setAttribute("fill", "#fff");
+    dom.appendChild(background);
+    const rect = document.createElementNS(config.ns, "rect");
+    rect.setAttribute("x", `${start}`);
+    rect.setAttribute("y", `${start}`);
+    rect.setAttribute("width", `${config.interval * (config.size - 1)}`);
+    rect.setAttribute("height", `${config.interval * (config.size - 1)}`);
+    rect.setAttribute("fill", "transparent");
+    rect.setAttribute("stroke", config.color);
+    rect.setAttribute("stroke-width", `${config.thick}`);
+    dom.appendChild(rect);
+    const createLine = (x1, x2, y1, y2) => {
+      const line = document.createElementNS(config.ns, "line");
+      line.setAttribute("x1", `${x1}`);
+      line.setAttribute("x2", `${x2}`);
+      line.setAttribute("y1", `${y1}`);
+      line.setAttribute("y2", `${y2}`);
+      line.setAttribute("stroke", config.color);
+      line.setAttribute("stroke-width", `${config.thin}`);
+      return line;
+    };
+    const linePoss = config.positions.filter((_, i) => 0 < i && i < config.size - 1);
+    linePoss.forEach((r_pos) => {
+      linePoss.forEach((c_pos) => {
+        dom.appendChild(createLine(r_pos, r_pos, start, end));
+        dom.appendChild(createLine(start, end, c_pos, c_pos));
+      });
+    });
+    const createDots = (cx, cy) => {
+      const dot = document.createElementNS(config.ns, "circle");
+      dot.setAttribute("cx", `${cx}`);
+      dot.setAttribute("cy", `${cy}`);
+      const r = Math.floor(config.thick * 1.5);
+      dot.setAttribute("r", `${r}`);
+      dot.setAttribute("fill", config.color);
+      return dot;
+    };
+    const dotPoss = config.positions.filter((_, i) => i === 3 || i === 9 || i === 15);
+    dotPoss.forEach((r_pos) => {
+      dotPoss.forEach((c_pos) => {
+        dom.appendChild(createDots(r_pos, c_pos));
       });
     });
     return dom;
   }
-  function createLine(x1, x2, y1, y2, sw) {
-    const line = document.createElementNS(config.ns, "line");
-    line.setAttribute("x1", `${x1}`);
-    line.setAttribute("x2", `${x2}`);
-    line.setAttribute("y1", `${y1}`);
-    line.setAttribute("y2", `${y2}`);
-    line.setAttribute("stroke", config.color);
-    line.setAttribute("stroke-width", `${sw}`);
-    return line;
-  }
-  function createDot(cx, cy) {
-    const dot = document.createElementNS(config.ns, "circle");
-    dot.setAttribute("cx", `${cx}`);
-    dot.setAttribute("cy", `${cy}`);
-    const r = Math.floor(config.thick * 1.5);
-    dot.setAttribute("r", `${r}`);
-    dot.setAttribute("fill", config.color);
-    return dot;
-  }
 
-  // src/igo/render/body/viewbox.ts
-  function innerViewBox(state) {
-    const max = config.size * config.interval;
-    const minx = 0;
-    const width = state.width * config.interval;
-    const height = state.height * config.interval;
-    const miny = max - height;
-    return [minx, miny, width, height].join(" ");
-  }
-  function outerViewBox(state) {
-    const max = config.size * config.interval;
-    let width = state.width * config.interval;
-    let height = state.height * config.interval;
-    let minx = 0;
-    let miny = max - height;
-    if (state.vertical !== "null") {
-      minx -= config.interval;
-      width += config.interval;
-    }
-    if (state.horizontal !== "null") {
-      height += config.interval;
-    }
-    return [minx, miny, width, height].join(" ");
-  }
-
-  // src/igo/render/body/stone.ts
+  // src/igo/board/stone.ts
   var Stone = class {
     dom = document.createElementNS(config.ns, "g");
-    #data = ["0", ""];
-    #circle;
-    #text;
-    #patternMap = Object.freeze({
-      empty: {
-        circle_fill: "transparent",
-        circle_stroke: "transparent",
-        text_fill: "transparent"
-      },
-      onlyChar: {
-        circle_fill: "#fff",
-        circle_stroke: "#fff",
-        text_fill: config.color
-      },
-      black: {
-        circle_fill: config.color,
-        circle_stroke: config.color,
-        text_fill: "#fff"
-      },
-      white: {
-        circle_fill: "#fff",
-        circle_stroke: config.color,
-        text_fill: config.color
-      }
-    });
-    constructor(row, col, color, character) {
-      this.#circle = this.#createCircle(row, col);
-      this.dom.appendChild(this.#circle);
-      this.#text = this.#createText(row, col);
-      this.dom.appendChild(this.#text);
-      this.#data = [color, character];
+    circle = document.createElementNS(config.ns, "circle");
+    text = document.createElementNS(config.ns, "text");
+    tupple = [0, ""];
+    constructor(x, y) {
+      this.initCircle(x, y);
+      this.dom.appendChild(this.circle);
+      this.initText(x, y);
+      this.dom.appendChild(this.text);
     }
-    #createCircle(row, col) {
-      const circle = document.createElementNS(config.ns, "circle");
-      circle.setAttribute("cx", `${col}`);
-      circle.setAttribute("cy", `${row}`);
-      circle.setAttribute("r", `${config.radius}`);
-      circle.setAttribute("fill", "transparent");
-      circle.setAttribute("stroke", "transparent");
-      circle.setAttribute("stroke-width", `${config.thick}`);
-      return circle;
-    }
-    #createText(row, col) {
-      const text = document.createElementNS(config.ns, "text");
-      const text_size = config.text_size;
-      const font_style = `font:normal ${text_size}px sans-serif`;
-      text.setAttribute("style", font_style);
-      text.setAttribute("x", `${col}`);
-      const base_line = config.radius * 0.6;
-      const y = base_line + row;
-      text.setAttribute("y", `${y}`);
-      text.setAttribute("fill", "transparent");
-      text.setAttribute("text-anchor", "middle");
-      text.textContent = "";
-      return text;
-    }
-    render(color, character) {
-      let colorPattern = "empty";
-      if (color === "0" && character === "") {
-        colorPattern = "empty";
-      } else if (color === "0") {
-        colorPattern = "onlyChar";
-      } else if (color === "1") {
-        colorPattern = "black";
-      } else if (color === "2") {
-        colorPattern = "white";
+    render(tupple) {
+      this.tupple = tupple;
+      const [color, character] = tupple;
+      let pattern = "empty";
+      if (color === 0 && character === "") {
+        pattern = "empty";
+      } else if (color === 0) {
+        pattern = "onlyChar";
+      } else if (color === 1) {
+        pattern = "black";
+      } else if (color === 2) {
+        pattern = "white";
       }
       const {
         circle_fill,
         circle_stroke,
         text_fill
-      } = this.#patternMap[colorPattern];
-      this.#circle.setAttribute("fill", circle_fill);
-      this.#circle.setAttribute("stroke", circle_stroke);
-      this.#text.setAttribute("fill", text_fill);
-      this.#text.textContent = character;
+      } = stoneColorPattern[pattern];
+      this.circle.setAttribute("fill", circle_fill);
+      this.circle.setAttribute("stroke", circle_stroke);
+      this.text.setAttribute("fill", text_fill);
+      this.text.textContent = character;
+    }
+    initCircle(x, y) {
+      this.circle.setAttribute("cx", `${x}`);
+      this.circle.setAttribute("cy", `${y}`);
+      this.circle.setAttribute("r", `${config.radius}`);
+      this.circle.setAttribute("fill", "transparent");
+      this.circle.setAttribute("stroke", "transparent");
+      this.circle.setAttribute("stroke-width", `${config.thick}`);
+    }
+    initText(x, y) {
+      const text_size = config.text_size;
+      const font_style = `font:normal ${text_size}px sans-serif`;
+      this.text.setAttribute("style", font_style);
+      this.text.setAttribute("x", `${x}`);
+      const base_line = config.radius * 0.6;
+      const base_y = base_line + y;
+      this.text.setAttribute("y", `${base_y}`);
+      this.text.setAttribute("fill", "transparent");
+      this.text.setAttribute("text-anchor", "middle");
+      this.text.textContent = "";
     }
   };
 
-  // src/igo/render/body/stones.ts
+  // src/igo/board/stones.ts
   var Stones = class {
-    dom = document.createElementNS(config.ns, "g");
-    data;
+    dom;
     stones;
-    constructor(state) {
-      this.data = state.data;
-      this.stones = config.positions.map(
-        (row) => config.positions.map(
-          (col) => new Stone(row, col, "0", "")
-        )
-      );
-    }
-    /*
-    onClick(x:number, y:number, state:State):string {
-        
-        if(x < 0) return JSON.stringify(this.data);
-        const max_height = config.size * config.interval;
-        if(max_height < y) return JSON.stringify(this.data);
-        const positions = this.#positions;
-        const init_x = {idx: 0, dist: Math.abs(positions[0] - x), now: x};
-        const init_y = {idx: 0, dist: Math.abs(positions[0] - y), now: y};
-        const minDist = (obj:{idx:number, dist:number, now:number}, pos:number, i:number) => {
-            if(Math.abs(pos - obj.now) < obj.dist) {
-                obj.idx = i;
-                obj.dist = Math.abs(pos - obj.now);
-            }
-            return obj;
-        }
-        const col = positions.reduce(minDist, init_x).idx;
-        const row = positions.reduce(minDist, init_y).idx;
-        const color = this.#state.color.input.init[this.#state.color.input.active].value as ColorData;
-        const character = this.#state.character.input.init[this.#state.character.input.active].value;
-        this.stones[row][col].onChange(color, character);
-        return JSON.stringify(this.data);
-    }
-    */
-    render(state) {
-      if (this.data === state.data) return;
-      this.data.forEach((row, ridx) => {
-        if (row !== state.data[ridx]) {
-          row.forEach((cell, cidx) => {
-            if (cell !== state.data[ridx][cidx]) {
-              this.stones[ridx][cidx].render(cell[0], cell[1]);
-            }
-          });
-        }
-      });
-    }
-  };
-
-  // src/igo/render/body/board.ts
-  var Board = class {
-    dom = document.createElementNS(config.ns, "svg");
-    stones;
-    constructor(state) {
-      this.dom.setAttribute("viewBox", innerViewBox(state));
-      this.dom.appendChild(createGrid());
-      this.stones = new Stones(state);
-      this.dom.addEventListener("click", (ev) => {
-        const pt = this.dom.createSVGPoint();
-        pt.x = ev.clientX;
-        pt.y = ev.clientY;
-        const { x, y } = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
-        const event = new CustomEvent("click-board", {
-          bubbles: true,
-          detail: [x, y]
-        });
-        this.dom.dispatchEvent(event);
-      }, false);
-    }
-    render(state) {
-      this.dom.setAttribute("viewBox", innerViewBox(state));
-      this.stones.render(state);
-    }
-  };
-
-  // src/igo/render/body/coordinates.ts
-  var Coordinates = class {
-    dom = document.createElementNS(config.ns, "g");
-    init_data = {
-      aiu: "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split(""),
-      iroha: "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split(""),
-      nums: Array.from({ length: 19 }, (_, i) => `${i + 1}`)
-    };
-    groups = {
-      aiu: document.createElementNS(config.ns, "g"),
-      iroha: document.createElementNS(config.ns, "g"),
-      nums: document.createElementNS(config.ns, "g")
-    };
-    init(type) {
-      this.groups[type] = this.setChars(
-        this.groups[type],
-        this.init_data[type],
-        this.positions
-      );
-      this.dom.appendChild(this.groups[type]);
-    }
-    switchCoord(type) {
-      for (const [gtype, element] of Object.entries(this.groups)) {
-        let opacity = "0";
-        let pointer = "";
-        if (gtype === type) {
-          opacity = "1";
-          pointer = "none";
-        }
-        element.style.opacity = opacity;
-      }
-    }
-    setChars(group, chars, positions) {
-      return chars.reduce((gro, char, idx) => {
-        const [x, y] = positions[idx];
-        const text = document.createElementNS(
-          config.ns,
-          "text"
-        );
-        text.setAttribute("x", `${x}`);
-        text.setAttribute("y", `${y}`);
-        const style = `font:normal ${config.text_size}px sans-serif;`;
-        text.setAttribute("style", style);
-        text.setAttribute("fill", "currentColor");
-        text.setAttribute("text-anchor", "middle");
-        text.textContent = char;
-        gro.appendChild(text);
-        return gro;
-      }, group);
-    }
-  };
-  var Vertical = class extends Coordinates {
-    vertical;
-    constructor(state) {
-      super();
-      this.vertical = state.vertical;
-      this.init("aiu");
-      this.init("iroha");
-      this.init("nums");
-    }
-    get positions() {
-      return config.positions.toReversed().map((row) => {
-        const x = 0 - Math.floor(config.interval / 2);
-        const y = row + config.radius * 0.6;
-        return [x, y];
-      });
-    }
-    render(state) {
-      if (this.vertical === state.vertical) return;
-      this.vertical = state.vertical;
-      this.switchCoord(this.vertical);
-    }
-  };
-  var Horizontal = class extends Coordinates {
-    horizontal;
-    constructor(state) {
-      super();
-      this.horizontal = state.horizontal;
-      this.init("aiu");
-      this.init("iroha");
-      this.init("nums");
-    }
-    get positions() {
-      return config.positions.map((col) => {
-        const y = (config.size + 1) * config.interval - config.radius * 0.6;
-        const x = col;
-        return [x, y];
-      });
-    }
-    render(state) {
-      if (this.horizontal === state.horizontal) return;
-      this.horizontal = state.horizontal;
-      this.switchCoord(this.horizontal);
-    }
-  };
-
-  // src/igo/render/body.ts
-  var Body = class {
-    dom = document.createElementNS(config.ns, "svg");
-    #state;
-    board;
-    vertical;
-    horizontal;
-    constructor(state) {
-      this.#state = state;
-      this.dom.setAttribute("viewBox", outerViewBox(state));
-      this.board = new Board(state);
-      this.dom.appendChild(this.board.dom);
-      this.vertical = new Vertical(state);
-      this.dom.appendChild(this.vertical.dom);
-      this.horizontal = new Horizontal(state);
-      this.dom.appendChild(this.horizontal.dom);
-    }
-    render(state) {
-      if (state === this.#state) return;
-      if (this.#state.data !== state.data) {
-        this.board.render(state);
-      }
-      if (this.#state.width !== state.width || this.#state.height !== state.height || this.#state.vertical !== state.vertical || this.#state.horizontal !== state.horizontal) {
-        this.dom.setAttribute("viewBox", outerViewBox(state));
-        this.vertical.render(state);
-        this.horizontal.render(state);
-      }
-      this.#state = state;
-    }
-  };
-
-  // src/igo/render/footer.ts
-  var Footer = class {
-    dom = document.createElement("div");
-    textarea = document.createElement("textarea");
-    paragraph = document.createElement("p");
-    constructor(state) {
-      this.textarea.placeholder = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
-      this.textarea.value = state.textarea;
-      this.textarea.style.display = "none";
-      this.paragraphText = state.textarea;
-      this.dom.appendChild(this.textarea);
-      this.dom.appendChild(this.paragraph);
-      this.paragraph.addEventListener("click", () => {
-        this.paragraph.style.display = "none";
-        this.textarea.style.display = "block";
-        this.textarea.focus();
-      });
-      this.textarea.addEventListener("blur", () => {
-        this.paragraphText = this.textarea.value;
-        this.textarea.style.display = "none";
-        this.paragraph.style.display = "block";
-        const event = new CustomEvent("blur-textarea", {
-          bubbles: true,
-          detail: this.textarea.value
-        });
-        this.dom.dispatchEvent(event);
-      });
-    }
-    set paragraphText(text) {
-      if (text === "") {
-        this.paragraph.textContent = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
-      } else {
-        this.paragraph.textContent = text;
-      }
-    }
-    render(state) {
-    }
-  };
-
-  // src/igo/update.ts
-  var Update = class {
-    static color(state, color) {
-      if (typeof color !== "string") return state;
-      if (state.color === color) return state;
-      if (!["0", "1", "2"].includes(color)) return state;
-      return {
-        ...state,
-        color
-      };
-    }
-    static character(state, value) {
-      if (typeof value !== "string") return state;
-      if (state.character === value) return state;
-      const character = value.length > 0 ? value[0] : "";
-      return {
-        ...state,
-        character
-      };
-    }
-    static width(state, range) {
-      if (typeof range !== "number") return state;
-      const width = 1 <= range && range <= 19 ? range : 19;
-      return {
-        ...state,
-        width
-      };
-    }
-    static height(state, range) {
-      if (typeof range !== "number") return state;
-      const height = 1 <= range && range <= 19 ? range : 19;
-      return {
-        ...state,
-        height
-      };
-    }
-    static vertical(state, coord) {
-      if (typeof coord !== "string") return state;
-      const coordArr = ["nums", "aiu", "iroha"];
-      const vertical = coordArr.includes(coord) ? coord : "null";
-      return {
-        ...state,
-        vertical
-      };
-    }
-    static horizontal(state, coord) {
-      if (typeof coord !== "string") return state;
-      const coordArr = ["nums", "aiu", "iroha"];
-      const horizontal = coordArr.includes(coord) ? coord : "null";
-      return {
-        ...state,
-        horizontal
-      };
-    }
-    static data(state, input) {
-      if (!Array.isArray(input) || input.length !== 2) return state;
-      const [x, y] = input;
-      if (typeof x !== "number" || typeof y !== "number") return state;
-      if (!Number.isInteger(x) || !Number.isInteger(y)) return state;
-      if (x < 1 || 19 < x || y < 1 || 19 < y) return state;
-      const [col, row] = [x - 1, y - 1];
-      const oldCell = state.data[row][col];
-      let newCell = [state.color, state.character];
-      if (state.color === oldCell[0] && state.character === oldCell[1]) {
-        newCell = ["0", ""];
-      }
-      const newRow = [...state.data[row]];
-      newRow[col] = newCell;
-      const newData = [...state.data];
-      newData[row] = newRow;
-      return {
-        ...state,
-        data: newData
-      };
-    }
-    static textarea(state, text) {
-      if (state.textarea === text) return state;
-      return {
-        ...state,
-        textarea: text
-      };
-    }
-  };
-
-  // src/igo/wrapper.ts
-  var Wrapper = class {
-    dom = document.createElement("div");
-    #state = {
-      color: "0",
-      character: "",
-      width: 19,
-      height: 19,
-      vertical: "null",
-      horizontal: "null",
-      size: "small",
-      data: Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => ["0", ""])),
-      textarea: ""
-    };
-    #header;
-    #body;
-    #footer;
     constructor() {
-      this.#header = new Header(this.#state);
-      this.#body = new Body(this.#state);
-      this.#footer = new Footer(this.#state);
-      this.dom.appendChild(this.#header.dom);
-      this.dom.appendChild(this.#body.dom);
-      this.dom.appendChild(this.#footer.dom);
-      this.dom.addEventListener("change-state", (ev) => {
-        const detail = ev.detail;
-        switch (detail.type) {
-          case "color":
-            this.#state = Update.color(this.#state, detail.value);
-            break;
-          case "character":
-            this.#state = Update.character(this.#state, detail.value);
-            break;
-          case "width":
-            this.#state = Update.width(this.#state, detail.value);
-            this.#render();
-            break;
-          case "height":
-            this.#state = Update.height(this.#state, detail.value);
-            this.#render();
-            break;
-          case "vertical":
-            this.#state = Update.vertical(this.#state, detail.value);
-            this.#render();
-            break;
-          case "horizontal":
-            this.#state = Update.horizontal(this.#state, detail.value);
-            this.#render();
-            break;
-        }
-      }, false);
-      this.dom.addEventListener("click-board", (ev) => {
-        this.#state = Update.data(this.#state, ev.detail);
-        this.#render();
-      }, false);
-      this.dom.addEventListener("blur-textarea", (ev) => {
-        const detail = ev.detail;
-        this.#state = Update.textarea(this.#state, detail);
-      }, false);
+      this.dom = document.createElementNS(config.ns, "g");
+      this.stones = config.positions.map(
+        (pos_r) => config.positions.map((pos_c) => new Stone(pos_r, pos_c))
+      );
     }
-    changeSize(size) {
-      if (["none", "small", "large"].includes(size)) {
-        this.#state.size = size;
-        this.#render();
+    update(row, col, tupple) {
+      this.stones[row][col].render(tupple);
+    }
+    bulkUpdate(val) {
+      const data = this.parseData(val);
+      data.forEach((row_data, r) => {
+        row_data.forEach((cell_data, c) => {
+          this.stones[r][c].render(cell_data);
+        });
+      });
+    }
+    parseData(jsonString) {
+      const baseStone = [0, ""];
+      const blankData = Array.from(
+        { length: 19 },
+        () => Array.from({ length: 19 }, () => [...baseStone])
+      );
+      try {
+        const input = JSON.parse(jsonString);
+        if (!Array.isArray(input) || input.length !== 19) return blankData;
+        const isValid = input.every((row) => {
+          if (!Array.isArray(row) || row.length !== 19) return false;
+          return row.every((cell) => {
+            if (!Array.isArray(cell) || cell.length !== 2) return false;
+            if (cell[0] !== 0 && cell[0] !== 1 && cell[0] !== 2) return false;
+            if (typeof cell[1] !== "string" || cell[1].length > 1) return false;
+            return true;
+          });
+        });
+        return isValid ? input : blankData;
+      } catch (e) {
+        console.error("parse error: ", e);
+        return blankData;
       }
     }
-    bulkUpdate(input) {
-      const [rowData, rowTextarea] = input;
-      this.#render();
+  };
+
+  // src/igo/board/view-box.ts
+  var ViewBox = class {
+    xAxis = "none";
+    yAxis = "none";
+    cols = 19;
+    rows = 19;
+    get child() {
+      const vb = [
+        0,
+        config.interval * (config.size - this.rows),
+        config.interval * this.cols,
+        config.interval * this.rows
+      ];
+      return vb.join(" ");
     }
-    get data() {
-      return [this.#state.data, this.#state.textarea];
+    get parent() {
+      const rowCoord = this.xAxis === "none" ? 0 : config.interval;
+      const colCoord = this.yAxis === "none" ? 0 : config.interval;
+      const vb = [
+        0 - rowCoord,
+        0,
+        config.interval * this.cols + rowCoord,
+        config.interval * this.rows + colCoord
+      ];
+      return vb.join(" ");
     }
-    #render() {
-      this.#header.render(this.#state);
-      this.#body.render(this.#state);
-      this.#footer.render(this.#state);
+  };
+
+  // src/igo/board/go-board.ts
+  var GoBoard = class {
+    dom = document.createElementNS(config.ns, "svg");
+    board = document.createElementNS(config.ns, "svg");
+    coord = document.createElementNS(config.ns, "g");
+    displayMode = "list";
+    tupple = [0, ""];
+    stones;
+    viewBox;
+    tupples;
+    constructor() {
+      this.stones = new Stones();
+      this.tupples = this.stones.stones.map((r) => r.map((stn) => stn.tupple));
+      this.viewBox = new ViewBox();
+      this.dom.setAttribute("viewBox", this.viewBox.parent);
+      this.board.setAttribute("viewBox", this.viewBox.child);
+      this.board.setAttribute("x", "0");
+      this.board.setAttribute("y", "0");
+      this.board.appendChild(createGrid());
+      this.board.appendChild(this.stones.dom);
+      this.dom.appendChild(this.board);
+      this.board.addEventListener("click", (ev) => {
+        this.toggleStone(ev);
+      }, false);
+    }
+    toggleStone(ev) {
+      if (this.displayMode !== "detail") return;
+      const pt = this.board.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const { x, y } = pt.matrixTransform(this.board.getScreenCTM()?.inverse());
+      const nearestIdx = (num) => {
+        return config.positions.reduce((nearest, pos, idx) => {
+          const everBest = Math.abs(config.positions[nearest] - num);
+          const now = Math.abs(pos - num);
+          return everBest < now ? nearest : idx;
+        }, 0);
+      };
+      const [col, row] = [nearestIdx(x), nearestIdx(y)];
+      const old = this.stones.stones[row][col];
+      if (old.tupple[0] === this.tupple[0] && old.tupple[1] === this.tupple[1]) {
+        this.stones.stones[row][col].render([0, ""]);
+      } else {
+        this.stones.stones[row][col].render(this.tupple);
+      }
+    }
+    set color(input) {
+      const n = Number(input);
+      if (n === 0 || n === 1 || n === 2) {
+        this.tupple[0] = n;
+      }
+    }
+    set character(input) {
+      if (typeof input === "string") {
+        this.tupple[1] = input.length > 0 ? input[0] : "";
+      }
+    }
+    set rangeRows(input) {
+      const num = Number(input ?? 19);
+      if (1 <= num && num <= 19) {
+        this.viewBox.rows = num;
+        this.dom.setAttribute("viewBox", this.viewBox.parent);
+        this.board.setAttribute("viewBox", this.viewBox.child);
+      }
+    }
+    set rangeCols(input) {
+      const num = Number(input ?? 19);
+      console.log(input);
+      if (1 <= num && num <= 19) {
+        this.viewBox.cols = num;
+        this.dom.setAttribute("viewBox", this.viewBox.parent);
+        this.board.setAttribute("viewBox", this.viewBox.child);
+      }
+    }
+    set xAxis(type) {
+      switch (type) {
+        case "none":
+        case "num":
+        case "aiu":
+        case "iroha":
+          this.viewBox.xAxis = type;
+          this.dom.setAttribute("viewBox", this.viewBox.parent);
+          this.board.setAttribute("viewBox", this.viewBox.child);
+          break;
+      }
+    }
+    set yAxis(type) {
+      switch (type) {
+        case "none":
+        case "num":
+        case "aiu":
+        case "iroha":
+          this.viewBox.yAxis = type;
+          this.dom.setAttribute("viewBox", this.viewBox.parent);
+          this.board.setAttribute("viewBox", this.viewBox.child);
+          break;
+      }
+    }
+    setDisplayMode(mode) {
+      this.displayMode = mode;
+    }
+  };
+
+  // src/igo/controller/create-buttons.ts
+  function createButtons(input) {
+    const ul = document.createElement("ul");
+    ul.classList.add("go-form-ul");
+    const title = document.createElement("li");
+    title.textContent = input.title;
+    ul.appendChild(title);
+    const buttons = input.init.map((ini) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.type = input.type;
+      btn.dataset.value = ini.value;
+      btn.textContent = ini.text;
+      return btn;
+    });
+    buttons[0].classList.add("active");
+    buttons.forEach((btn) => {
+      const li = document.createElement("li");
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => {
+          b.classList.toggle("active", b === btn);
+        });
+      }, false);
+    });
+    return ul;
+  }
+  function createColorButtons() {
+    return createButtons({
+      title: "\u77F3\u306E\u8272\uFF1A",
+      type: "color",
+      init: [
+        { text: "\uFF08\u7121\u8272\uFF09", value: "0" },
+        { text: "\u9ED2", value: "1" },
+        { text: "\u767D", value: "2" }
+      ]
+    });
+  }
+  function createCharacterButtons() {
+    return createButtons({
+      title: "\u6587\u5B57",
+      type: "character",
+      init: [
+        { text: "\uFF08\u7121\u3057\uFF09", value: "" },
+        { text: "A", value: "A" },
+        { text: "B", value: "B" },
+        { text: "C", value: "C" },
+        { text: "D", value: "D" },
+        { text: "E", value: "E" },
+        { text: "\u25B3", value: "\u25B3" },
+        { text: "1", value: "1" },
+        { text: "2", value: "2" },
+        { text: "3", value: "3" },
+        { text: "4", value: "4" },
+        { text: "5", value: "5" }
+      ]
+    });
+  }
+  function createXAxisButtons() {
+    return createButtons({
+      title: "\u6A2A\u8EF8",
+      type: "x-axis",
+      init: [
+        { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
+        { text: "1,2,3,...", value: "num" },
+        { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
+        { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
+      ]
+    });
+  }
+  function createYAxisButtons() {
+    return createButtons({
+      title: "\u7E26\u8EF8",
+      type: "y-axis",
+      init: [
+        { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
+        { text: "1,2,3,...", value: "num" },
+        { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
+        { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
+      ]
+    });
+  }
+
+  // src/igo/controller/create-ranges.ts
+  function createRange(data) {
+    const div = document.createElement("div");
+    div.classList.add("go-form-range");
+    const title = document.createElement("span");
+    title.textContent = data.title;
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = "5";
+    input.max = "19";
+    input.value = "19";
+    input.dataset.type = data.type;
+    const span = document.createElement("span");
+    span.textContent = "19";
+    div.appendChild(title);
+    div.appendChild(input);
+    div.appendChild(span);
+    input.addEventListener("change", () => {
+      span.textContent = input.value;
+    }, false);
+    return div;
+  }
+  function createXAxisRange() {
+    return createRange({
+      title: "\u6A2A\u5E45",
+      type: "width"
+    });
+  }
+  function createYAxisRange() {
+    return createRange({
+      title: "\u9AD8\u3055",
+      type: "height"
+    });
+  }
+
+  // src/igo/controller/create-header.ts
+  function createHeader() {
+    const dom = document.createElement("div");
+    dom.appendChild(createColorButtons());
+    dom.appendChild(createCharacterButtons());
+    dom.appendChild(createXAxisRange());
+    dom.appendChild(createYAxisRange());
+    dom.appendChild(createXAxisButtons());
+    dom.appendChild(createYAxisButtons());
+    return dom;
+  }
+
+  // src/igo/controller/textarea.ts
+  var Textarea = class {
+    dom = document.createElement("div");
+    area = document.createElement("textarea");
+    para = document.createElement("p");
+    displayMode = "list";
+    constructor() {
+      this.dom.appendChild(this.area);
+      this.dom.appendChild(this.para);
+      this.area.style.display = "none";
+      this.para.textContent = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
+      this.para.style.color = "#555";
+      this.area.addEventListener("blur", () => {
+        this.area.style.display = "none";
+        if (this.area.value === "") {
+          this.para.textContent = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
+          this.para.style.color = "#555";
+        } else {
+          this.para.textContent = this.area.value;
+          this.para.style.color = "#333";
+        }
+        this.para.style.display = "block";
+      });
+      this.para.addEventListener("click", () => {
+        if (this.displayMode === "detail") {
+          this.area.style.display = "block";
+          this.para.style.display = "none";
+        }
+      });
     }
   };
 
   // src/igo/board-controller.ts
   var BoardController = class extends HTMLElement {
-    #wrapper;
+    #header = createHeader();
+    #board = new GoBoard();
+    #textarea = new Textarea();
     static observedAttributes = [
       // "data-gostate-data",
       "data-display"
     ];
     constructor() {
       super();
-      this.#wrapper = new Wrapper();
-      this.appendChild(this.#wrapper.dom);
+      this.appendChild(this.#header);
+      this.appendChild(this.#board.dom);
+      this.appendChild(this.#textarea.dom);
+      this.#header.addEventListener("click", (ev) => {
+        const target = ev.target;
+        if (target instanceof HTMLButtonElement) {
+          switch (target.dataset.type) {
+            case "color":
+              this.#board.color = target.dataset.value;
+              console.log(this.#board.tupple);
+              break;
+            case "character":
+              this.#board.character = target.dataset.value;
+              break;
+            case "x-axis":
+              this.#board.xAxis = target.dataset.value;
+              break;
+            case "y-axis":
+              this.#board.yAxis = target.dataset.value;
+              break;
+          }
+        }
+      });
+      this.#header.addEventListener("change", (ev) => {
+        const target = ev.target;
+        if (target instanceof HTMLInputElement && target.type === "range") {
+          switch (target.dataset.type) {
+            case "width":
+              this.#board.rangeCols = target.value;
+              break;
+            case "height":
+              this.#board.rangeRows = target.value;
+              break;
+          }
+        }
+      });
+      this.addEventListener("blur", (ev) => {
+      });
     }
     // document に接続時実行
     connectedCallback() {
@@ -748,10 +546,24 @@
     // 属性変更時実行
     attributeChangedCallback(attr, oldVal, newVal) {
       switch (attr) {
-        //case 'data-gostate-data':
-        //    break;
         case "data-display":
-          this.#wrapper.changeSize(newVal);
+          switch (newVal) {
+            case "none":
+              this.#header.style.display = "none";
+              this.#board.displayMode = "none";
+              this.#textarea.displayMode = "none";
+              break;
+            case "list":
+              this.#header.style.display = "none";
+              this.#board.displayMode = "list";
+              this.#textarea.displayMode = "list";
+              break;
+            case "detail":
+              this.#header.style.display = "block";
+              this.#board.displayMode = "detail";
+              this.#textarea.displayMode = "detail";
+              break;
+          }
           break;
       }
     }
@@ -871,19 +683,5 @@
     displayShowHide();
     document.querySelector("button#save")?.addEventListener("click", save, false);
     document.querySelector("input#load")?.addEventListener("change", load, false);
-    const [dom, func] = createState();
-    document.querySelector("div.board")?.appendChild(dom);
-    dom.addEventListener("click", (ev) => {
-      console.log(dom);
-      func("active", ev.target === dom);
-    }, false);
   }, false);
-  function createState() {
-    const dom = document.createElement("div");
-    dom.textContent = "test";
-    const func = (className, bool) => {
-      dom.classList.toggle(className, bool);
-    };
-    return [dom, func];
-  }
 })();

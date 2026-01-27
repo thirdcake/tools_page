@@ -1,9 +1,9 @@
-import { BoardController as BCon } from "./board-controller";
+import { BoardController } from "./board-controller";
 import { displayShowHide } from "./displayShowHide";
 import { save, load } from "./saveLoad";
 
 // <board-svg>要素を定義
-customElements.define('board-controller', BCon);
+customElements.define('board-controller', BoardController);
 
 // 実行
 document.addEventListener('DOMContentLoaded', ()=>{
