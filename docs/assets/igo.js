@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/igo/board/config.ts
   var config = Object.freeze({
@@ -90,6 +91,89 @@
     return dom;
   }
 
+  // src/igo/board/coordinates.ts
+  var Coordinates = class {
+    dom = document.createElementNS(config.ns, "g");
+    x = {
+      num: document.createElementNS(config.ns, "g"),
+      aiu: document.createElementNS(config.ns, "g"),
+      iroha: document.createElementNS(config.ns, "g")
+    };
+    y = {
+      num: document.createElementNS(config.ns, "g"),
+      aiu: document.createElementNS(config.ns, "g"),
+      iroha: document.createElementNS(config.ns, "g")
+    };
+    xpositions = config.positions.map((pos) => [pos, config.interval * (config.size + 0.5)]);
+    ypositions = config.positions.toReversed().map((pos) => [-Math.floor(config.interval / 2), pos]);
+    init_data = {
+      aiu: "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split(""),
+      iroha: "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split(""),
+      num: Array.from({ length: 19 }, (_, i) => `${i + 1}`)
+    };
+    constructor() {
+      this.createCoord(this.x.num, this.xpositions, this.init_data.num);
+      this.createCoord(this.x.aiu, this.xpositions, this.init_data.aiu);
+      this.createCoord(this.x.iroha, this.xpositions, this.init_data.iroha);
+      this.createCoord(this.y.num, this.ypositions, this.init_data.num);
+      this.createCoord(this.y.aiu, this.ypositions, this.init_data.aiu);
+      this.createCoord(this.y.iroha, this.ypositions, this.init_data.iroha);
+      this.dom.appendChild(this.x.num);
+      this.dom.appendChild(this.x.aiu);
+      this.dom.appendChild(this.x.iroha);
+      this.dom.appendChild(this.y.num);
+      this.dom.appendChild(this.y.aiu);
+      this.dom.appendChild(this.y.iroha);
+    }
+    createCoord(parent, positions, init_data) {
+      parent.style.fill = "transparent";
+      const text_size = config.text_size;
+      const font_style = `font:normal ${text_size}px sans-serif`;
+      const base_line = config.radius * 0.6;
+      positions.forEach(([x_pos, y_pos], i) => {
+        const text = document.createElementNS(config.ns, "text");
+        text.setAttribute("style", font_style);
+        text.setAttribute("x", `${x_pos}`);
+        text.setAttribute("y", `${base_line + y_pos}`);
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = init_data[i];
+        parent.appendChild(text);
+      });
+    }
+    set xAxis(axis) {
+      this.x.num.style.fill = "transparent";
+      this.x.aiu.style.fill = "transparent";
+      this.x.iroha.style.fill = "transparent";
+      switch (axis) {
+        case "num":
+          this.x.num.style.fill = config.color;
+          break;
+        case "aiu":
+          this.x.aiu.style.fill = config.color;
+          break;
+        case "iroha":
+          this.x.iroha.style.fill = config.color;
+          break;
+      }
+    }
+    set yAxis(axis) {
+      this.y.num.style.fill = "transparent";
+      this.y.aiu.style.fill = "transparent";
+      this.y.iroha.style.fill = "transparent";
+      switch (axis) {
+        case "num":
+          this.y.num.style.fill = config.color;
+          break;
+        case "aiu":
+          this.y.aiu.style.fill = config.color;
+          break;
+        case "iroha":
+          this.y.iroha.style.fill = config.color;
+          break;
+      }
+    }
+  };
+
   // src/igo/board/stone.ts
   var Stone = class {
     dom = document.createElementNS(config.ns, "g");
@@ -149,13 +233,17 @@
 
   // src/igo/board/stones.ts
   var Stones = class {
-    dom;
+    dom = document.createElementNS(config.ns, "g");
     stones;
     constructor() {
-      this.dom = document.createElementNS(config.ns, "g");
       this.stones = config.positions.map(
-        (pos_r) => config.positions.map((pos_c) => new Stone(pos_r, pos_c))
+        (pos_r) => config.positions.map((pos_c) => new Stone(pos_c, pos_r))
       );
+      this.stones.forEach((row) => {
+        row.forEach((stn) => {
+          this.dom.appendChild(stn.dom);
+        });
+      });
     }
     update(row, col, tupple) {
       this.stones[row][col].render(tupple);
@@ -194,65 +282,49 @@
     }
   };
 
-  // src/igo/board/view-box.ts
-  var ViewBox = class {
-    xAxis = "none";
-    yAxis = "none";
-    cols = 19;
-    rows = 19;
-    get child() {
-      const vb = [
-        0,
-        config.interval * (config.size - this.rows),
-        config.interval * this.cols,
-        config.interval * this.rows
-      ];
-      return vb.join(" ");
-    }
-    get parent() {
-      const rowCoord = this.xAxis === "none" ? 0 : config.interval;
-      const colCoord = this.yAxis === "none" ? 0 : config.interval;
-      const vb = [
-        0 - rowCoord,
-        0,
-        config.interval * this.cols + rowCoord,
-        config.interval * this.rows + colCoord
-      ];
-      return vb.join(" ");
-    }
-  };
-
   // src/igo/board/go-board.ts
   var GoBoard = class {
     dom = document.createElementNS(config.ns, "svg");
-    board = document.createElementNS(config.ns, "svg");
-    coord = document.createElementNS(config.ns, "g");
-    displayMode = "list";
+    coord;
+    #displayMode = "list";
     tupple = [0, ""];
     stones;
-    viewBox;
+    #viewBox = {
+      xAxis: "none",
+      yAxis: "none",
+      rows: 19,
+      cols: 19
+    };
     tupples;
     constructor() {
       this.stones = new Stones();
       this.tupples = this.stones.stones.map((r) => r.map((stn) => stn.tupple));
-      this.viewBox = new ViewBox();
-      this.dom.setAttribute("viewBox", this.viewBox.parent);
-      this.board.setAttribute("viewBox", this.viewBox.child);
-      this.board.setAttribute("x", "0");
-      this.board.setAttribute("y", "0");
-      this.board.appendChild(createGrid());
-      this.board.appendChild(this.stones.dom);
-      this.dom.appendChild(this.board);
-      this.board.addEventListener("click", (ev) => {
+      this.coord = new Coordinates();
+      this.dom.setAttribute("viewBox", this.viewBox);
+      this.dom.appendChild(createGrid());
+      this.dom.appendChild(this.stones.dom);
+      this.dom.appendChild(this.coord.dom);
+      this.dom.addEventListener("click", (ev) => {
         this.toggleStone(ev);
       }, false);
     }
+    get viewBox() {
+      const xAxis = this.#viewBox.xAxis === "none" ? 0 : config.interval;
+      const yAxis = this.#viewBox.yAxis === "none" ? 0 : config.interval;
+      const vb = [
+        -yAxis,
+        config.interval * (config.size - this.#viewBox.rows),
+        config.interval * this.#viewBox.cols + yAxis,
+        config.interval * this.#viewBox.rows + xAxis
+      ];
+      return vb.join(" ");
+    }
     toggleStone(ev) {
-      if (this.displayMode !== "detail") return;
-      const pt = this.board.createSVGPoint();
+      if (this.#displayMode !== "detail") return;
+      const pt = this.dom.createSVGPoint();
       pt.x = ev.clientX;
       pt.y = ev.clientY;
-      const { x, y } = pt.matrixTransform(this.board.getScreenCTM()?.inverse());
+      const { x, y } = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
       const nearestIdx = (num) => {
         return config.positions.reduce((nearest, pos, idx) => {
           const everBest = Math.abs(config.positions[nearest] - num);
@@ -282,18 +354,16 @@
     set rangeRows(input) {
       const num = Number(input ?? 19);
       if (1 <= num && num <= 19) {
-        this.viewBox.rows = num;
-        this.dom.setAttribute("viewBox", this.viewBox.parent);
-        this.board.setAttribute("viewBox", this.viewBox.child);
+        this.#viewBox.rows = num;
+        this.dom.setAttribute("viewBox", this.viewBox);
       }
     }
     set rangeCols(input) {
       const num = Number(input ?? 19);
       console.log(input);
       if (1 <= num && num <= 19) {
-        this.viewBox.cols = num;
-        this.dom.setAttribute("viewBox", this.viewBox.parent);
-        this.board.setAttribute("viewBox", this.viewBox.child);
+        this.#viewBox.cols = num;
+        this.dom.setAttribute("viewBox", this.viewBox);
       }
     }
     set xAxis(type) {
@@ -302,9 +372,9 @@
         case "num":
         case "aiu":
         case "iroha":
-          this.viewBox.xAxis = type;
-          this.dom.setAttribute("viewBox", this.viewBox.parent);
-          this.board.setAttribute("viewBox", this.viewBox.child);
+          this.#viewBox.xAxis = type;
+          this.dom.setAttribute("viewBox", this.viewBox);
+          this.coord.xAxis = type;
           break;
       }
     }
@@ -314,14 +384,14 @@
         case "num":
         case "aiu":
         case "iroha":
-          this.viewBox.yAxis = type;
-          this.dom.setAttribute("viewBox", this.viewBox.parent);
-          this.board.setAttribute("viewBox", this.viewBox.child);
+          this.#viewBox.yAxis = type;
+          this.dom.setAttribute("viewBox", this.viewBox);
+          this.coord.yAxis = type;
           break;
       }
     }
-    setDisplayMode(mode) {
-      this.displayMode = mode;
+    set displayMode(mode) {
+      this.#displayMode = mode;
     }
   };
 

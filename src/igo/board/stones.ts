@@ -2,14 +2,18 @@ import { config } from "./config";
 import { Stone, StoneTupple } from "./stone";
 
 export class Stones {
-    dom: SVGGElement;
+    dom = document.createElementNS(config.ns, 'g');
     stones: Stone[][];
 
     constructor() {
-        this.dom = document.createElementNS(config.ns, 'g');
         this.stones = config.positions.map(pos_r => 
-            config.positions.map(pos_c => new Stone(pos_r, pos_c))
+            config.positions.map(pos_c => new Stone(pos_c, pos_r))
         );
+        this.stones.forEach(row => {
+            row.forEach(stn => {
+                this.dom.appendChild(stn.dom);
+            })
+        });
     }
     
     update(row: number, col: number, tupple: StoneTupple):void {

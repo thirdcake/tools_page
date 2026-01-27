@@ -1,48 +1,59 @@
 import { config } from "./config";
 import { createGrid } from "./create-grid";
+import { Coordinates } from "./coordinates";
 import { StoneTupple } from "./stone";
 import { Stones } from "./stones";
-import { ViewBox } from "./view-box";
 import { DisplayMode } from "../board-controller";
-
-type CoordinateType = 'none' | 'num' | 'aiu' | 'iroha';
 
 export class GoBoard {
     dom = document.createElementNS(config.ns, 'svg');
-    board = document.createElementNS(config.ns, 'svg');
-    coord = document.createElementNS(config.ns, 'g');
+    coord: Coordinates;
 
-    displayMode: DisplayMode = 'list';
+    #displayMode: DisplayMode = 'list';
     tupple:StoneTupple = [0, ''];
     stones: Stones;
-    viewBox: ViewBox;
+    #viewBox = {
+        xAxis: 'none',
+        yAxis: 'none',
+        rows: 19,
+        cols: 19,
+    }
     tupples: StoneTupple[][];
 
     constructor() {
         this.stones = new Stones();
         this.tupples = this.stones.stones.map(r=>r.map(stn=>stn.tupple));
-        this.viewBox = new ViewBox();
-        this.dom.setAttribute('viewBox', this.viewBox.parent);
-        this.board.setAttribute('viewBox', this.viewBox.child);
-        this.board.setAttribute('x', '0');
-        this.board.setAttribute('y', '0');
-        this.board.appendChild(createGrid());
-        this.board.appendChild(this.stones.dom);
-        this.dom.appendChild(this.board);
+        this.coord = new Coordinates();
+        this.dom.setAttribute('viewBox', this.viewBox);
+        this.dom.appendChild(createGrid());
+        this.dom.appendChild(this.stones.dom);
+        this.dom.appendChild(this.coord.dom);
 
-        this.board.addEventListener('click', (ev: PointerEvent) => {
+        this.dom.addEventListener('click', (ev: PointerEvent) => {
             this.toggleStone(ev);
         }, false);
     }
+    
+    get viewBox (): string {
+        const xAxis = (this.#viewBox.xAxis === 'none') ? 0 : config.interval;
+        const yAxis = (this.#viewBox.yAxis === 'none') ? 0 : config.interval;
+        const vb = [
+            -yAxis,
+            config.interval * (config.size - this.#viewBox.rows),
+            config.interval * this.#viewBox.cols + yAxis,
+            config.interval * this.#viewBox.rows + xAxis,
+        ];
+        return vb.join(' ');
+    }
 
     public toggleStone(ev: PointerEvent): void {
-        if(this.displayMode !== 'detail' ) return;
+        if(this.#displayMode !== 'detail' ) return;
 
         // svg 内部の座標 [x, y] に変換
-        const pt = this.board.createSVGPoint();
+        const pt = this.dom.createSVGPoint();
         pt.x = ev.clientX;
         pt.y = ev.clientY;
-        const {x, y} = pt.matrixTransform(this.board.getScreenCTM()?.inverse());
+        const {x, y} = pt.matrixTransform(this.dom.getScreenCTM()?.inverse());
         const nearestIdx = (num:number):number => {
             return config.positions.reduce((nearest, pos, idx)=>{
                 const everBest = Math.abs(config.positions[nearest] - num);
@@ -77,9 +88,8 @@ export class GoBoard {
     set rangeRows(input: unknown) {
         const num = Number(input ?? 19);
         if(1 <= num && num <= 19) {
-            this.viewBox.rows = num;
-            this.dom.setAttribute('viewBox', this.viewBox.parent);
-            this.board.setAttribute('viewBox', this.viewBox.child);
+            this.#viewBox.rows = num;
+            this.dom.setAttribute('viewBox', this.viewBox);
         }
     }
 
@@ -87,9 +97,8 @@ export class GoBoard {
         const num = Number(input ?? 19);
         console.log(input);
         if(1 <= num && num <= 19) {
-            this.viewBox.cols = num;
-            this.dom.setAttribute('viewBox', this.viewBox.parent);
-            this.board.setAttribute('viewBox', this.viewBox.child);
+            this.#viewBox.cols = num;
+            this.dom.setAttribute('viewBox', this.viewBox);
         }
     }
 
@@ -99,9 +108,9 @@ export class GoBoard {
             case 'num':
             case 'aiu':
             case 'iroha':
-                this.viewBox.xAxis = type;
-                this.dom.setAttribute('viewBox', this.viewBox.parent);
-                this.board.setAttribute('viewBox', this.viewBox.child);
+                this.#viewBox.xAxis = type;
+                this.dom.setAttribute('viewBox', this.viewBox);
+                this.coord.xAxis = type;
                 break;
         }
     }
@@ -112,15 +121,15 @@ export class GoBoard {
             case 'num':
             case 'aiu':
             case 'iroha':
-                this.viewBox.yAxis = type;
-                this.dom.setAttribute('viewBox', this.viewBox.parent);
-                this.board.setAttribute('viewBox', this.viewBox.child);
+                this.#viewBox.yAxis = type;
+                this.dom.setAttribute('viewBox', this.viewBox);
+                this.coord.yAxis = type;
                 break;
         }
     }
-
-    public setDisplayMode(mode: DisplayMode):void {
-        this.displayMode = mode;
+    
+    set displayMode(mode: DisplayMode) {
+        this.#displayMode = mode;
     }
 
 }
