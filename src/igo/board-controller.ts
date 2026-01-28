@@ -1,11 +1,20 @@
 import { GoBoard } from "./board/go-board";
-import { createHeader } from "./controller/create-header";
+import { Header } from "./controller/header";
 import { Textarea } from "./controller/textarea";
+import { StoneTupple } from "./board/stone";
 
 export type DisplayMode = 'none' | 'list' | 'detail';
+export type State = [
+    string,  // xAxis
+    string,  // yAxis
+    number,  // rows
+    number,  // cols
+    StoneTupple[][],  // stone
+    string,  // textarea
+];
 
 export class BoardController extends HTMLElement {
-    #header = createHeader();
+    #header = new Header();
     #board = new GoBoard();
     #textarea = new Textarea();
 
@@ -17,11 +26,11 @@ export class BoardController extends HTMLElement {
     constructor() {
         super();
 
-        this.appendChild(this.#header);
+        this.appendChild(this.#header.dom);
         this.appendChild(this.#board.dom);
         this.appendChild(this.#textarea.dom);
 
-        this.#header.addEventListener('click', (ev: PointerEvent) => {
+        this.#header.dom.addEventListener('click', (ev: PointerEvent) => {
             const target = ev.target;
             if(target instanceof HTMLButtonElement) {
                 switch(target.dataset.type) {
@@ -41,7 +50,7 @@ export class BoardController extends HTMLElement {
                 }
             }
         });
-        this.#header.addEventListener('change', (ev: Event) => {
+        this.#header.dom.addEventListener('change', (ev: Event) => {
             const target = ev.target;
             if(target instanceof HTMLInputElement && target.type === 'range') {
                 switch(target.dataset.type) {
@@ -65,26 +74,40 @@ export class BoardController extends HTMLElement {
     attributeChangedCallback(attr:string, oldVal:string, newVal:string) {
         switch(attr) {
             case 'data-display':
-                switch (newVal) {
-                    case 'none':
-                        this.#header.style.display = 'none';
-                        this.#board.displayMode = 'none';
-                        this.#textarea.displayMode = 'none';
-                        break;
-                    case 'list':
-                        this.#header.style.display = 'none';
-                        this.#board.displayMode = 'list';
-                        this.#textarea.displayMode = 'list';
-                        break;
-                    case 'detail':
-                        this.#header.style.display = 'block';
-                        this.#board.displayMode = 'detail';
-                        this.#textarea.displayMode = 'detail';
-                        break;
+                if (newVal==='none' || newVal==='list' || newVal==='detail') {
+                    this.#header.displayMode = newVal;
+                    this.#board.displayMode = newVal;
+                    this.#textarea.displayMode = newVal;
                 }
                 break;
-            // case '':
         }
     }
-     
+
+    get state ():State {
+        return [
+            ...this.#board.viewBoxState,
+            this.#board.tupples,
+            this.#textarea.area.value,
+        ];
+    }
+
+    set state (input: unknown) {
+        if(Array.isArray(input)) {
+            const [
+                xAxis,
+                yAxis,
+                rows,
+                cols,
+                tupples,
+                textarea,
+            ] = input;
+            this.#header.xaxis = xAxis;
+            this.#header.yaxis = yAxis;
+            this.#header.rows = rows;
+            this.#header.cols = cols;
+            this.#board.tupples = tupples;
+            this.#textarea.area.value = textarea;
+        }
+    }
+
 }

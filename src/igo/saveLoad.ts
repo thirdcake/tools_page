@@ -6,10 +6,7 @@ export function save() {
     const bCons =
         [...document.querySelectorAll<BCon>('board-controller')];
 
-    const bConsData = bCons.map(bcon => ({
-        data: bcon.dataset.stonesData,
-        textarea: bcon.dataset.textArea,
-    }));
+    const bConsData = bCons.map(bcon => bcon.state);
     const json = JSON.stringify(bConsData);
     
     const blob = new Blob([json], { type: "application/json" });  // Blob 作成
@@ -46,8 +43,7 @@ export async function load(ev: Event) {
         // ToDo: 各bConに配る
         if(Array.isArray(data)) {
             data.forEach((dat, i) => {
-                bCons[i].dataset.stonesData = dat.data;
-                bCons[i].dataset.textArea = dat.textarea;
+                bCons[i].state = dat;
             });
         }
     } catch (err) {

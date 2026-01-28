@@ -1,8 +1,8 @@
-import { BoardController as BCon } from "./board-controller";
+import { BoardController } from "./board-controller";
 
 type Btn = HTMLButtonElement;
 
-type BConSize = 'none'|'small'|'large';
+type BConSize = 'none'|'list'|'detail';
 interface Zoom {
     inRange: boolean,
     size: BConSize,
@@ -15,13 +15,13 @@ interface State {
 interface Dom {
     perPageBtns: Btn[],
     overviewZoomBtns: Btn[],
-    bCons: BCon[],
+    bCons: BoardController[],
 }
 
 export function displayShowHide() {
 
     // 管理が必要な state
-    const zoomBase: Zoom = {inRange:true, size:'small'}
+    const zoomBase: Zoom = {inRange:true, size:'list'}
     const state: State = {
         perPageLimit: 6,
         zoomIdx: -1,
@@ -39,7 +39,7 @@ export function displayShowHide() {
     dom.overviewZoomBtns =
         [...document.querySelectorAll<Btn>('#display-overview-zoom button')];
     dom.bCons =
-        [...document.querySelectorAll<BCon>('board-controller')];
+        [...document.querySelectorAll<BoardController>('board-controller')];
 
     // click Event
     dom.perPageBtns.forEach(btn => {
@@ -52,14 +52,11 @@ export function displayShowHide() {
             update(dom, state);
         });
     });
-    dom.overviewZoomBtns.forEach(btn => {
+    dom.overviewZoomBtns.forEach((btn, idx) => {
         btn.addEventListener('click', () => {
             toggleActiveClass(btn, dom.overviewZoomBtns);
 
-            const input:number = Number(btn.dataset.godisplayIdx ?? -1);
-            state.zoomIdx = (-1 < input && input <= state.perPageLimit)
-                ? input : -1;
-
+            state.zoomIdx = idx;
             update(dom, state);
         });
     });
@@ -67,26 +64,27 @@ export function displayShowHide() {
 }
 
 function update(dom: Dom, state: State) {
-    const isOverview = state.zoomIdx === -1;
+    const isOverview = state.zoomIdx === 0;
     state.zooms.forEach((zoom, i) => {
         zoom.inRange = (i < state.perPageLimit);
-        const isZoom = state.zoomIdx === i;
+        const isZoom = state.zoomIdx === i + 1;
         if(isOverview) {
-            zoom.size = 'small';
+            zoom.size = 'list';
         }else if(isZoom) {
-            zoom.size = 'large';
+            zoom.size = 'detail';
         }else{
             zoom.size = 'none';
         }
     });
+
     dom.overviewZoomBtns.forEach((btn, i) => {
         if(i > 0) {
-            btn.classList.toggle('hidden', !state.zooms[i-1].inRange);
+            btn.style.display = (state.zooms[i-1].inRange) ? 'block' : 'none';
         }
     });
+
     dom.bCons.forEach((bcon, i) => {
-        const inRange = state.zooms[i].inRange;
-        bcon.dataset.display = inRange ? state.zooms[i].size : 'none';
+        bcon.dataset.display = state.zooms[i].size;
     });
 }
 

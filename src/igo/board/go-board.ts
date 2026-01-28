@@ -46,6 +46,15 @@ export class GoBoard {
         return vb.join(' ');
     }
 
+    get viewBoxState (): [string, string, number, number] {
+        return [
+            this.#viewBox.xAxis,
+            this.#viewBox.yAxis,
+            this.#viewBox.rows,
+            this.#viewBox.cols
+        ];
+    }
+
     public toggleStone(ev: PointerEvent): void {
         if(this.#displayMode !== 'detail' ) return;
 
@@ -85,6 +94,7 @@ export class GoBoard {
         }
     }
 
+    get rangeRows():number { return this.#viewBox.rows }
     set rangeRows(input: unknown) {
         const num = Number(input ?? 19);
         if(1 <= num && num <= 19) {
@@ -93,6 +103,7 @@ export class GoBoard {
         }
     }
 
+    get rangeCols():number { return this.#viewBox.cols }
     set rangeCols(input: unknown) {
         const num = Number(input ?? 19);
         console.log(input);
@@ -102,6 +113,7 @@ export class GoBoard {
         }
     }
 
+    get xAxis():string { return this.#viewBox.xAxis }
     set xAxis(type: unknown) {
         switch(type) {
             case 'none':
@@ -115,6 +127,7 @@ export class GoBoard {
         }
     }
 
+    get yAxix():string { return this.#viewBox.yAxis }
     set yAxis(type: unknown) {
         switch(type) {
             case 'none':
@@ -130,6 +143,9 @@ export class GoBoard {
     
     set displayMode(mode: DisplayMode) {
         this.#displayMode = mode;
+        ['none', 'list', 'detail'].forEach(md => {
+            this.dom.classList.toggle(`display-${mode}`, md===mode);
+        });
     }
 
 }

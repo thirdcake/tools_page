@@ -58,6 +58,27 @@
         .p4 {
             padding: .7rem;
         }
+        .board-flex {
+            display: block;
+        }
+        .board-flex:has(board-controller[data-display="list"]) {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 800px;
+            gap: 1rem;
+        }
+        board-controller[data-display="none"] {
+            display: none;
+        }
+        board-controller[data-display="list"] {
+            display: block;
+        }
+        board-controller[data-display="detail"] {
+            display: block;
+            max-width: 800px;
+            width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -85,13 +106,13 @@
         </div>
         <hr>
     </div>
-    <div id="input">
-        <board-controller data-go-idx="1" data-display="small"></board-controller>
-        <board-controller data-go-idx="2" data-display="small"></board-controller>
-        <board-controller data-go-idx="3" data-display="small"></board-controller>
-        <board-controller data-go-idx="4" data-display="small"></board-controller>
-        <board-controller data-go-idx="5" data-display="small"></board-controller>
-        <board-controller data-go-idx="6" data-display="small"></board-controller>
+    <div id="input" class="board-flex">
+        <board-controller data-go-idx="1" data-display="list"></board-controller>
+        <board-controller data-go-idx="2" data-display="list"></board-controller>
+        <board-controller data-go-idx="3" data-display="list"></board-controller>
+        <board-controller data-go-idx="4" data-display="list"></board-controller>
+        <board-controller data-go-idx="5" data-display="list"></board-controller>
+        <board-controller data-go-idx="6" data-display="list"></board-controller>
     </div>
 </body>
 </html>

@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/board/config.ts
   var config = Object.freeze({
@@ -319,6 +318,14 @@
       ];
       return vb.join(" ");
     }
+    get viewBoxState() {
+      return [
+        this.#viewBox.xAxis,
+        this.#viewBox.yAxis,
+        this.#viewBox.rows,
+        this.#viewBox.cols
+      ];
+    }
     toggleStone(ev) {
       if (this.#displayMode !== "detail") return;
       const pt = this.dom.createSVGPoint();
@@ -351,12 +358,18 @@
         this.tupple[1] = input.length > 0 ? input[0] : "";
       }
     }
+    get rangeRows() {
+      return this.#viewBox.rows;
+    }
     set rangeRows(input) {
       const num = Number(input ?? 19);
       if (1 <= num && num <= 19) {
         this.#viewBox.rows = num;
         this.dom.setAttribute("viewBox", this.viewBox);
       }
+    }
+    get rangeCols() {
+      return this.#viewBox.cols;
     }
     set rangeCols(input) {
       const num = Number(input ?? 19);
@@ -365,6 +378,9 @@
         this.#viewBox.cols = num;
         this.dom.setAttribute("viewBox", this.viewBox);
       }
+    }
+    get xAxis() {
+      return this.#viewBox.xAxis;
     }
     set xAxis(type) {
       switch (type) {
@@ -377,6 +393,9 @@
           this.coord.xAxis = type;
           break;
       }
+    }
+    get yAxix() {
+      return this.#viewBox.yAxis;
     }
     set yAxis(type) {
       switch (type) {
@@ -392,148 +411,219 @@
     }
     set displayMode(mode) {
       this.#displayMode = mode;
+      ["none", "list", "detail"].forEach((md) => {
+        this.dom.classList.toggle(`display-${mode}`, md === mode);
+      });
     }
   };
 
-  // src/igo/controller/create-buttons.ts
-  function createButtons(input) {
-    const ul = document.createElement("ul");
-    ul.classList.add("go-form-ul");
-    const title = document.createElement("li");
-    title.textContent = input.title;
-    ul.appendChild(title);
-    const buttons = input.init.map((ini) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.dataset.type = input.type;
-      btn.dataset.value = ini.value;
-      btn.textContent = ini.text;
-      return btn;
-    });
-    buttons[0].classList.add("active");
-    buttons.forEach((btn) => {
-      const li = document.createElement("li");
-      li.appendChild(btn);
-      ul.appendChild(li);
-    });
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        buttons.forEach((b) => {
-          b.classList.toggle("active", b === btn);
+  // src/igo/controller/buttons.ts
+  var Buttons = class {
+    dom = document.createElement("ul");
+    buttons;
+    constructor(input) {
+      this.dom.classList.add("go-form-ul");
+      const title = document.createElement("li");
+      title.textContent = input.title;
+      this.dom.appendChild(title);
+      this.buttons = input.init.map((ini) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.type = input.type;
+        btn.dataset.value = ini.value;
+        btn.textContent = ini.text;
+        return btn;
+      });
+      this.buttons[0].classList.add("active");
+      this.buttons.forEach((btn) => {
+        const li = document.createElement("li");
+        li.appendChild(btn);
+        this.dom.appendChild(li);
+      });
+      this.buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          this.buttons.forEach((b) => {
+            b.classList.toggle("active", b === btn);
+          });
+        }, false);
+      });
+    }
+  };
+  var ColorButtons = class extends Buttons {
+    constructor() {
+      super({
+        title: "\u77F3\u306E\u8272\uFF1A",
+        type: "color",
+        init: [
+          { text: "\uFF08\u7121\u8272\uFF09", value: "0" },
+          { text: "\u9ED2", value: "1" },
+          { text: "\u767D", value: "2" }
+        ]
+      });
+    }
+  };
+  var CharacterButtons = class extends Buttons {
+    constructor() {
+      super({
+        title: "\u6587\u5B57\uFF1A",
+        type: "character",
+        init: [
+          { text: "\uFF08\u7121\u3057\uFF09", value: "" },
+          { text: "A", value: "A" },
+          { text: "B", value: "B" },
+          { text: "C", value: "C" },
+          { text: "D", value: "D" },
+          { text: "E", value: "E" },
+          { text: "\u25B3", value: "\u25B3" },
+          { text: "1", value: "1" },
+          { text: "2", value: "2" },
+          { text: "3", value: "3" },
+          { text: "4", value: "4" },
+          { text: "5", value: "5" }
+        ]
+      });
+    }
+  };
+  var XAxisButtons = class extends Buttons {
+    constructor() {
+      super({
+        title: "\u6A2A\u8EF8\uFF1A",
+        type: "x-axis",
+        init: [
+          { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
+          { text: "1,2,3,...", value: "num" },
+          { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
+          { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
+        ]
+      });
+    }
+    set active(input) {
+      if (input === "none" || input === "num" || input === "aiu" || input === "iroha") {
+        this.buttons.forEach((btn) => {
+          btn.classList.toggle("active", input === btn.dataset.value);
         });
+      }
+    }
+  };
+  var YAxisButtons = class extends Buttons {
+    constructor() {
+      super({
+        title: "\u7E26\u8EF8\uFF1A",
+        type: "y-axis",
+        init: [
+          { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
+          { text: "1,2,3,...", value: "num" },
+          { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
+          { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
+        ]
+      });
+    }
+    set active(input) {
+      if (input === "none" || input === "num" || input === "aiu" || input === "iroha") {
+        this.buttons.forEach((btn) => {
+          btn.classList.toggle("active", input === btn.dataset.value);
+        });
+      }
+    }
+  };
+
+  // src/igo/controller/ranges.ts
+  var Range = class {
+    dom = document.createElement("div");
+    input = document.createElement("input");
+    span = document.createElement("span");
+    constructor(data) {
+      this.dom.classList.add("go-form-range");
+      const title = document.createElement("span");
+      title.textContent = data.title;
+      this.input.type = "range";
+      this.input.min = "5";
+      this.input.max = "19";
+      this.input.value = "19";
+      this.input.dataset.type = data.type;
+      this.span.textContent = "19";
+      this.dom.appendChild(title);
+      this.dom.appendChild(this.input);
+      this.dom.appendChild(this.span);
+      this.input.addEventListener("change", () => {
+        this.span.textContent = this.input.value;
       }, false);
-    });
-    return ul;
-  }
-  function createColorButtons() {
-    return createButtons({
-      title: "\u77F3\u306E\u8272\uFF1A",
-      type: "color",
-      init: [
-        { text: "\uFF08\u7121\u8272\uFF09", value: "0" },
-        { text: "\u9ED2", value: "1" },
-        { text: "\u767D", value: "2" }
-      ]
-    });
-  }
-  function createCharacterButtons() {
-    return createButtons({
-      title: "\u6587\u5B57",
-      type: "character",
-      init: [
-        { text: "\uFF08\u7121\u3057\uFF09", value: "" },
-        { text: "A", value: "A" },
-        { text: "B", value: "B" },
-        { text: "C", value: "C" },
-        { text: "D", value: "D" },
-        { text: "E", value: "E" },
-        { text: "\u25B3", value: "\u25B3" },
-        { text: "1", value: "1" },
-        { text: "2", value: "2" },
-        { text: "3", value: "3" },
-        { text: "4", value: "4" },
-        { text: "5", value: "5" }
-      ]
-    });
-  }
-  function createXAxisButtons() {
-    return createButtons({
-      title: "\u6A2A\u8EF8",
-      type: "x-axis",
-      init: [
-        { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
-        { text: "1,2,3,...", value: "num" },
-        { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
-        { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
-      ]
-    });
-  }
-  function createYAxisButtons() {
-    return createButtons({
-      title: "\u7E26\u8EF8",
-      type: "y-axis",
-      init: [
-        { text: "\uFF08\u7121\u3057\uFF09", value: "none" },
-        { text: "1,2,3,...", value: "num" },
-        { text: "\u3042,\u3044,\u3046,...", value: "aiu" },
-        { text: "\u30A4,\u30ED,\u30CF,...", value: "iroha" }
-      ]
-    });
-  }
+    }
+    set range(input) {
+      const num = Number(input);
+      if (0 < num && num <= 19) {
+        this.span.textContent = `${num}`;
+        this.input.value = `${num}`;
+      }
+    }
+  };
+  var ColsRange = class extends Range {
+    constructor() {
+      super({
+        title: "\u6A2A\u5E45\uFF1A",
+        type: "cols"
+      });
+    }
+  };
+  var RowsRange = class extends Range {
+    constructor() {
+      super({
+        title: "\u9AD8\u3055\uFF1A",
+        type: "rows"
+      });
+    }
+  };
 
-  // src/igo/controller/create-ranges.ts
-  function createRange(data) {
-    const div = document.createElement("div");
-    div.classList.add("go-form-range");
-    const title = document.createElement("span");
-    title.textContent = data.title;
-    const input = document.createElement("input");
-    input.type = "range";
-    input.min = "5";
-    input.max = "19";
-    input.value = "19";
-    input.dataset.type = data.type;
-    const span = document.createElement("span");
-    span.textContent = "19";
-    div.appendChild(title);
-    div.appendChild(input);
-    div.appendChild(span);
-    input.addEventListener("change", () => {
-      span.textContent = input.value;
-    }, false);
-    return div;
-  }
-  function createXAxisRange() {
-    return createRange({
-      title: "\u6A2A\u5E45",
-      type: "width"
-    });
-  }
-  function createYAxisRange() {
-    return createRange({
-      title: "\u9AD8\u3055",
-      type: "height"
-    });
-  }
-
-  // src/igo/controller/create-header.ts
-  function createHeader() {
-    const dom = document.createElement("div");
-    dom.appendChild(createColorButtons());
-    dom.appendChild(createCharacterButtons());
-    dom.appendChild(createXAxisRange());
-    dom.appendChild(createYAxisRange());
-    dom.appendChild(createXAxisButtons());
-    dom.appendChild(createYAxisButtons());
-    return dom;
-  }
+  // src/igo/controller/header.ts
+  var Header = class {
+    dom = document.createElement("div");
+    children = {
+      color: new ColorButtons(),
+      character: new CharacterButtons(),
+      cols: new ColsRange(),
+      rows: new RowsRange(),
+      xaxis: new XAxisButtons(),
+      yaxis: new YAxisButtons()
+    };
+    constructor() {
+      this.dom.appendChild(this.children.color.dom);
+      this.dom.appendChild(this.children.character.dom);
+      this.dom.appendChild(this.children.cols.dom);
+      this.dom.appendChild(this.children.rows.dom);
+      this.dom.appendChild(this.children.xaxis.dom);
+      this.dom.appendChild(this.children.yaxis.dom);
+    }
+    set rows(input) {
+      this.children.rows.range = input;
+    }
+    set cols(input) {
+      this.children.cols.range = input;
+    }
+    set xaxis(input) {
+      this.children.xaxis.active = input;
+    }
+    set yaxis(input) {
+      this.children.yaxis.active = input;
+    }
+    set displayMode(input) {
+      switch (input) {
+        case "none":
+        case "list":
+          this.dom.style.display = "none";
+          break;
+        case "detail":
+          this.dom.style.display = "block";
+          break;
+      }
+    }
+  };
 
   // src/igo/controller/textarea.ts
   var Textarea = class {
     dom = document.createElement("div");
     area = document.createElement("textarea");
     para = document.createElement("p");
-    displayMode = "list";
+    #displayMode = "list";
     constructor() {
       this.dom.appendChild(this.area);
       this.dom.appendChild(this.para);
@@ -547,22 +637,63 @@
           this.para.style.color = "#555";
         } else {
           this.para.textContent = this.area.value;
-          this.para.style.color = "#333";
+          this.para.style.color = "#111";
         }
         this.para.style.display = "block";
       });
       this.para.addEventListener("click", () => {
-        if (this.displayMode === "detail") {
-          this.area.style.display = "block";
+        if (this.#displayMode === "detail") {
           this.para.style.display = "none";
+          this.area.style.display = "block";
+          this.area.focus();
         }
       });
+    }
+    displayNone() {
+      this.area.style.display = "none";
+      this.para.style.display = "none";
+    }
+    displayList() {
+      this.area.style.display = "none";
+      this.para.style.display = "block";
+      if (this.area.value === "") {
+        this.para.textContent = " ";
+        this.para.style.color = "#555";
+      } else {
+        this.para.textContent = this.area.value;
+        this.para.style.color = "#111";
+      }
+    }
+    displayDetail() {
+      this.area.style.display = "none";
+      this.para.style.display = "block";
+      if (this.area.value === "") {
+        this.para.textContent = "\uFF08\u3053\u3053\u306B\u6587\u7AE0\u3092\u5165\u529B\u3067\u304D\u307E\u3059\u3002\uFF09";
+        this.para.style.color = "#555";
+      } else {
+        this.para.textContent = this.area.value;
+        this.para.style.color = "#111";
+      }
+    }
+    set displayMode(mode) {
+      this.#displayMode = mode;
+      switch (mode) {
+        case "none":
+          this.displayNone();
+          break;
+        case "list":
+          this.displayList();
+          break;
+        case "detail":
+          this.displayDetail();
+          break;
+      }
     }
   };
 
   // src/igo/board-controller.ts
   var BoardController = class extends HTMLElement {
-    #header = createHeader();
+    #header = new Header();
     #board = new GoBoard();
     #textarea = new Textarea();
     static observedAttributes = [
@@ -571,10 +702,10 @@
     ];
     constructor() {
       super();
-      this.appendChild(this.#header);
+      this.appendChild(this.#header.dom);
       this.appendChild(this.#board.dom);
       this.appendChild(this.#textarea.dom);
-      this.#header.addEventListener("click", (ev) => {
+      this.#header.dom.addEventListener("click", (ev) => {
         const target = ev.target;
         if (target instanceof HTMLButtonElement) {
           switch (target.dataset.type) {
@@ -594,7 +725,7 @@
           }
         }
       });
-      this.#header.addEventListener("change", (ev) => {
+      this.#header.dom.addEventListener("change", (ev) => {
         const target = ev.target;
         if (target instanceof HTMLInputElement && target.type === "range") {
           switch (target.dataset.type) {
@@ -617,31 +748,44 @@
     attributeChangedCallback(attr, oldVal, newVal) {
       switch (attr) {
         case "data-display":
-          switch (newVal) {
-            case "none":
-              this.#header.style.display = "none";
-              this.#board.displayMode = "none";
-              this.#textarea.displayMode = "none";
-              break;
-            case "list":
-              this.#header.style.display = "none";
-              this.#board.displayMode = "list";
-              this.#textarea.displayMode = "list";
-              break;
-            case "detail":
-              this.#header.style.display = "block";
-              this.#board.displayMode = "detail";
-              this.#textarea.displayMode = "detail";
-              break;
+          if (newVal === "none" || newVal === "list" || newVal === "detail") {
+            this.#header.displayMode = newVal;
+            this.#board.displayMode = newVal;
+            this.#textarea.displayMode = newVal;
           }
           break;
+      }
+    }
+    get state() {
+      return [
+        ...this.#board.viewBoxState,
+        this.#board.tupples,
+        this.#textarea.area.value
+      ];
+    }
+    set state(input) {
+      if (Array.isArray(input)) {
+        const [
+          xAxis,
+          yAxis,
+          rows,
+          cols,
+          tupples,
+          textarea
+        ] = input;
+        this.#header.xaxis = xAxis;
+        this.#header.yaxis = yAxis;
+        this.#header.rows = rows;
+        this.#header.cols = cols;
+        this.#board.tupples = tupples;
+        this.#textarea.area.value = textarea;
       }
     }
   };
 
   // src/igo/displayShowHide.ts
   function displayShowHide() {
-    const zoomBase = { inRange: true, size: "small" };
+    const zoomBase = { inRange: true, size: "list" };
     const state = {
       perPageLimit: 6,
       zoomIdx: -1,
@@ -663,36 +807,34 @@
         update(dom, state);
       });
     });
-    dom.overviewZoomBtns.forEach((btn) => {
+    dom.overviewZoomBtns.forEach((btn, idx) => {
       btn.addEventListener("click", () => {
         toggleActiveClass(btn, dom.overviewZoomBtns);
-        const input = Number(btn.dataset.godisplayIdx ?? -1);
-        state.zoomIdx = -1 < input && input <= state.perPageLimit ? input : -1;
+        state.zoomIdx = idx;
         update(dom, state);
       });
     });
   }
   function update(dom, state) {
-    const isOverview = state.zoomIdx === -1;
+    const isOverview = state.zoomIdx === 0;
     state.zooms.forEach((zoom, i) => {
       zoom.inRange = i < state.perPageLimit;
-      const isZoom = state.zoomIdx === i;
+      const isZoom = state.zoomIdx === i + 1;
       if (isOverview) {
-        zoom.size = "small";
+        zoom.size = "list";
       } else if (isZoom) {
-        zoom.size = "large";
+        zoom.size = "detail";
       } else {
         zoom.size = "none";
       }
     });
     dom.overviewZoomBtns.forEach((btn, i) => {
       if (i > 0) {
-        btn.classList.toggle("hidden", !state.zooms[i - 1].inRange);
+        btn.style.display = state.zooms[i - 1].inRange ? "block" : "none";
       }
     });
     dom.bCons.forEach((bcon, i) => {
-      const inRange = state.zooms[i].inRange;
-      bcon.dataset.display = inRange ? state.zooms[i].size : "none";
+      bcon.dataset.display = state.zooms[i].size;
     });
   }
   function toggleActiveClass(btn, btns) {
@@ -705,10 +847,7 @@
   // src/igo/saveLoad.ts
   function save() {
     const bCons = [...document.querySelectorAll("board-controller")];
-    const bConsData = bCons.map((bcon) => ({
-      data: bcon.dataset.stonesData,
-      textarea: bcon.dataset.textArea
-    }));
+    const bConsData = bCons.map((bcon) => bcon.state);
     const json = JSON.stringify(bConsData);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -738,8 +877,7 @@
       const data = JSON.parse(jsonText);
       if (Array.isArray(data)) {
         data.forEach((dat, i) => {
-          bCons[i].dataset.stonesData = dat.data;
-          bCons[i].dataset.textArea = dat.textarea;
+          bCons[i].state = dat;
         });
       }
     } catch (err) {
