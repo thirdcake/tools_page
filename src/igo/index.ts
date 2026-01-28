@@ -1,14 +1,30 @@
-import { BoardController } from "./board-controller";
-import { displayShowHide } from "./displayShowHide";
-import { save, load } from "./saveLoad";
+import { Model, AllActions } from "./model";
+import { State } from "./state";
+import { View } from "./view";
 
-// <board-svg>要素を定義
-customElements.define('board-controller', BoardController);
+declare global {
+    interface HTMLElementEventMap {
+        'go-event': CustomEvent<{
+            detail: AllActions
+        }>;
+    }
+}
 
-// 実行
-document.addEventListener('DOMContentLoaded', ()=>{
-    displayShowHide();
-    document.querySelector('button#save')?.addEventListener('click', save, false);
-    document.querySelector('input#load')?.addEventListener('change', load, false);
-}, false);
+class Controller extends HTMLElement{
+    constructor() {
+        super();
+        
+        let state = new State();
+        const model = new Model();
+        const view = new View();
+        
+        this.appendChild(view.dom);
 
+        view.dom.addEventListener('go-event', (ev: CustomEvent)=>{
+            state = model.update(state, ev.detail);
+            view.render(state);
+        }, false);
+    }
+}
+
+customElements.define('go-quiz', Controller);
