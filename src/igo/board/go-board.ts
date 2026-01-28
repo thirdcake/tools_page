@@ -74,6 +74,7 @@ export class GoBoard {
 
         // stones を更新, 同じなら [0, '']
         const old = this.stones.stones[row][col];
+        //console.log(old.tupple, this.tupple);
         if(old.tupple[0]===this.tupple[0] && old.tupple[1]===this.tupple[1]) {
             this.stones.stones[row][col].render([0, '']);
         } else {
@@ -106,7 +107,6 @@ export class GoBoard {
     get rangeCols():number { return this.#viewBox.cols }
     set rangeCols(input: unknown) {
         const num = Number(input ?? 19);
-        console.log(input);
         if(1 <= num && num <= 19) {
             this.#viewBox.cols = num;
             this.dom.setAttribute('viewBox', this.viewBox);

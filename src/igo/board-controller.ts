@@ -36,7 +36,6 @@ export class BoardController extends HTMLElement {
                 switch(target.dataset.type) {
                     case 'color':
                         this.#board.color = target.dataset.value;
-                        console.log(this.#board.tupple);
                         break;
                     case 'character':
                         this.#board.character = target.dataset.value;
@@ -54,10 +53,10 @@ export class BoardController extends HTMLElement {
             const target = ev.target;
             if(target instanceof HTMLInputElement && target.type === 'range') {
                 switch(target.dataset.type) {
-                    case 'width':
+                    case 'cols':
                         this.#board.rangeCols = target.value;
                         break;
-                    case 'height':
+                    case 'rows':
                         this.#board.rangeRows = target.value;
                         break;
                 }

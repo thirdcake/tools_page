@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/igo/board/config.ts
   var config = Object.freeze({
@@ -178,15 +179,16 @@
     dom = document.createElementNS(config.ns, "g");
     circle = document.createElementNS(config.ns, "circle");
     text = document.createElementNS(config.ns, "text");
-    tupple = [0, ""];
+    tupple;
     constructor(x, y) {
+      this.tupple = [0, ""];
       this.initCircle(x, y);
       this.dom.appendChild(this.circle);
       this.initText(x, y);
       this.dom.appendChild(this.text);
     }
     render(tupple) {
-      this.tupple = tupple;
+      this.tupple = [...tupple];
       const [color, character] = tupple;
       let pattern = "empty";
       if (color === 0 && character === "") {
@@ -711,7 +713,6 @@
           switch (target.dataset.type) {
             case "color":
               this.#board.color = target.dataset.value;
-              console.log(this.#board.tupple);
               break;
             case "character":
               this.#board.character = target.dataset.value;
@@ -729,10 +730,10 @@
         const target = ev.target;
         if (target instanceof HTMLInputElement && target.type === "range") {
           switch (target.dataset.type) {
-            case "width":
+            case "cols":
               this.#board.rangeCols = target.value;
               break;
-            case "height":
+            case "rows":
               this.#board.rangeRows = target.value;
               break;
           }

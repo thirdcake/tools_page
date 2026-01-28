@@ -8,9 +8,10 @@ export class Stone {
     circle = document.createElementNS(config.ns, 'circle');
     text = document.createElementNS(config.ns, 'text');
 
-    tupple: StoneTupple = [0, ''];
+    tupple: StoneTupple;
 
     constructor(x:number, y:number) {
+        this.tupple = [0, ''];
         this.initCircle(x, y);
         this.dom.appendChild(this.circle);
         this.initText(x, y);
@@ -18,7 +19,7 @@ export class Stone {
     }
 
     render(tupple: StoneTupple):void {
-        this.tupple = tupple;
+        this.tupple = [...tupple];
 
         const [color, character] = tupple;
         let pattern: ColorPattern = 'empty';
