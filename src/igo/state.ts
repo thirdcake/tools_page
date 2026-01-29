@@ -1,3 +1,5 @@
+import { config } from "./view/consts";
+
 export type GoWrapperState = {
     color: 0 | 1 | 2;
     character: string;
@@ -5,6 +7,7 @@ export type GoWrapperState = {
     cols: number;
     xAxis: string;
     yAxis: string;
+    viewBox: string;
     data: [number, string][][];
     textarea: string;
 }
@@ -27,6 +30,12 @@ export const initState: State = {
         cols: 19,
         xAxis: 'none',
         yAxis: 'none',
+        viewBox: [
+            0,
+            0,
+            config.interval * config.size,
+            config.interval * config.size,
+        ].join(' '),
         data: Array.from({length: 19}, () =>
             Array.from({length: 19}, ()=>([0, '']))),
         textarea: '',

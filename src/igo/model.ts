@@ -1,55 +1,53 @@
 import { State } from "./state";
 import { clickPerPage } from "./model/click-per-page";
 import { clickListZoom } from "./model/click-list-zoom";
+import { clickColor } from "./model/click-color";
+import { clickCharacter } from "./model/click-character";
+import { clickStone } from "./model/click-stone";
+import {
+    changeCols,
+    changeRows,
+    clickXAxis,
+    clickYAxis,
+} from "./model/change-view-box";
 
 interface BaseAction {
     type: string;
 }
 
-interface ClickPerPage extends BaseAction {
-    type: 'click-per-page';
+interface GlobalAction extends BaseAction {
+    type: 'click-per-page' | 'click-list-zoom';
     input: string;
 }
 
-interface ClickListZoom extends BaseAction {
-    type: 'click-list-zoom';
-    input: string;
-}
-
-interface ClickColor extends BaseAction {
-    type: 'click-color';
+interface GoBoardButtonAction extends BaseAction {
+    type: 'click-color' | 'click-character' | 'click-x-axis'
+        | 'click-y-axis';
     input: {
         index: number,
         value: string,
     };
 }
 
-interface ClickCharacter extends BaseAction {
-    type: 'click-character';
+interface GoBoardRangeAction extends BaseAction {
+    type: 'change-rows' | 'change-cols';
     input: {
         index: number,
         value: string,
     };
 }
 
-interface ClickXAxis extends BaseAction {
-    type: 'click-x-axis';
+interface GoBoardStoneClick extends BaseAction {
+    type: 'click-stone';
     input: {
         index: number,
-        value: string,
+        row: number,
+        col: number,
     };
 }
 
-interface ClickYAxis extends BaseAction {
-    type: 'click-y-axis';
-    input: {
-        index: number,
-        value: string,
-    };
-}
-
-export type AllActions = ClickPerPage | ClickListZoom
- | ClickColor | ClickCharacter | ClickXAxis | ClickYAxis
+export type AllActions = GlobalAction | GoBoardButtonAction
+ | GoBoardRangeAction | GoBoardStoneClick;
 
 export class Model {
     update(state: State, detail: AllActions):State {
@@ -59,17 +57,25 @@ export class Model {
             case 'click-list-zoom':
                 return clickListZoom(state, detail.input);
             case 'click-color':
-                return state;
+                return clickColor(state, detail.input);
             case 'click-character':
-                return state;
+                return clickCharacter(state, detail.input);
+            case 'change-rows':
+                return changeRows(state, detail.input);
+            case 'change-cols':
+                return changeCols(state, detail.input);
             case 'click-x-axis':
-                return state;
+                return clickXAxis(state, detail.input);
             case 'click-y-axis':
-                return state;
+                return clickYAxis(state, detail.input);
+            case 'click-stone':
+                return clickStone(state, detail.input);
             default:
                 return state;
         }
     }
     save(state: State):void {}
-    load(input: unknown):void {}
+    load(state: State, input: unknown):State {
+        return state;
+    }
 }
