@@ -1,5 +1,5 @@
 import { Model, AllActions } from "./model";
-import { State } from "./state";
+import { initState, State } from "./state";
 import { View } from "./view";
 
 declare global {
@@ -13,12 +13,14 @@ declare global {
 class Controller extends HTMLElement{
     constructor() {
         super();
-        
-        let state = new State();
+
+        let state: State = initState;
         const model = new Model();
         const view = new View();
         
         this.appendChild(view.dom);
+
+        view.render(state);
 
         view.dom.addEventListener('go-event', (ev: CustomEvent)=>{
             state = model.update(state, ev.detail);
