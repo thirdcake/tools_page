@@ -3,17 +3,33 @@ import { State } from "../state";
 export function clickPerPage(state: State, input: string):State {
     const perPage = input === '4' ? 4 : 6;
     if(state.perPage === perPage) return state;
-    let listZoom = state.listZoom;
-    if(state.listZoom.includes('detail')) {
-        if(perPage <= state.listZoom.indexOf('detail')) {
-            listZoom = Array.from({length: 6}, (_, i)=> i < perPage ? 'list' : 'none');
+    const oldList = state.goWrapper.map(gW => gW.list);
+    let idealList:('detail'|'list'|'none')[] = Array.from(
+        {length: 6},
+        (_, i) => (i < perPage) ? 'list' : 'none');
+
+    if(oldList.includes('detail')) {
+        if(oldList.indexOf('detail') < perPage) {
+            idealList = oldList;
         }
-    }else{
-        listZoom = Array.from({length: 6}, (_, i)=> i < perPage ? 'list' : 'none');
+    }
+
+    const goWrapper = state.goWrapper.map((gW, i) => {
+        if(gW.list === idealList[i]) return gW;
+        return {
+            ...gW,
+            list: idealList[i],
+        }
+    });
+    if(state.goWrapper.every((gW,i)=>(gW===goWrapper[i]))) {
+        return {
+            ...state,
+            perPage,
+        }
     }
     return {
         ...state,
         perPage,
-        listZoom,
-    };
-}
+        goWrapper,
+    }
+} 

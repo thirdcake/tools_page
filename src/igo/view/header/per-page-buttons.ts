@@ -1,5 +1,5 @@
-import { Buttons } from "./buttons";
-import { State } from "../state";
+import { Buttons } from "../buttons";
+import { State } from "../../state";
 
 
 export class PerPageButtons extends Buttons {
@@ -12,6 +12,8 @@ export class PerPageButtons extends Buttons {
                 { text: '6つ', value: '6', },
             ],
         });
+        
+        this.dom.classList.add('no-print');
 
         this.buttons[1].classList.add('active');
 
@@ -31,6 +33,8 @@ export class PerPageButtons extends Buttons {
     }
 
     render(state: State):void {
-        this.buttons.forEach(button => {});
+        this.buttons.forEach(button => {
+            button.classList.toggle('active', `${state.perPage}`===button.value);
+        });
     }
 }

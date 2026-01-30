@@ -1,5 +1,5 @@
-import { State } from "../state";
-import { config } from "../view/consts";
+import { State, GoWrapperState } from "../state";
+import { config } from "../consts";
 
 type Input = {
     index: number;
@@ -23,9 +23,9 @@ export function clickXAxis(state: State, input: Input): State {
     const oldVal = state.goWrapper[input.index].xAxis;
     const newVal = input.value;
     if(oldVal === newVal) return state;
-    const newWrapper = {
+    const newWrapper: GoWrapperState = {
         ...state.goWrapper[input.index],
-        xAixs: newVal,
+        xAxis: newVal,
         viewBox: createViewBox(
             state.goWrapper[input.index].rows,
             state.goWrapper[input.index].cols,
@@ -45,9 +45,9 @@ export function clickYAxis(state: State, input: Input): State {
     const oldVal = state.goWrapper[input.index].yAxis;
     const newVal = input.value;
     if(oldVal === newVal) return state;
-    const newWrapper = {
+    const newWrapper:GoWrapperState = {
         ...state.goWrapper[input.index],
-        yAixs: newVal,
+        yAxis: newVal,
         viewBox: createViewBox(
             state.goWrapper[input.index].rows,
             state.goWrapper[input.index].cols,
@@ -67,9 +67,10 @@ export function changeRows(state: State, input: Input): State {
     const oldVal = state.goWrapper[input.index].rows;
     const newVal = Number(input.value);
     if(oldVal === newVal) return state;
+    console.log('fire!');
     if(!Number.isInteger(newVal)) return state;
     if(newVal < 1 || 19 < newVal) return state;
-    const newWrapper = {
+    const newWrapper: GoWrapperState = {
         ...state.goWrapper[input.index],
         rows: newVal,
         viewBox: createViewBox(
@@ -93,7 +94,7 @@ export function changeCols(state: State, input: Input): State {
     if(oldVal === newVal) return state;
     if(!Number.isInteger(newVal)) return state;
     if(newVal < 1 || 19 < newVal) return state;
-    const newWrapper = {
+    const newWrapper: GoWrapperState = {
         ...state.goWrapper[input.index],
         cols: newVal,
         viewBox: createViewBox(

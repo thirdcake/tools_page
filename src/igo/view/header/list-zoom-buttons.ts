@@ -1,5 +1,5 @@
-import { Buttons } from "./buttons";
-import { State } from "../state";
+import { Buttons } from "../buttons";
+import { State } from "../../state";
 
 export class ListZoomButtons extends Buttons {
     constructor() {
@@ -16,6 +16,8 @@ export class ListZoomButtons extends Buttons {
                 { text: '6つ目を拡大', value: '5', },
             ],
         });
+        
+        this.dom.classList.add('no-print');
         
         this.buttons[0].classList.add('active');
 
@@ -34,5 +36,19 @@ export class ListZoomButtons extends Buttons {
         });
     }
 
-    render(state: State):void {}
+    render(state: State):void {
+        const listZoom = state.goWrapper.map(gW => gW.list);
+        let activeBtnIndex = listZoom.reduce((num, lZ, idx) => {
+            if(lZ==='detail') return idx;
+            return num;
+        }, -1);
+        this.buttons.forEach((button, i) => {
+            if(state.perPage < i) {
+                button.style.display = 'none';
+            }else{
+                button.style.display = 'block';
+            }
+            button.classList.toggle('active', `${activeBtnIndex}`===button.value);
+        });
+    }
 }

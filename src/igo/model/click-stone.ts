@@ -10,11 +10,11 @@ export function clickStone(state: State, input: Input): State {
         = state.goWrapper[input.index].data[input.row][input.col];
     const newColor = state.goWrapper[input.index].color;
     const newChar = state.goWrapper[input.index].character;
-    const newTupple:[0|1|2, string] = (
+    const newTuple:[0|1|2, string] = (
         oldColor === newColor && oldChar === newChar
         ) ? [0, ''] : [newColor, newChar];
     const newRow = [...state.goWrapper[input.index].data[input.row]];
-    newRow[input.col] = newTupple;
+    newRow[input.col] = newTuple;
     const newData = [...state.goWrapper[input.index].data];
     newData[input.row] = newRow;
     const newWrapper = {

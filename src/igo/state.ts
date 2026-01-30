@@ -1,6 +1,7 @@
-import { config } from "./view/consts";
+import { config } from "./consts";
 
 export type GoWrapperState = {
+    list: 'none' | 'list' | 'detail';
     color: 0 | 1 | 2;
     character: string;
     rows: number;
@@ -12,18 +13,15 @@ export type GoWrapperState = {
     textarea: string;
 }
 
-export type ZoomState = 'none' | 'list' | 'detail';
-
 export type State = {
     perPage: 4 | 6;
-    listZoom: ZoomState[];
     goWrapper: GoWrapperState[];
 }
 
 export const initState: State = {
     perPage: 6,
-    listZoom: Array.from({length: 6}, ()=>'list'),
     goWrapper: Array.from({length: 6}, ()=>({
+        list: 'list',
         color: 0,
         character: '',
         rows: 19,

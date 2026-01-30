@@ -1,5 +1,5 @@
-import { Buttons } from "./buttons";
-import { State } from "../state";
+import { Buttons } from "../buttons";
+import { GoWrapperState } from "../../state";
 
 
 export class CharacterButtons extends Buttons {
@@ -43,7 +43,9 @@ export class CharacterButtons extends Buttons {
         });
     }
 
-    render(state: State):void {
-        this.buttons.forEach(button => {});
+    render(state: GoWrapperState):void {
+        this.buttons.forEach((button) => {
+            button.classList.toggle('active', state.character===button.value);
+        });
     }
 }

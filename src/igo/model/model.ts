@@ -1,15 +1,16 @@
-import { State } from "./state";
-import { clickPerPage } from "./model/click-per-page";
-import { clickListZoom } from "./model/click-list-zoom";
-import { clickColor } from "./model/click-color";
-import { clickCharacter } from "./model/click-character";
-import { clickStone } from "./model/click-stone";
+import { State } from "../state";
+import { clickPerPage } from "./click-per-page";
+import { clickListZoom } from "./click-list-zoom";
+import { clickColor } from "./click-color";
+import { clickCharacter } from "./click-character";
 import {
     changeCols,
     changeRows,
     clickXAxis,
     clickYAxis,
-} from "./model/change-view-box";
+} from "./change-view-box";
+import { clickStone } from "./click-stone";
+import { changeTextarea} from "./change-textarea";
 
 interface BaseAction {
     type: string;
@@ -46,8 +47,20 @@ interface GoBoardStoneClick extends BaseAction {
     };
 }
 
+interface ChangeTextarea extends BaseAction {
+    type: 'change-textarea';
+    input: {
+        index: number,
+        text: string,
+    }
+}
+
+
 export type AllActions = GlobalAction | GoBoardButtonAction
- | GoBoardRangeAction | GoBoardStoneClick;
+ | GoBoardRangeAction | GoBoardStoneClick | ChangeTextarea;
+
+export type LoadAction = {
+}
 
 export class Model {
     update(state: State, detail: AllActions):State {
@@ -70,6 +83,8 @@ export class Model {
                 return clickYAxis(state, detail.input);
             case 'click-stone':
                 return clickStone(state, detail.input);
+            case 'change-textarea':
+                return changeTextarea(state, detail.input);
             default:
                 return state;
         }

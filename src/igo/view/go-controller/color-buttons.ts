@@ -1,8 +1,9 @@
-import { Buttons } from "./buttons";
-import { State } from "../state";
+import { Buttons } from "../buttons";
+import { GoWrapperState } from "../../state";
 
 
 export class ColorButtons extends Buttons {
+    color = 0;
     constructor(idx: number) {
         super({
             title: '碁石の色：',
@@ -14,7 +15,7 @@ export class ColorButtons extends Buttons {
             ],
         });
 
-        this.buttons[1].classList.add('active');
+        this.buttons[0].classList.add('active');
 
         this.buttons.forEach(button => {
             const event = new CustomEvent('go-event', {
@@ -34,7 +35,12 @@ export class ColorButtons extends Buttons {
         });
     }
 
-    render(state: State):void {
-        this.buttons.forEach(button => {});
+    render(state: GoWrapperState):void {
+        if(state.color === this.color) return;
+
+        this.color = state.color;
+        this.buttons.forEach((button, i) => {
+            button.classList.toggle('active', i===this.color);
+        });
     }
 }

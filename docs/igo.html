@@ -82,37 +82,7 @@
     </style>
 </head>
 <body>
-    <div class="no-print">
-        <h1 class="p4">囲碁 問題解答 印刷用</h1>
-        <ul id="display-per-page" class="go-form-ul">
-            <li>１ページに表示する数：</li>
-            <li><button type="button" data-godisplay-per-page="4">４つ</button></li>
-            <li><button type="button" data-godisplay-per-page="6"
-                class="active">６つ</button></li>
-        </ul>
-        <ul id="display-overview-zoom" class="go-form-ul">
-            <li><button type="button" data-go-idx="0" class="active">全体を俯瞰</button></li>
-            <li><button type="button" data-go-idx="1">１つ目を拡大</button></li>
-            <li><button type="button" data-go-idx="2">２つ目を拡大</button></li>
-            <li><button type="button" data-go-idx="3">３つ目を拡大</button></li>
-            <li><button type="button" data-go-idx="4">４つ目を拡大</button></li>
-            <li><button type="button" data-go-idx="5">５つ目を拡大</button></li>
-            <li><button type="button" data-go-idx="6">６つ目を拡大</button></li>
-        </ul>
-        <hr>
-        <div>
-            <p class="p4">保存：<button type="button" value="save" id="save">保存</button></p>
-            <p class="p4">読込：<input type="file" id="load" accept="application/json"></p>
-        </div>
-        <hr>
-    </div>
-    <div id="input" class="board-flex">
-        <board-controller data-go-idx="1" data-display="list"></board-controller>
-        <board-controller data-go-idx="2" data-display="list"></board-controller>
-        <board-controller data-go-idx="3" data-display="list"></board-controller>
-        <board-controller data-go-idx="4" data-display="list"></board-controller>
-        <board-controller data-go-idx="5" data-display="list"></board-controller>
-        <board-controller data-go-idx="6" data-display="list"></board-controller>
-    </div>
+    <h1 class="p4 no-print">囲碁 問題解答 印刷用</h1>
+    <go-quiz></go-quiz>
 </body>
 </html>

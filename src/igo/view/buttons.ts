@@ -3,7 +3,7 @@ type InitData = {
     value: string;
 }
 
-type ButtonData = {
+export type ButtonData = {
     title: string;
     type: string;
     init: InitData[];
