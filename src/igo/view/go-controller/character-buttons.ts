@@ -3,7 +3,9 @@ import { GoWrapperState } from "../../state";
 
 
 export class CharacterButtons extends Buttons {
-    constructor(idx: number) {
+    state: string;
+
+    constructor(idx: number, state: GoWrapperState) {
         super({
             title: '文字：',
             type: 'click-character',
@@ -22,6 +24,8 @@ export class CharacterButtons extends Buttons {
                 { text: '5', value: '5' },
             ],
         });
+
+        this.state = state.character;
 
         this.buttons[1].classList.add('active');
 
@@ -44,8 +48,10 @@ export class CharacterButtons extends Buttons {
     }
 
     render(state: GoWrapperState):void {
+        if(this.state === state.character) return;
+        this.state = state.character;
         this.buttons.forEach((button) => {
-            button.classList.toggle('active', state.character===button.value);
+            button.classList.toggle('active', this.state === button.value);
         });
     }
 }

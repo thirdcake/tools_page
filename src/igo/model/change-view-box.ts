@@ -6,7 +6,7 @@ type Input = {
     value: string;
 }
 
-function createViewBox(
+export function createViewBox(
     rows:number,
     cols:number,
     hasXAxis:boolean,

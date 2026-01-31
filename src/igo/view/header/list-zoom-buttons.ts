@@ -16,9 +16,10 @@ export class ListZoomButtons extends Buttons {
                 { text: '6つ目を拡大', value: '5', },
             ],
         });
-        
+
+        this.dom.appendChild(document.createElement('hr'));
         this.dom.classList.add('no-print');
-        
+
         this.buttons[0].classList.add('active');
 
         this.buttons.forEach(button => {

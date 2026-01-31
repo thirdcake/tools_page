@@ -6,6 +6,7 @@ import { GoWrapperState } from "../../state";
 
 export class GoHeader {
     dom = document.createElement('div');
+    state = 'list';
 
     color: ColorButtons;
     character: CharacterButtons;
@@ -14,13 +15,14 @@ export class GoHeader {
     xAxis: XAxisButtons;
     yAxis: YAxisButtons;
 
-    constructor(idx: number) {
-        this.color = new ColorButtons(idx);
-        this.character = new CharacterButtons(idx);
-        this.cols = new ColsRange(idx);
-        this.rows = new RowsRange(idx);
-        this.xAxis = new XAxisButtons(idx);
-        this.yAxis = new YAxisButtons(idx);
+    constructor(idx: number, state: GoWrapperState) {
+        this.state = state.list;
+        this.color = new ColorButtons(idx, state);
+        this.character = new CharacterButtons(idx, state);
+        this.cols = new ColsRange(idx, state);
+        this.rows = new RowsRange(idx, state);
+        this.xAxis = new XAxisButtons(idx, state);
+        this.yAxis = new YAxisButtons(idx, state);
 
         this.dom.appendChild(this.color.dom);
         this.dom.appendChild(this.character.dom);
@@ -31,6 +33,8 @@ export class GoHeader {
     }
     
     render(state: GoWrapperState) {
+        if(this.state === state.list) return;
+        this.state = state.list;
         switch(state.list) {
             case 'detail':
                 this.dom.style.display = 'block';

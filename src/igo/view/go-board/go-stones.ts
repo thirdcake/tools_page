@@ -4,7 +4,6 @@ import { GoWrapperState } from "../../state";
 class Stone {
     dom = document.createElementNS(config.ns, 'g');
     idx: number;
-    data:[number, string] = [0, ''];
 
     circle = document.createElementNS(config.ns, 'circle');
     char = document.createElementNS(config.ns, 'text');
@@ -88,24 +87,21 @@ class Stone {
     }
 
     render(stoneData: [number, string]):void {
-        if(this.data === stoneData) return;
-        this.data = stoneData;
-
         let pattern: 'empty' | 'onlyChar' | 'black' | 'white';
-        switch (this.data[0]) {
+        switch (stoneData[0]) {
             case 1:
                 pattern = 'black';
             case 2:
                 pattern = 'white';
             default:
-                pattern = (this.data[1]==='') ? 'empty' : 'onlyChar';
+                pattern = (stoneData[1]==='') ? 'empty' : 'onlyChar';
                 break;
         }
-        
+
         this.circle.setAttribute('fill', this.color[pattern].circle_fill);
         this.circle.setAttribute('stroke', this.color[pattern].circle_stroke);
         this.char.setAttribute('fill', this.color[pattern].text_fill);
-        this.char.textContent = this.data[1];
+        this.char.textContent = stoneData[1];
     }
 }
 
@@ -115,13 +111,11 @@ export class GoStones {
     stones: Stone[][];
     data:[number, string][][];
 
-    constructor(idx: number) {
+    constructor(idx: number, state: GoWrapperState) {
         this.idx = idx;
         this.stones = Array.from({length: 19}, (_, r)=>
             Array.from({length: 19}, (_, c) => new Stone(idx, r, c)));
-            
-        this.data = Array.from({length: 19}, () => 
-            Array.from({length: 19}, ()=> ([0, ''])));
+        this.data = state.data;
     }
 
     render(state: GoWrapperState):void {

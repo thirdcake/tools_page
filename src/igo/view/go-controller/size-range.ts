@@ -10,8 +10,9 @@ class Range {
     state: number = 19;
     type: 'cols'|'rows';
 
-    constructor(idx: number, title: string, type: 'cols'|'rows') {
+    constructor(idx: number, state: GoWrapperState, title: string, type: 'cols'|'rows') {
         this.type = type;
+        this.state = state[this.type];
 
         // title
         this.title.textContent = title;
@@ -51,13 +52,13 @@ class Range {
 }
 
 export class ColsRange extends Range {
-    constructor(idx: number) {
-        super(idx, '横幅：', 'cols');
+    constructor(idx: number, state: GoWrapperState) {
+        super(idx, state, '横幅：', 'cols');
     }
 }
 
 export class RowsRange extends Range {
-    constructor(idx: number) {
-        super(idx, '高さ：', 'rows');
+    constructor(idx: number, state: GoWrapperState) {
+        super(idx, state, '高さ：', 'rows');
     }
 }

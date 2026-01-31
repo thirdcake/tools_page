@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/model/click-per-page.ts
   function clickPerPage(state, input) {
@@ -113,6 +112,7 @@
     size: 19,
     interval: 48,
     text_size: 36,
+    font_style: "font:normal 36px sans-serif",
     radius: 20,
     positions: Array.from({ length: 19 }, (_, i) => Math.floor(48 / 2) + i * 48)
   });
@@ -251,6 +251,74 @@
     };
   }
 
+  // src/igo/model/save.ts
+  function save(state) {
+  }
+
+  // src/igo/model/load.ts
+  function load(state, input) {
+    let data = null;
+    try {
+      data = JSON.parse(input);
+    } catch (err) {
+      console.error("JSON\u306E\u30D1\u30FC\u30B9\u306B\u5931\u6557:", err);
+    }
+    if (isState(data)) {
+      const goWrapper = data.goWrapper.map((gW, i) => ({
+        list: i < data.perPage ? "list" : "none",
+        color: 0,
+        character: "",
+        rows: gW.rows,
+        cols: gW.cols,
+        xAxis: gW.xAxis,
+        yAxis: gW.yAxis,
+        viewBox: createViewBox(
+          gW.rows,
+          gW.cols,
+          gW.xAxis !== "none",
+          gW.yAxis !== "none"
+        ),
+        data: gW.data,
+        textarea: gW.textarea
+      }));
+      return {
+        perPage: data.perPage,
+        listZoom: -1,
+        goWrapper
+      };
+    }
+    return state;
+  }
+  function isState(obj) {
+    if (typeof obj !== "object" || obj === null) {
+      return false;
+    }
+    const candidate = obj;
+    if (candidate.perPage !== 4 && candidate.perPage !== 6) return false;
+    if (!Array.isArray(candidate.goWrapper)) return false;
+    if (candidate.goWrapper.length !== 6) return false;
+    return candidate.goWrapper.every((gW) => isGoWrapperState(gW));
+  }
+  function isGoWrapperState(obj) {
+    if (typeof obj !== "object" || obj === null) {
+      return false;
+    }
+    const candidate = obj;
+    if (typeof candidate.rows !== "number") return false;
+    if (candidate.rows < 0 || 19 < candidate.rows) return false;
+    if (typeof candidate.cols !== "number") return false;
+    if (candidate.cols < 0 || 19 < candidate.cols) return false;
+    if (candidate.xAxis !== "none" || candidate.xAxis !== "num" || candidate.xAxis !== "aiu" || candidate.xAxis !== "iroha") return false;
+    if (candidate.yAxis !== "none" || candidate.yAxis !== "num" || candidate.yAxis !== "aiu" || candidate.yAxis !== "iroha") return false;
+    if (candidate.textarea !== "string") return false;
+    if (!Array.isArray(candidate.data)) return false;
+    return candidate.data.every(
+      (row) => Array.isArray(row) && row.every(
+        (tuple) => Array.isArray(tuple) && tuple.length === 2 && (tuple[0] === 0 || tuple[0] === 1 || tuple[0] === 2) && typeof tuple[1] === "string" && tuple[1].length < 2
+      )
+    );
+  }
+
   // src/igo/model/model.ts
   var Model = class {
     update(state, detail) {
@@ -280,15 +348,17 @@
       }
     }
     save(state) {
+      save(state);
     }
     load(state, input) {
-      return state;
+      return load(state, input);
     }
   };
 
   // src/igo/state.ts
   var initState = {
     perPage: 6,
+    listZoom: -1,
     goWrapper: Array.from({ length: 6 }, () => ({
       list: "list",
       color: 0,
@@ -381,6 +451,7 @@
           { text: "6\u3064\u76EE\u3092\u62E1\u5927", value: "5" }
         ]
       });
+      this.dom.appendChild(document.createElement("hr"));
       this.dom.classList.add("no-print");
       this.buttons[0].classList.add("active");
       this.buttons.forEach((button) => {
@@ -414,41 +485,75 @@
   };
 
   // src/igo/view/header/save-load.ts
-  function createSaveLoad() {
-    const dom = document.createElement("div");
-    const save = document.createElement("button");
-    save.id = "save";
-    save.type = "button";
-    save.textContent = "\u4FDD\u5B58\u3059\u308B";
-    save.addEventListener("click", () => {
-      const event = new Event("go-save", { bubbles: true });
-      dom.dispatchEvent(event);
-    }, false);
-    dom.appendChild(save);
-    const loadText = document.createTextNode("\u8AAD\u307F\u8FBC\u307F\uFF1A");
-    dom.appendChild(loadText);
-    const load = document.createElement("input");
-    load.id = "load";
-    load.type = "file";
-    load.accept = "application/json";
-    load.addEventListener("change", (ev) => {
-    }, false);
-    dom.appendChild(load);
-    return dom;
-  }
+  var SaveLoad = class {
+    dom = document.createElement("div");
+    save = document.createElement("button");
+    loadText = document.createElement("span");
+    loadInput = document.createElement("input");
+    state;
+    constructor(state) {
+      this.state = state.listZoom;
+      this.save.id = "save";
+      this.save.type = "button";
+      this.save.textContent = "\u4FDD\u5B58\u3059\u308B";
+      this.dom.appendChild(this.save);
+      this.save.addEventListener("click", () => {
+        const event = new Event("go-save", { bubbles: true });
+        this.dom.dispatchEvent(event);
+      }, false);
+      this.loadText.textContent = "\u8AAD\u307F\u8FBC\u307F\uFF1A";
+      this.dom.appendChild(this.loadText);
+      this.loadInput.id = "load";
+      this.loadInput.type = "file";
+      this.loadInput.accept = "application/json";
+      this.dom.appendChild(this.loadInput);
+      this.dom.appendChild(document.createElement("hr"));
+      this.loadInput.addEventListener("change", async (ev) => {
+        const target = ev.target;
+        const files = target.files;
+        if (!files) return;
+        const file = files[0];
+        let jsonString;
+        try {
+          jsonString = await file.text();
+        } catch (err) {
+          jsonString = "file \u53D6\u5F97\u306B\u5931\u6557";
+          console.error(jsonString, err);
+        }
+        const event = new CustomEvent("go-load", {
+          bubbles: true,
+          detail: {
+            input: jsonString
+          }
+        });
+        this.dom.dispatchEvent(event);
+      }, false);
+    }
+    render(state) {
+      if (this.state === state.listZoom) return;
+      this.state = state.listZoom;
+      if (this.state === -1) {
+        this.dom.style.display = "block";
+      } else {
+        this.dom.style.display = "none";
+      }
+    }
+  };
 
   // src/igo/view/header/header.ts
   var GlobalHeader = class {
     dom = document.createElement("div");
-    perPageButtons = new PerPageButtons();
-    listZoomButtons = new ListZoomButtons();
-    constructor() {
+    perPageButtons;
+    listZoomButtons;
+    saveLoad;
+    constructor(state) {
       this.dom.classList.add("no-print");
+      this.perPageButtons = new PerPageButtons();
       this.dom.appendChild(this.perPageButtons.dom);
+      this.listZoomButtons = new ListZoomButtons();
       this.dom.appendChild(this.listZoomButtons.dom);
-      this.dom.appendChild(document.createElement("hr"));
-      this.dom.appendChild(createSaveLoad());
-      this.dom.appendChild(document.createElement("hr"));
+      this.saveLoad = new SaveLoad(state);
+      this.dom.appendChild(this.saveLoad.dom);
     }
     render(state) {
       this.perPageButtons.render(state);
@@ -458,8 +563,8 @@
 
   // src/igo/view/go-controller/color-buttons.ts
   var ColorButtons = class extends Buttons {
-    color = 0;
-    constructor(idx) {
+    state;
+    constructor(idx, state) {
       super({
         title: "\u7881\u77F3\u306E\u8272\uFF1A",
         type: "click-color",
@@ -469,6 +574,7 @@
           { text: "\u767D", value: "2" }
         ]
       });
+      this.state = state.color;
       this.buttons[0].classList.add("active");
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
@@ -487,17 +593,18 @@
       });
     }
     render(state) {
-      if (state.color === this.color) return;
-      this.color = state.color;
+      if (state.color === this.state) return;
+      this.state = state.color;
       this.buttons.forEach((button, i) => {
-        button.classList.toggle("active", i === this.color);
+        button.classList.toggle("active", i === this.state);
       });
     }
   };
 
   // src/igo/view/go-controller/character-buttons.ts
   var CharacterButtons = class extends Buttons {
-    constructor(idx) {
+    state;
+    constructor(idx, state) {
       super({
         title: "\u6587\u5B57\uFF1A",
         type: "click-character",
@@ -516,6 +623,7 @@
           { text: "5", value: "5" }
         ]
       });
+      this.state = state.character;
       this.buttons[1].classList.add("active");
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
@@ -534,8 +642,10 @@
       });
     }
     render(state) {
+      if (this.state === state.character) return;
+      this.state = state.character;
       this.buttons.forEach((button) => {
-        button.classList.toggle("active", state.character === button.value);
+        button.classList.toggle("active", this.state === button.value);
       });
     }
   };
@@ -548,8 +658,9 @@
     disp = document.createElement("span");
     state = 19;
     type;
-    constructor(idx, title, type) {
+    constructor(idx, state, title, type) {
       this.type = type;
+      this.state = state[this.type];
       this.title.textContent = title;
       this.dom.appendChild(this.title);
       this.input.type = "range";
@@ -580,13 +691,13 @@
     }
   };
   var ColsRange = class extends Range {
-    constructor(idx) {
-      super(idx, "\u6A2A\u5E45\uFF1A", "cols");
+    constructor(idx, state) {
+      super(idx, state, "\u6A2A\u5E45\uFF1A", "cols");
     }
   };
   var RowsRange = class extends Range {
-    constructor(idx) {
-      super(idx, "\u9AD8\u3055\uFF1A", "rows");
+    constructor(idx, state) {
+      super(idx, state, "\u9AD8\u3055\uFF1A", "rows");
     }
   };
 
@@ -594,10 +705,12 @@
   var AxisButtons = class extends Buttons {
     type;
     idx;
-    constructor(idx, type, data) {
+    state;
+    constructor(idx, state, type, data) {
       super(data);
       this.type = type;
       this.idx = idx;
+      this.state = state[this.type];
       this.buttons[0].classList.add("active");
       this.buttons.forEach((button) => {
         button.addEventListener("click", () => {
@@ -619,14 +732,16 @@
       this.dom.dispatchEvent(event);
     }
     render(state) {
+      if (this.state === state[this.type]) return;
+      this.state = state[this.type];
       this.buttons.forEach((button) => {
         button.classList.toggle("active", state[this.type] === button.value);
       });
     }
   };
   var XAxisButtons = class extends AxisButtons {
-    constructor(idx) {
-      super(idx, "xAxis", {
+    constructor(idx, state) {
+      super(idx, state, "xAxis", {
         title: "\u6A2A\u8EF8\uFF1A",
         type: "click-x-axis",
         init: [
@@ -639,8 +754,8 @@
     }
   };
   var YAxisButtons = class extends AxisButtons {
-    constructor(idx) {
-      super(idx, "yAxis", {
+    constructor(idx, state) {
+      super(idx, state, "yAxis", {
         title: "\u7E26\u8EF8\uFF1A",
         type: "click-y-axis",
         init: [
@@ -656,19 +771,21 @@
   // src/igo/view/go-controller/go-header.ts
   var GoHeader = class {
     dom = document.createElement("div");
+    state = "list";
     color;
     character;
     cols;
     rows;
     xAxis;
     yAxis;
-    constructor(idx) {
-      this.color = new ColorButtons(idx);
-      this.character = new CharacterButtons(idx);
-      this.cols = new ColsRange(idx);
-      this.rows = new RowsRange(idx);
-      this.xAxis = new XAxisButtons(idx);
-      this.yAxis = new YAxisButtons(idx);
+    constructor(idx, state) {
+      this.state = state.list;
+      this.color = new ColorButtons(idx, state);
+      this.character = new CharacterButtons(idx, state);
+      this.cols = new ColsRange(idx, state);
+      this.rows = new RowsRange(idx, state);
+      this.xAxis = new XAxisButtons(idx, state);
+      this.yAxis = new YAxisButtons(idx, state);
       this.dom.appendChild(this.color.dom);
       this.dom.appendChild(this.character.dom);
       this.dom.appendChild(this.cols.dom);
@@ -677,6 +794,8 @@
       this.dom.appendChild(this.yAxis.dom);
     }
     render(state) {
+      if (this.state === state.list) return;
+      this.state = state.list;
       switch (state.list) {
         case "detail":
           this.dom.style.display = "block";
@@ -697,9 +816,125 @@
   // src/igo/view/go-board/go-coordinates.ts
   var GoCoordinates = class {
     dom = document.createElementNS(config.ns, "g");
-    constructor(idx) {
+    state;
+    x;
+    y;
+    char = {
+      num: Array.from({ length: 19 }, (_, i) => `${i + 1}`),
+      aiu: "\u3042\u3044\u3046\u3048\u304A\u304B\u304D\u304F\u3051\u3053\u3055\u3057\u3059\u305B\u305D\u305F\u3061\u3064\u3066".split(""),
+      iroha: "\u30A4\u30ED\u30CF\u30CB\u30DB\u30D8\u30C8\u30C1\u30EA\u30CC\u30EB\u30F2\u30EF\u30AB\u30E8\u30BF\u30EC\u30BD\u30C4".split("")
+    };
+    constructor(state) {
+      this.state = {
+        x: state.xAxis,
+        y: state.yAxis
+      };
+      const createXAxis = (g, char, i) => {
+        const x = config.interval * i + Math.floor(config.interval / 2);
+        const y = config.interval * config.size + Math.floor(config.interval / 2) + config.radius * 0.6;
+        const text = document.createElementNS(config.ns, "text");
+        text.setAttribute("style", config.font_style);
+        text.setAttribute("x", `${x}`);
+        text.setAttribute("y", `${y}`);
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = char;
+        g.appendChild(text);
+        return g;
+      };
+      this.x = {
+        num: this.char.num.reduce(createXAxis, document.createElementNS(config.ns, "g")),
+        aiu: this.char.aiu.reduce(createXAxis, document.createElementNS(config.ns, "g")),
+        iroha: this.char.iroha.reduce(createXAxis, document.createElementNS(config.ns, "g"))
+      };
+      const createYAxis = (g, char, i) => {
+        const x = 0 - Math.floor(config.interval / 2);
+        const y = config.interval * (config.size - 1 - i) + Math.floor(config.interval / 2) + config.radius * 0.6;
+        const text = document.createElementNS(config.ns, "text");
+        text.setAttribute("style", config.font_style);
+        text.setAttribute("x", `${x}`);
+        text.setAttribute("y", `${y}`);
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = char;
+        g.appendChild(text);
+        return g;
+      };
+      this.y = {
+        num: this.char.num.reduce(createYAxis, document.createElementNS(config.ns, "g")),
+        aiu: this.char.aiu.reduce(createYAxis, document.createElementNS(config.ns, "g")),
+        iroha: this.char.iroha.reduce(createYAxis, document.createElementNS(config.ns, "g"))
+      };
+      this.dom.appendChild(this.x.num);
+      this.dom.appendChild(this.x.aiu);
+      this.dom.appendChild(this.x.iroha);
+      this.dom.appendChild(this.y.num);
+      this.dom.appendChild(this.y.aiu);
+      this.dom.appendChild(this.y.iroha);
     }
     render(state) {
+      const colorPattern = {
+        num: {
+          num: config.color,
+          aiu: "transparent",
+          iroha: "transparent"
+        },
+        aiu: {
+          num: "transparent",
+          aiu: config.color,
+          iroha: "transparent"
+        },
+        iroha: {
+          num: "transparent",
+          aiu: "transparent",
+          iroha: config.color
+        },
+        default: {
+          num: "transparent",
+          aiu: "transparent",
+          iroha: "transparent"
+        }
+      };
+      if (this.state.x !== state.xAxis) {
+        this.state.x = state.xAxis;
+        let cP;
+        switch (state.xAxis) {
+          case "num":
+            cP = colorPattern.num;
+            break;
+          case "aiu":
+            cP = colorPattern.aiu;
+            break;
+          case "iroha":
+            cP = colorPattern.iroha;
+            break;
+          default:
+            cP = colorPattern.default;
+            break;
+        }
+        this.x.num.style.fill = cP.num;
+        this.x.aiu.style.fill = cP.aiu;
+        this.x.iroha.style.fill = cP.iroha;
+      }
+      if (this.state.y !== state.yAxis) {
+        this.state.y = state.yAxis;
+        let cP;
+        switch (state.xAxis) {
+          case "num":
+            cP = colorPattern.num;
+            break;
+          case "aiu":
+            cP = colorPattern.aiu;
+            break;
+          case "iroha":
+            cP = colorPattern.iroha;
+            break;
+          default:
+            cP = colorPattern.default;
+            break;
+        }
+        this.y.num.style.display = cP.num;
+        this.y.aiu.style.display = cP.aiu;
+        this.y.iroha.style.display = cP.iroha;
+      }
     }
   };
 
@@ -756,7 +991,6 @@
   var Stone = class {
     dom = document.createElementNS(config.ns, "g");
     idx;
-    data = [0, ""];
     circle = document.createElementNS(config.ns, "circle");
     char = document.createElementNS(config.ns, "text");
     color = Object.freeze({
@@ -826,22 +1060,20 @@
       }, false);
     }
     render(stoneData) {
-      if (this.data === stoneData) return;
-      this.data = stoneData;
       let pattern;
-      switch (this.data[0]) {
+      switch (stoneData[0]) {
         case 1:
           pattern = "black";
         case 2:
           pattern = "white";
         default:
-          pattern = this.data[1] === "" ? "empty" : "onlyChar";
+          pattern = stoneData[1] === "" ? "empty" : "onlyChar";
           break;
       }
       this.circle.setAttribute("fill", this.color[pattern].circle_fill);
       this.circle.setAttribute("stroke", this.color[pattern].circle_stroke);
       this.char.setAttribute("fill", this.color[pattern].text_fill);
-      this.char.textContent = this.data[1];
+      this.char.textContent = stoneData[1];
     }
   };
   var GoStones = class {
@@ -849,10 +1081,10 @@
     idx;
     stones;
     data;
-    constructor(idx) {
+    constructor(idx, state) {
       this.idx = idx;
       this.stones = Array.from({ length: 19 }, (_, r) => Array.from({ length: 19 }, (_2, c) => new Stone(idx, r, c)));
-      this.data = Array.from({ length: 19 }, () => Array.from({ length: 19 }, () => [0, ""]));
+      this.data = state.data;
     }
     render(state) {
       if (this.data === state.data) return;
@@ -872,9 +1104,9 @@
     dom = document.createElementNS(config.ns, "svg");
     stones;
     coordinates;
-    constructor(idx) {
-      this.stones = new GoStones(idx);
-      this.coordinates = new GoCoordinates(idx);
+    constructor(idx, state) {
+      this.stones = new GoStones(idx, state);
+      this.coordinates = new GoCoordinates(state);
       this.dom.appendChild(createGoGrid());
       this.dom.appendChild(this.stones.dom);
       this.dom.appendChild(this.coordinates.dom);
@@ -889,14 +1121,15 @@
   var Textarea = class {
     dom = document.createElement("div");
     idx;
-    state = {
-      list: "list",
-      text: ""
-    };
+    state;
     textarea = document.createElement("textarea");
     para = document.createElement("p");
-    constructor(idx) {
+    constructor(idx, state) {
       this.idx = idx;
+      this.state = {
+        list: state.list,
+        text: state.textarea
+      };
       this.textarea.style.display = "none";
       this.textarea.placeholder = "\u3053\u3053\u306B\u6587\u5B57\u304C\u5165\u529B\u3067\u304D\u307E\u3059\u3002";
       this.dom.appendChild(this.textarea);
@@ -941,15 +1174,16 @@
   var GoWrapper = class {
     dom = document.createElement("div");
     idx;
-    state = null;
+    state;
     goHeader;
     goBoard;
     textarea;
-    constructor(idx) {
+    constructor(idx, state) {
       this.idx = idx;
-      this.goHeader = new GoHeader(idx);
-      this.goBoard = new GoBoard(idx);
-      this.textarea = new Textarea(idx);
+      this.state = state;
+      this.goHeader = new GoHeader(idx, state);
+      this.goBoard = new GoBoard(idx, state);
+      this.textarea = new Textarea(idx, state);
       this.dom.appendChild(this.goHeader.dom);
       this.dom.appendChild(this.goBoard.dom);
       this.dom.appendChild(this.textarea.dom);
@@ -980,10 +1214,12 @@
   // src/igo/view/view.ts
   var View = class {
     dom = document.createElement("div");
-    globalHeader = new GlobalHeader();
-    goWrappers = Array.from({ length: 6 }, (_, i) => new GoWrapper(i));
-    constructor() {
+    globalHeader;
+    goWrappers;
+    constructor(state) {
+      this.globalHeader = new GlobalHeader(state);
       this.dom.appendChild(this.globalHeader.dom);
+      this.goWrappers = Array.from({ length: 6 }, (_, i) => new GoWrapper(i, state.goWrapper[i]));
       this.goWrappers.forEach((gW) => {
         this.dom.appendChild(gW.dom);
       });
@@ -998,9 +1234,9 @@
   var Controller = class extends HTMLElement {
     constructor() {
       super();
-      let state = initState;
+      let state = { ...initState };
       const model = new Model();
-      const view = new View();
+      const view = new View(state);
       this.appendChild(view.dom);
       view.render(state);
       view.dom.addEventListener("go-event", (ev) => {

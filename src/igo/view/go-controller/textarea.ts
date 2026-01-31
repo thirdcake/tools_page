@@ -3,16 +3,20 @@ import { GoWrapperState } from "../../state";
 export class Textarea {
     dom = document.createElement('div');
     idx: number;
-    state = {
-        list: 'list',
-        text: '',
+    state: {
+        list: string,
+        text: string,
     }
 
     textarea = document.createElement('textarea');
     para = document.createElement('p');
 
-    constructor(idx: number) {
+    constructor(idx: number, state: GoWrapperState) {
         this.idx = idx;
+        this.state = {
+            list: state.list,
+            text: state.textarea,
+        }
 
         this.textarea.style.display = 'none';
         this.textarea.placeholder = 'ここに文字が入力できます。';

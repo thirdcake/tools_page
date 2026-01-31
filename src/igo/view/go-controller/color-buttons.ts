@@ -3,8 +3,8 @@ import { GoWrapperState } from "../../state";
 
 
 export class ColorButtons extends Buttons {
-    color = 0;
-    constructor(idx: number) {
+    state: number;
+    constructor(idx: number, state: GoWrapperState) {
         super({
             title: '碁石の色：',
             type: 'click-color',
@@ -14,6 +14,7 @@ export class ColorButtons extends Buttons {
                 { text: '白', value: '2', },
             ],
         });
+        this.state = state.color;
 
         this.buttons[0].classList.add('active');
 
@@ -36,11 +37,10 @@ export class ColorButtons extends Buttons {
     }
 
     render(state: GoWrapperState):void {
-        if(state.color === this.color) return;
-
-        this.color = state.color;
+        if(state.color === this.state) return;
+        this.state = state.color;
         this.buttons.forEach((button, i) => {
-            button.classList.toggle('active', i===this.color);
+            button.classList.toggle('active', i===this.state);
         });
     }
 }

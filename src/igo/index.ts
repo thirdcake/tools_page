@@ -18,10 +18,10 @@ class Controller extends HTMLElement{
     constructor() {
         super();
 
-        let state: State = initState;
+        let state: State = { ...initState };
         const model = new Model();
-        const view = new View();
-        
+        const view = new View(state);
+
         this.appendChild(view.dom);
 
         view.render(state);
@@ -34,7 +34,7 @@ class Controller extends HTMLElement{
         view.dom.addEventListener('go-save', () => {
             model.save(state);
         }, false);
-        
+
         view.dom.addEventListener('go-load', (ev: CustomEvent) => {
             state = model.load(state, ev.detail);
             view.render(state);

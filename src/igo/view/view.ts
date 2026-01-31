@@ -5,14 +5,17 @@ import { GoWrapper } from "./go-wrapper";
 export class View {
     dom = document.createElement('div');
 
-    globalHeader = new GlobalHeader();
-    goWrappers = Array.from({length: 6}, (_, i) => ( new GoWrapper(i) ));
+    globalHeader: GlobalHeader;
+    goWrappers: GoWrapper[];
 
-    constructor() {
+    constructor(state: State) {
+        this.globalHeader = new GlobalHeader(state);
         this.dom.appendChild(this.globalHeader.dom);
+
+        this.goWrappers = Array.from({length: 6}, (_, i) => ( new GoWrapper(i, state.goWrapper[i]) ));
         this.goWrappers.forEach(gW => {
             this.dom.appendChild(gW.dom);
-        })
+        });
     }
 
     render(state: State):void {

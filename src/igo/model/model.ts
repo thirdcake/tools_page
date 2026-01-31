@@ -11,6 +11,8 @@ import {
 } from "./change-view-box";
 import { clickStone } from "./click-stone";
 import { changeTextarea} from "./change-textarea";
+import { save } from "./save";
+import { load } from "./load";
 
 interface BaseAction {
     type: string;
@@ -60,6 +62,7 @@ export type AllActions = GlobalAction | GoBoardButtonAction
  | GoBoardRangeAction | GoBoardStoneClick | ChangeTextarea;
 
 export type LoadAction = {
+    input: string;
 }
 
 export class Model {
@@ -89,8 +92,10 @@ export class Model {
                 return state;
         }
     }
-    save(state: State):void {}
-    load(state: State, input: unknown):State {
-        return state;
+
+    save(state: State):void { save(state); }
+
+    load(state: State, input: string):State {
+        return load(state, input);
     }
 }

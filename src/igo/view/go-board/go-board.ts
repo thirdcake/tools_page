@@ -9,9 +9,9 @@ export class GoBoard {
     stones: GoStones;
     coordinates: GoCoordinates;
 
-    constructor(idx: number) {
-        this.stones = new GoStones(idx);
-        this.coordinates = new GoCoordinates(idx);
+    constructor(idx: number, state: GoWrapperState) {
+        this.stones = new GoStones(idx, state);
+        this.coordinates = new GoCoordinates(state);
 
         this.dom.appendChild(createGoGrid());
         this.dom.appendChild(this.stones.dom);

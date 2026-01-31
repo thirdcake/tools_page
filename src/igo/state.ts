@@ -15,11 +15,13 @@ export type GoWrapperState = {
 
 export type State = {
     perPage: 4 | 6;
+    listZoom: number;
     goWrapper: GoWrapperState[];
 }
 
 export const initState: State = {
     perPage: 6,
+    listZoom: -1,
     goWrapper: Array.from({length: 6}, ()=>({
         list: 'list',
         color: 0,
