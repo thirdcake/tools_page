@@ -10,6 +10,8 @@ export class GoBoard {
     coordinates: GoCoordinates;
 
     constructor(idx: number, state: GoWrapperState) {
+        this.dom.classList.add('board');
+
         this.stones = new GoStones(idx, state);
         this.coordinates = new GoCoordinates(state);
 
@@ -19,7 +21,7 @@ export class GoBoard {
     }
 
     render(state: GoWrapperState):void {
-        //this.dom.setAttribute('viewBox', state.viewBox);
+        this.dom.setAttribute('viewBox', state.viewBox);
         this.stones.render(state);
         this.coordinates.render(state);
     }

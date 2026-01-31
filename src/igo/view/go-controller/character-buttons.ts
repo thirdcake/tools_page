@@ -3,9 +3,9 @@ import { GoWrapperState } from "../../state";
 
 
 export class CharacterButtons extends Buttons {
-    state: string;
+    state: null|string = null;
 
-    constructor(idx: number, state: GoWrapperState) {
+    constructor(idx: number) {
         super({
             title: '文字：',
             type: 'click-character',
@@ -24,10 +24,6 @@ export class CharacterButtons extends Buttons {
                 { text: '5', value: '5' },
             ],
         });
-
-        this.state = state.character;
-
-        this.buttons[1].classList.add('active');
 
         this.buttons.forEach(button => {
             const event = new CustomEvent('go-event', {

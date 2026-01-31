@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/igo/model/click-per-page.ts
   function clickPerPage(state, input) {
@@ -121,7 +122,7 @@
   function createViewBox(rows, cols, hasXAxis, hasYAxis) {
     let min_x = hasYAxis ? 0 - config.interval : 0;
     let min_y = config.interval * (config.size - rows);
-    let width = config.interval * cols;
+    let width = config.interval * cols + (hasYAxis ? config.interval : 0);
     let height = config.interval * rows + (hasXAxis ? config.interval : 0);
     return [min_x, min_y, width, height].join(" ");
   }
@@ -563,8 +564,8 @@
 
   // src/igo/view/go-controller/color-buttons.ts
   var ColorButtons = class extends Buttons {
-    state;
-    constructor(idx, state) {
+    state = null;
+    constructor(idx) {
       super({
         title: "\u7881\u77F3\u306E\u8272\uFF1A",
         type: "click-color",
@@ -574,8 +575,6 @@
           { text: "\u767D", value: "2" }
         ]
       });
-      this.state = state.color;
-      this.buttons[0].classList.add("active");
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
           bubbles: true,
@@ -593,7 +592,7 @@
       });
     }
     render(state) {
-      if (state.color === this.state) return;
+      if (this.state === state.color) return;
       this.state = state.color;
       this.buttons.forEach((button, i) => {
         button.classList.toggle("active", i === this.state);
@@ -603,8 +602,8 @@
 
   // src/igo/view/go-controller/character-buttons.ts
   var CharacterButtons = class extends Buttons {
-    state;
-    constructor(idx, state) {
+    state = null;
+    constructor(idx) {
       super({
         title: "\u6587\u5B57\uFF1A",
         type: "click-character",
@@ -623,8 +622,6 @@
           { text: "5", value: "5" }
         ]
       });
-      this.state = state.character;
-      this.buttons[1].classList.add("active");
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
           bubbles: true,
@@ -656,11 +653,10 @@
     title = document.createElement("span");
     input = document.createElement("input");
     disp = document.createElement("span");
-    state = 19;
+    state = null;
     type;
-    constructor(idx, state, title, type) {
+    constructor(idx, title, type) {
       this.type = type;
-      this.state = state[this.type];
       this.title.textContent = title;
       this.dom.appendChild(this.title);
       this.input.type = "range";
@@ -691,13 +687,13 @@
     }
   };
   var ColsRange = class extends Range {
-    constructor(idx, state) {
-      super(idx, state, "\u6A2A\u5E45\uFF1A", "cols");
+    constructor(idx) {
+      super(idx, "\u6A2A\u5E45\uFF1A", "cols");
     }
   };
   var RowsRange = class extends Range {
-    constructor(idx, state) {
-      super(idx, state, "\u9AD8\u3055\uFF1A", "rows");
+    constructor(idx) {
+      super(idx, "\u9AD8\u3055\uFF1A", "rows");
     }
   };
 
@@ -705,12 +701,11 @@
   var AxisButtons = class extends Buttons {
     type;
     idx;
-    state;
-    constructor(idx, state, type, data) {
+    state = null;
+    constructor(idx, type, data) {
       super(data);
       this.type = type;
       this.idx = idx;
-      this.state = state[this.type];
       this.buttons[0].classList.add("active");
       this.buttons.forEach((button) => {
         button.addEventListener("click", () => {
@@ -740,8 +735,8 @@
     }
   };
   var XAxisButtons = class extends AxisButtons {
-    constructor(idx, state) {
-      super(idx, state, "xAxis", {
+    constructor(idx) {
+      super(idx, "xAxis", {
         title: "\u6A2A\u8EF8\uFF1A",
         type: "click-x-axis",
         init: [
@@ -754,8 +749,8 @@
     }
   };
   var YAxisButtons = class extends AxisButtons {
-    constructor(idx, state) {
-      super(idx, state, "yAxis", {
+    constructor(idx) {
+      super(idx, "yAxis", {
         title: "\u7E26\u8EF8\uFF1A",
         type: "click-y-axis",
         init: [
@@ -771,21 +766,19 @@
   // src/igo/view/go-controller/go-header.ts
   var GoHeader = class {
     dom = document.createElement("div");
-    state = "list";
     color;
     character;
     cols;
     rows;
     xAxis;
     yAxis;
-    constructor(idx, state) {
-      this.state = state.list;
-      this.color = new ColorButtons(idx, state);
-      this.character = new CharacterButtons(idx, state);
-      this.cols = new ColsRange(idx, state);
-      this.rows = new RowsRange(idx, state);
-      this.xAxis = new XAxisButtons(idx, state);
-      this.yAxis = new YAxisButtons(idx, state);
+    constructor(idx) {
+      this.color = new ColorButtons(idx);
+      this.character = new CharacterButtons(idx);
+      this.cols = new ColsRange(idx);
+      this.rows = new RowsRange(idx);
+      this.xAxis = new XAxisButtons(idx);
+      this.yAxis = new YAxisButtons(idx);
       this.dom.appendChild(this.color.dom);
       this.dom.appendChild(this.character.dom);
       this.dom.appendChild(this.cols.dom);
@@ -794,21 +787,16 @@
       this.dom.appendChild(this.yAxis.dom);
     }
     render(state) {
-      if (this.state === state.list) return;
-      this.state = state.list;
-      switch (state.list) {
-        case "detail":
-          this.dom.style.display = "block";
-          this.color.render(state);
-          this.character.render(state);
-          this.cols.render(state);
-          this.rows.render(state);
-          this.xAxis.render(state);
-          this.yAxis.render(state);
-          break;
-        default:
-          this.dom.style.display = "none";
-          break;
+      if (state.list === "detail") {
+        this.dom.style.display = "block";
+        this.color.render(state);
+        this.character.render(state);
+        this.cols.render(state);
+        this.rows.render(state);
+        this.xAxis.render(state);
+        this.yAxis.render(state);
+      } else {
+        this.dom.style.display = "none";
       }
     }
   };
@@ -917,7 +905,7 @@
       if (this.state.y !== state.yAxis) {
         this.state.y = state.yAxis;
         let cP;
-        switch (state.xAxis) {
+        switch (state.yAxis) {
           case "num":
             cP = colorPattern.num;
             break;
@@ -931,9 +919,9 @@
             cP = colorPattern.default;
             break;
         }
-        this.y.num.style.display = cP.num;
-        this.y.aiu.style.display = cP.aiu;
-        this.y.iroha.style.display = cP.iroha;
+        this.y.num.style.fill = cP.num;
+        this.y.aiu.style.fill = cP.aiu;
+        this.y.iroha.style.fill = cP.iroha;
       }
     }
   };
@@ -1105,6 +1093,7 @@
     stones;
     coordinates;
     constructor(idx, state) {
+      this.dom.classList.add("board");
       this.stones = new GoStones(idx, state);
       this.coordinates = new GoCoordinates(state);
       this.dom.appendChild(createGoGrid());
@@ -1112,6 +1101,7 @@
       this.dom.appendChild(this.coordinates.dom);
     }
     render(state) {
+      this.dom.setAttribute("viewBox", state.viewBox);
       this.stones.render(state);
       this.coordinates.render(state);
     }
@@ -1174,14 +1164,13 @@
   var GoWrapper = class {
     dom = document.createElement("div");
     idx;
-    state;
+    state = null;
     goHeader;
     goBoard;
     textarea;
     constructor(idx, state) {
       this.idx = idx;
-      this.state = state;
-      this.goHeader = new GoHeader(idx, state);
+      this.goHeader = new GoHeader(idx);
       this.goBoard = new GoBoard(idx, state);
       this.textarea = new Textarea(idx, state);
       this.dom.appendChild(this.goHeader.dom);

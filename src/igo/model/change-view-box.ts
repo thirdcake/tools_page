@@ -14,7 +14,7 @@ export function createViewBox(
 ):string {
     let min_x = hasYAxis ? 0 - config.interval : 0;
     let min_y = config.interval * (config.size - rows);
-    let width = config.interval * cols;
+    let width = config.interval * cols + (hasYAxis ? config.interval : 0);
     let height = config.interval * rows + (hasXAxis ? config.interval : 0);
     return [min_x, min_y, width, height].join(' ');
 }

@@ -6,7 +6,6 @@ import { GoWrapperState } from "../../state";
 
 export class GoHeader {
     dom = document.createElement('div');
-    state = 'list';
 
     color: ColorButtons;
     character: CharacterButtons;
@@ -15,14 +14,13 @@ export class GoHeader {
     xAxis: XAxisButtons;
     yAxis: YAxisButtons;
 
-    constructor(idx: number, state: GoWrapperState) {
-        this.state = state.list;
-        this.color = new ColorButtons(idx, state);
-        this.character = new CharacterButtons(idx, state);
-        this.cols = new ColsRange(idx, state);
-        this.rows = new RowsRange(idx, state);
-        this.xAxis = new XAxisButtons(idx, state);
-        this.yAxis = new YAxisButtons(idx, state);
+    constructor(idx: number) {
+        this.color = new ColorButtons(idx);
+        this.character = new CharacterButtons(idx);
+        this.cols = new ColsRange(idx);
+        this.rows = new RowsRange(idx);
+        this.xAxis = new XAxisButtons(idx);
+        this.yAxis = new YAxisButtons(idx);
 
         this.dom.appendChild(this.color.dom);
         this.dom.appendChild(this.character.dom);
@@ -30,24 +28,20 @@ export class GoHeader {
         this.dom.appendChild(this.rows.dom);
         this.dom.appendChild(this.xAxis.dom);
         this.dom.appendChild(this.yAxis.dom);
+        
     }
     
     render(state: GoWrapperState) {
-        if(this.state === state.list) return;
-        this.state = state.list;
-        switch(state.list) {
-            case 'detail':
-                this.dom.style.display = 'block';
-                this.color.render(state);
-                this.character.render(state);
-                this.cols.render(state);
-                this.rows.render(state);
-                this.xAxis.render(state);
-                this.yAxis.render(state);
-                break;
-            default:
-                this.dom.style.display = 'none';
-                break;
+        if(state.list === 'detail') {
+            this.dom.style.display = 'block';
+            this.color.render(state);
+            this.character.render(state);
+            this.cols.render(state);
+            this.rows.render(state);
+            this.xAxis.render(state);
+            this.yAxis.render(state);
+        } else {
+            this.dom.style.display = 'none';
         }
     }
 }

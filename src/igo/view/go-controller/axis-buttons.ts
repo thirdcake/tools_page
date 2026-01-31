@@ -4,14 +4,13 @@ import { GoWrapperState } from "../../state";
 class AxisButtons extends Buttons {
     type: 'xAxis' | 'yAxis';
     idx: number;
-    state: string;
+    state: null|string = null;
 
-    constructor(idx: number, state: GoWrapperState, type: 'xAxis' | 'yAxis', data: ButtonData) {
+    constructor(idx: number, type: 'xAxis' | 'yAxis', data: ButtonData) {
         super(data);
 
         this.type = type;
         this.idx = idx;
-        this.state = state[this.type];
 
         this.buttons[0].classList.add('active');
 
@@ -46,8 +45,8 @@ class AxisButtons extends Buttons {
 }
 
 export class XAxisButtons extends AxisButtons {
-    constructor(idx: number, state: GoWrapperState) {
-        super(idx, state, 'xAxis', {
+    constructor(idx: number) {
+        super(idx, 'xAxis', {
             title: '横軸：',
             type: 'click-x-axis',
             init: [
@@ -62,8 +61,8 @@ export class XAxisButtons extends AxisButtons {
 }
 
 export class YAxisButtons extends AxisButtons {
-    constructor(idx: number, state: GoWrapperState) {
-        super(idx, state, 'yAxis', {
+    constructor(idx: number) {
+        super(idx, 'yAxis', {
             title: '縦軸：',
             type: 'click-y-axis',
             init: [

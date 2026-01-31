@@ -120,7 +120,7 @@ export class GoCoordinates {
         if( this.state.y !== state.yAxis) {
             this.state.y = state.yAxis;
             let cP;
-            switch(state.xAxis) {
+            switch(state.yAxis) {
                 case 'num':
                     cP = colorPattern.num;
                     break;
@@ -134,9 +134,9 @@ export class GoCoordinates {
                     cP = colorPattern.default;
                     break;
             }
-            this.y.num.style.display = cP.num;
-            this.y.aiu.style.display = cP.aiu;
-            this.y.iroha.style.display = cP.iroha;
+            this.y.num.style.fill = cP.num;
+            this.y.aiu.style.fill = cP.aiu;
+            this.y.iroha.style.fill = cP.iroha;
         }
     }
 }

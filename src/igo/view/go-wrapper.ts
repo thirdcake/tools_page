@@ -6,15 +6,14 @@ import { GoWrapperState } from "../state";
 export class GoWrapper {
     dom = document.createElement('div');
     idx: number;
-    state: GoWrapperState;
+    state: null|GoWrapperState = null;
     goHeader: GoHeader;
     goBoard: GoBoard;
     textarea: Textarea;
 
     constructor(idx: number, state: GoWrapperState) {
         this.idx = idx;
-        this.state = state;
-        this.goHeader = new GoHeader(idx, state);
+        this.goHeader = new GoHeader(idx);
         this.goBoard = new GoBoard(idx, state);
         this.textarea = new Textarea(idx, state);
 
