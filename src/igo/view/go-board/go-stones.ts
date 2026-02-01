@@ -1,9 +1,9 @@
 import { config } from "../../consts";
-import { GoWrapperState } from "../../state";
 
 class Stone {
     dom = document.createElementNS(config.ns, 'g');
     idx: number;
+    data: [number, string] = [0, ''];
 
     circle = document.createElementNS(config.ns, 'circle');
     char = document.createElementNS(config.ns, 'text');
@@ -74,12 +74,15 @@ class Stone {
 
         // click イベント
         this.dom.addEventListener('click', () => {
-            const event = new CustomEvent('', {
+            const event = new CustomEvent('go-event', {
                 bubbles: true,
                 detail: {
-                    index: idx,
-                    row: row,
-                    col: col,
+                    type: 'click-stone',
+                    input: {
+                        index: idx,
+                        row: row,
+                        col: col,
+                    },
                 },
             });
             this.dom.dispatchEvent(event);
@@ -87,12 +90,16 @@ class Stone {
     }
 
     render(stoneData: [number, string]):void {
+        if(stoneData === this.data) return;
+        this.data = stoneData;
         let pattern: 'empty' | 'onlyChar' | 'black' | 'white';
         switch (stoneData[0]) {
             case 1:
                 pattern = 'black';
+                break;
             case 2:
                 pattern = 'white';
+                break;
             default:
                 pattern = (stoneData[1]==='') ? 'empty' : 'onlyChar';
                 break;
@@ -105,28 +112,48 @@ class Stone {
     }
 }
 
+class RowStones {
+    idx: number;
+    row: number;
+    stones: Stone[];
+    data: null|[number, string][] = null;
+
+    constructor(idx: number, row: number) {
+        this.idx = idx;
+        this.row = row;
+        this.stones = Array.from({length: 19}, (_, c) => new Stone(idx, row, c));
+    }
+    appendChild(dom: SVGGElement):void {
+        this.stones.forEach(stone => {
+            dom.appendChild(stone.dom);
+        });
+    }
+    render(data: [number, string][]) {
+        if(this.data === data) return;
+        this.data = data;
+        this.stones.forEach((stone, c) => {stone.render(data[c])});
+    }
+}
+
 export class GoStones {
     dom = document.createElementNS(config.ns, 'g');
     idx: number;
-    stones: Stone[][];
-    data:[number, string][][];
+    rows: RowStones[];
+    data: null|[number, string][][] = null;
 
-    constructor(idx: number, state: GoWrapperState) {
+    constructor(idx: number) {
         this.idx = idx;
-        this.stones = Array.from({length: 19}, (_, r)=>
-            Array.from({length: 19}, (_, c) => new Stone(idx, r, c)));
-        this.data = state.data;
+        this.rows = Array.from({length: 19}, (_, r)=> new RowStones(idx, r));
+        this.rows.forEach(row => {
+            row.appendChild(this.dom);
+        });
     }
 
-    render(state: GoWrapperState):void {
-        if(this.data === state.data) return;
-        this.stones.forEach((row, r) => {
-            if(this.data[r] === state.data[r]) return;
-            row.forEach((stone, c) => {
-                if(this.data[r][c] === state.data[r][c]) return;
-                stone.render(state.data[r][c]);
-            });
+    render(data: [number, string][][]):void {
+        if(this.data === data) return;
+        this.data = data;
+        this.rows.forEach((row, r) => {
+            row.render(data[r]);
         });
-        this.data = state.data;
     }
 }

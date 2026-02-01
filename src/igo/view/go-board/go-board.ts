@@ -12,7 +12,7 @@ export class GoBoard {
     constructor(idx: number, state: GoWrapperState) {
         this.dom.classList.add('board');
 
-        this.stones = new GoStones(idx, state);
+        this.stones = new GoStones(idx);
         this.coordinates = new GoCoordinates(state);
 
         this.dom.appendChild(createGoGrid());
@@ -22,7 +22,7 @@ export class GoBoard {
 
     render(state: GoWrapperState):void {
         this.dom.setAttribute('viewBox', state.viewBox);
-        this.stones.render(state);
+        this.stones.render(state.data);
         this.coordinates.render(state);
     }
 }

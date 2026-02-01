@@ -218,9 +218,14 @@
 
   // src/igo/model/click-stone.ts
   function clickStone(state, input) {
+    if (state.goWrapper[input.index].list === "none") return state;
+    if (state.goWrapper[input.index].list === "list") {
+      return clickListZoom(state, `${input.index}`);
+    }
     const [oldColor, oldChar] = state.goWrapper[input.index].data[input.row][input.col];
     const newColor = state.goWrapper[input.index].color;
     const newChar = state.goWrapper[input.index].character;
+    if (oldColor === 0 && newColor === 0 && oldChar === "" && newChar === "") return state;
     const newTuple = oldColor === newColor && oldChar === newChar ? [0, ""] : [newColor, newChar];
     const newRow = [...state.goWrapper[input.index].data[input.row]];
     newRow[input.col] = newTuple;
@@ -653,7 +658,7 @@
     title = document.createElement("span");
     input = document.createElement("input");
     disp = document.createElement("span");
-    state = null;
+    state = 19;
     type;
     constructor(idx, title, type) {
       this.type = type;
@@ -979,6 +984,7 @@
   var Stone = class {
     dom = document.createElementNS(config.ns, "g");
     idx;
+    data = [0, ""];
     circle = document.createElementNS(config.ns, "circle");
     char = document.createElementNS(config.ns, "text");
     color = Object.freeze({
@@ -1036,24 +1042,31 @@
       this.dom.appendChild(this.circle);
       this.dom.appendChild(this.char);
       this.dom.addEventListener("click", () => {
-        const event = new CustomEvent("", {
+        const event = new CustomEvent("go-event", {
           bubbles: true,
           detail: {
-            index: idx,
-            row,
-            col
+            type: "click-stone",
+            input: {
+              index: idx,
+              row,
+              col
+            }
           }
         });
         this.dom.dispatchEvent(event);
       }, false);
     }
     render(stoneData) {
+      if (stoneData === this.data) return;
+      this.data = stoneData;
       let pattern;
       switch (stoneData[0]) {
         case 1:
           pattern = "black";
+          break;
         case 2:
           pattern = "white";
+          break;
         default:
           pattern = stoneData[1] === "" ? "empty" : "onlyChar";
           break;
@@ -1064,26 +1077,47 @@
       this.char.textContent = stoneData[1];
     }
   };
+  var RowStones = class {
+    idx;
+    row;
+    stones;
+    data = null;
+    constructor(idx, row) {
+      this.idx = idx;
+      this.row = row;
+      this.stones = Array.from({ length: 19 }, (_, c) => new Stone(idx, row, c));
+    }
+    appendChild(dom) {
+      this.stones.forEach((stone) => {
+        dom.appendChild(stone.dom);
+      });
+    }
+    render(data) {
+      if (this.data === data) return;
+      this.data = data;
+      this.stones.forEach((stone, c) => {
+        stone.render(data[c]);
+      });
+    }
+  };
   var GoStones = class {
     dom = document.createElementNS(config.ns, "g");
     idx;
-    stones;
-    data;
-    constructor(idx, state) {
+    rows;
+    data = null;
+    constructor(idx) {
       this.idx = idx;
-      this.stones = Array.from({ length: 19 }, (_, r) => Array.from({ length: 19 }, (_2, c) => new Stone(idx, r, c)));
-      this.data = state.data;
-    }
-    render(state) {
-      if (this.data === state.data) return;
-      this.stones.forEach((row, r) => {
-        if (this.data[r] === state.data[r]) return;
-        row.forEach((stone, c) => {
-          if (this.data[r][c] === state.data[r][c]) return;
-          stone.render(state.data[r][c]);
-        });
+      this.rows = Array.from({ length: 19 }, (_, r) => new RowStones(idx, r));
+      this.rows.forEach((row) => {
+        row.appendChild(this.dom);
       });
-      this.data = state.data;
+    }
+    render(data) {
+      if (this.data === data) return;
+      this.data = data;
+      this.rows.forEach((row, r) => {
+        row.render(data[r]);
+      });
     }
   };
 
@@ -1094,7 +1128,7 @@
     coordinates;
     constructor(idx, state) {
       this.dom.classList.add("board");
-      this.stones = new GoStones(idx, state);
+      this.stones = new GoStones(idx);
       this.coordinates = new GoCoordinates(state);
       this.dom.appendChild(createGoGrid());
       this.dom.appendChild(this.stones.dom);
@@ -1102,7 +1136,7 @@
     }
     render(state) {
       this.dom.setAttribute("viewBox", state.viewBox);
-      this.stones.render(state);
+      this.stones.render(state.data);
       this.coordinates.render(state);
     }
   };

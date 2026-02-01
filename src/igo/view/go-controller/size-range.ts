@@ -7,7 +7,7 @@ class Range {
     input = document.createElement('input');
     disp = document.createElement('span');
     
-    state: null|number = null;
+    state: number = 19;
     type: 'cols'|'rows';
 
     constructor(idx: number, title: string, type: 'cols'|'rows') {
