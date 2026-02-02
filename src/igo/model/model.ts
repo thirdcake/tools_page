@@ -66,7 +66,7 @@ export type LoadAction = {
 }
 
 export class Model {
-    update(state: State, detail: AllActions):State {
+    static update(state: State, detail: AllActions):State {
         switch(detail.type) {
             case 'click-per-page':
                 return clickPerPage(state, detail.input);
@@ -93,9 +93,9 @@ export class Model {
         }
     }
 
-    save(state: State):void { save(state); }
+    static save(state: State):void { save(state); }
 
-    load(state: State, input: string):State {
+    static load(state: State, input: string):State {
         return load(state, input);
     }
 }

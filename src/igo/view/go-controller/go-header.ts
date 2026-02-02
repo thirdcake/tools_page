@@ -28,9 +28,8 @@ export class GoHeader {
         this.dom.appendChild(this.rows.dom);
         this.dom.appendChild(this.xAxis.dom);
         this.dom.appendChild(this.yAxis.dom);
-        
     }
-    
+
     render(state: GoWrapperState) {
         if(state.list === 'detail') {
             this.dom.style.display = 'block';

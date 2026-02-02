@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/model/click-per-page.ts
   function clickPerPage(state, input) {

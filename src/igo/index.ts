@@ -19,24 +19,21 @@ class Controller extends HTMLElement{
         super();
 
         let state: State = { ...initState };
-        const model = new Model();
         const view = new View(state);
 
         this.appendChild(view.dom);
 
-        view.render(state);
-
         view.dom.addEventListener('go-event', (ev: CustomEvent)=>{
-            state = model.update(state, ev.detail);
+            state = Model.update(state, ev.detail);
             view.render(state);
         }, false);
 
         view.dom.addEventListener('go-save', () => {
-            model.save(state);
+            Model.save(state);
         }, false);
 
         view.dom.addEventListener('go-load', (ev: CustomEvent) => {
-            state = model.load(state, ev.detail);
+            state = Model.load(state, ev.detail);
             view.render(state);
         }, false);
     }

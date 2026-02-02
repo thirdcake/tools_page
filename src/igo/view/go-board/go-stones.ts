@@ -1,5 +1,7 @@
 import { config } from "../../consts";
 
+type StoneData = [number, string];
+
 class Stone {
     dom = document.createElementNS(config.ns, 'g');
     idx: number;
@@ -7,7 +9,7 @@ class Stone {
 
     circle = document.createElementNS(config.ns, 'circle');
     char = document.createElementNS(config.ns, 'text');
-    
+
     color = Object.freeze({
         empty: {
             circle_fill: 'transparent',
@@ -121,13 +123,18 @@ class RowStones {
     constructor(idx: number, row: number) {
         this.idx = idx;
         this.row = row;
-        this.stones = Array.from({length: 19}, (_, c) => new Stone(idx, row, c));
+        this.stones = Array.from(
+            {length: 19},
+            (_, c) => new Stone(idx, row, c)
+        );
     }
+
     appendChild(dom: SVGGElement):void {
         this.stones.forEach(stone => {
             dom.appendChild(stone.dom);
         });
     }
+
     render(data: [number, string][]) {
         if(this.data === data) return;
         this.data = data;
@@ -143,7 +150,10 @@ export class GoStones {
 
     constructor(idx: number) {
         this.idx = idx;
-        this.rows = Array.from({length: 19}, (_, r)=> new RowStones(idx, r));
+        this.rows = Array.from(
+            {length: 19},
+            (_, r)=> new RowStones(idx, r)
+        );
         this.rows.forEach(row => {
             row.appendChild(this.dom);
         });
