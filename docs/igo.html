@@ -16,6 +16,10 @@
             border: 1px solid #333;
             border-radius: .37rem;
             font-weight: 400;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ddd;
         }
         hr {
             margin:1rem;
@@ -26,6 +30,9 @@
             background-color: #185;
             border-color: #185;
             font-weight: bold;
+        }
+        button.active:hover {
+            background-color: #074;
         }
         ul.go-form-ul {
             margin:0; padding:.7rem;
@@ -39,6 +46,9 @@
         div.go-form-range {
             margin:0;
             padding: .7rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
         }
         .go-form-range label {
             display: flex;
@@ -46,6 +56,14 @@
             gap: 0 1rem;
             align-items: center;
             justify-content: flex-start;
+        }
+        div.go-save-load {
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
         svg.board {
             width: 100%;
@@ -56,8 +74,11 @@
             padding: .7rem;
         }
         div.go-wrapper:has(div.go-board-list) {
+            width: 100%;
+            max-width: 600px;
             display:grid;
             grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
         div.go-wrapper:has(div.go-board-detail) {
             display: block;

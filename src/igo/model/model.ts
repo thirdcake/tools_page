@@ -11,8 +11,8 @@ import {
 } from "./change-view-box";
 import { clickStone } from "./click-stone";
 import { changeTextarea} from "./change-textarea";
-import { save } from "./save";
-import { load } from "./load";
+import { save as saveState } from "./save";
+import { load as loadState } from "./load";
 
 interface BaseAction {
     type: string;
@@ -93,9 +93,9 @@ export class Model {
         }
     }
 
-    static save(state: State):void { save(state); }
+    static save(state: State):void { saveState(state); }
 
     static load(state: State, input: string):State {
-        return load(state, input);
+        return loadState(state, input);
     }
 }

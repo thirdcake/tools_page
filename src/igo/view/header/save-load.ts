@@ -2,6 +2,8 @@ import { State } from "../../state";
 
 export class SaveLoad {
     dom = document.createElement('div');
+    div = document.createElement('div');
+    hr = document.createElement('hr');
 
     save = document.createElement('button');
     loadText = document.createElement('span');
@@ -10,26 +12,29 @@ export class SaveLoad {
     state: number;
 
     constructor(state: State) {
+        this.div.classList.add('go-save-load');
+
+        this.dom.appendChild(this.div);
+        this.dom.appendChild(this.hr);
+
         this.state = state.listZoom;
         this.save.id = 'save';
         this.save.type = 'button';
         this.save.textContent = '保存する';
-        this.dom.appendChild(this.save);
+        this.div.appendChild(this.save);
 
         this.save.addEventListener('click', () => {
-            const event = new Event('go-save', { bubbles: true });
-            this.dom.dispatchEvent(event);
+            const event = new CustomEvent('go-save', { bubbles: true });
+            this.div.dispatchEvent(event);
         }, false);
 
         this.loadText.textContent = '読み込み：';
-        this.dom.appendChild(this.loadText);
+        this.div.appendChild(this.loadText);
 
         this.loadInput.id = 'load';
         this.loadInput.type = 'file';
         this.loadInput.accept = 'application/json';
-        this.dom.appendChild(this.loadInput);
-
-        this.dom.appendChild(document.createElement('hr'));
+        this.div.appendChild(this.loadInput);
 
         this.loadInput.addEventListener('change', async (ev: Event) => {
             const target = ev.target as HTMLInputElement;
@@ -50,7 +55,7 @@ export class SaveLoad {
                     input: jsonString,
                 }
             });
-            this.dom.dispatchEvent(event);
+            this.div.dispatchEvent(event);
         }, false);
     }
 

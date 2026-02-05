@@ -9,6 +9,7 @@ export function load(state: State, input: string): State {
     } catch (err) {
         console.error("JSONのパースに失敗:", err);
     }
+
     if(isState(data)) {
         const goWrapper: GoWrapperState[] = data.goWrapper.map((gW, i) => ({
             list: (i < data.perPage) ? 'list' : 'none',
@@ -33,7 +34,7 @@ export function load(state: State, input: string): State {
             goWrapper,
         }
     }
-    
+    console.error('data は変更されませんでした。');
     return state;
 }
 
@@ -69,18 +70,18 @@ function isGoWrapperState(obj:unknown): obj is GoWrapperState {
     if(candidate.cols < 0 || 19 < candidate.cols) return false;
 
     if(candidate.xAxis!=='none'
-        ||candidate.xAxis!=='num'
-        ||candidate.xAxis!=='aiu'
-        ||candidate.xAxis!=='iroha'
+        && candidate.xAxis!=='num'
+        && candidate.xAxis!=='aiu'
+        && candidate.xAxis!=='iroha'
     ) return false;
 
     if(candidate.yAxis!=='none'
-        ||candidate.yAxis!=='num'
-        ||candidate.yAxis!=='aiu'
-        ||candidate.yAxis!=='iroha'
+        && candidate.yAxis!=='num'
+        && candidate.yAxis!=='aiu'
+        && candidate.yAxis!=='iroha'
     ) return false;
 
-    if(candidate.textarea !== 'string') return false;
+    if(typeof candidate.textarea !== 'string') return false;
 
     if(!Array.isArray(candidate.data)) return false;
 

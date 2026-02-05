@@ -7,7 +7,7 @@ declare global {
         'go-event': CustomEvent<{
             detail: AllActions
         }>;
-        'go-save': Event;
+        'go-save': CustomEvent;
         'go-load': CustomEvent<{
             detail: LoadAction
         }>;
@@ -33,7 +33,7 @@ class Controller extends HTMLElement{
         }, false);
 
         this.addEventListener('go-load', (ev: CustomEvent) => {
-            state = Model.load(state, ev.detail);
+            state = Model.load(state, ev.detail.input);
             view.render(state);
         }, false);
     }

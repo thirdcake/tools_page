@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/igo/model/click-per-page.ts
   function clickPerPage(state, input) {
@@ -272,6 +273,18 @@
 
   // src/igo/model/save.ts
   function save(state) {
+    if (!window.confirm("\u30D5\u30A1\u30A4\u30EB\u306B\u4FDD\u5B58\u3057\u3066\u3088\u308D\u3057\u3044\u3067\u3059\u304B\uFF1F")) return;
+    const now = /* @__PURE__ */ new Date();
+    const pad = (num) => String(num).padStart(2, "0");
+    const title = `\u56F2\u7881\u30C7\u30FC\u30BF_${pad(now.getFullYear())}\u5E74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65E5_${pad(now.getHours())}\u6642${pad(now.getMinutes())}\u5206${pad(now.getSeconds())}\u79D2.json`;
+    const json = JSON.stringify(state);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anc = document.createElement("a");
+    anc.href = url;
+    anc.download = title;
+    anc.click();
+    URL.revokeObjectURL(url);
   }
 
   // src/igo/model/load.ts
@@ -306,6 +319,7 @@
         goWrapper
       };
     }
+    console.error("data \u306F\u5909\u66F4\u3055\u308C\u307E\u305B\u3093\u3067\u3057\u305F\u3002");
     return state;
   }
   function isState(obj) {
@@ -327,9 +341,9 @@
     if (candidate.rows < 0 || 19 < candidate.rows) return false;
     if (typeof candidate.cols !== "number") return false;
     if (candidate.cols < 0 || 19 < candidate.cols) return false;
-    if (candidate.xAxis !== "none" || candidate.xAxis !== "num" || candidate.xAxis !== "aiu" || candidate.xAxis !== "iroha") return false;
-    if (candidate.yAxis !== "none" || candidate.yAxis !== "num" || candidate.yAxis !== "aiu" || candidate.yAxis !== "iroha") return false;
-    if (candidate.textarea !== "string") return false;
+    if (candidate.xAxis !== "none" && candidate.xAxis !== "num" && candidate.xAxis !== "aiu" && candidate.xAxis !== "iroha") return false;
+    if (candidate.yAxis !== "none" && candidate.yAxis !== "num" && candidate.yAxis !== "aiu" && candidate.yAxis !== "iroha") return false;
+    if (typeof candidate.textarea !== "string") return false;
     if (!Array.isArray(candidate.data)) return false;
     return candidate.data.every(
       (row) => Array.isArray(row) && row.every(
@@ -503,27 +517,31 @@
   // src/igo/view/header/save-load.ts
   var SaveLoad = class {
     dom = document.createElement("div");
+    div = document.createElement("div");
+    hr = document.createElement("hr");
     save = document.createElement("button");
     loadText = document.createElement("span");
     loadInput = document.createElement("input");
     state;
     constructor(state) {
+      this.div.classList.add("go-save-load");
+      this.dom.appendChild(this.div);
+      this.dom.appendChild(this.hr);
       this.state = state.listZoom;
       this.save.id = "save";
       this.save.type = "button";
       this.save.textContent = "\u4FDD\u5B58\u3059\u308B";
-      this.dom.appendChild(this.save);
+      this.div.appendChild(this.save);
       this.save.addEventListener("click", () => {
-        const event = new Event("go-save", { bubbles: true });
-        this.dom.dispatchEvent(event);
+        const event = new CustomEvent("go-save", { bubbles: true });
+        this.div.dispatchEvent(event);
       }, false);
       this.loadText.textContent = "\u8AAD\u307F\u8FBC\u307F\uFF1A";
-      this.dom.appendChild(this.loadText);
+      this.div.appendChild(this.loadText);
       this.loadInput.id = "load";
       this.loadInput.type = "file";
       this.loadInput.accept = "application/json";
-      this.dom.appendChild(this.loadInput);
-      this.dom.appendChild(document.createElement("hr"));
+      this.div.appendChild(this.loadInput);
       this.loadInput.addEventListener("change", async (ev) => {
         const target = ev.target;
         const files = target.files;
@@ -542,7 +560,7 @@
             input: jsonString
           }
         });
-        this.dom.dispatchEvent(event);
+        this.div.dispatchEvent(event);
       }, false);
     }
     render(state) {
@@ -797,12 +815,12 @@
       this.rows = new RowsRange(idx);
       this.xAxis = new XAxisButtons(idx);
       this.yAxis = new YAxisButtons(idx);
-      this.dom.appendChild(this.color.dom);
-      this.dom.appendChild(this.character.dom);
       this.dom.appendChild(this.cols.dom);
       this.dom.appendChild(this.rows.dom);
       this.dom.appendChild(this.xAxis.dom);
       this.dom.appendChild(this.yAxis.dom);
+      this.dom.appendChild(this.color.dom);
+      this.dom.appendChild(this.character.dom);
       this.#display(state);
     }
     #display(state) {
@@ -972,10 +990,10 @@
     };
     const linePoss = config.positions.filter((_, i) => 0 < i && i < config.size - 1);
     linePoss.forEach((r_pos) => {
-      linePoss.forEach((c_pos) => {
-        dom.appendChild(createLine(r_pos, r_pos, start, end));
-        dom.appendChild(createLine(start, end, c_pos, c_pos));
-      });
+      dom.appendChild(createLine(r_pos, r_pos, start, end));
+    });
+    linePoss.forEach((c_pos) => {
+      dom.appendChild(createLine(start, end, c_pos, c_pos));
     });
     const createDots = (cx, cy) => {
       const dot = document.createElementNS(config.ns, "circle");
@@ -1302,7 +1320,7 @@
         Model.save(state);
       }, false);
       this.addEventListener("go-load", (ev) => {
-        state = Model.load(state, ev.detail);
+        state = Model.load(state, ev.detail.input);
         view.render(state);
       }, false);
     }

@@ -11,6 +11,5 @@ JavaScript で作ったツール
 - [テーブルからjsonファイルにする](./table2json.html)
 - [AVL木の回転](./avl-tree.html)
 - [現在時刻: ISO 8601](./iso8601.html)
-- [囲碁の全体図](./igoa.html)
-- [囲碁の部分図](./igob.html)
+- [囲碁盤の作図](./igo.html)
 

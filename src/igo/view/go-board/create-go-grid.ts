@@ -36,10 +36,10 @@ export function createGoGrid():SVGGElement {
     const linePoss = config.positions
         .filter((_, i) => (0 < i && i < config.size - 1));
     linePoss.forEach(r_pos => {
-        linePoss.forEach(c_pos => {
-            dom.appendChild(createLine(r_pos, r_pos, start, end));
-            dom.appendChild(createLine(start, end, c_pos, c_pos));
-        });
+        dom.appendChild(createLine(r_pos, r_pos, start, end));
+    });
+    linePoss.forEach(c_pos => {
+        dom.appendChild(createLine(start, end, c_pos, c_pos));
     });
 
     // dots

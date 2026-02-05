@@ -22,12 +22,12 @@ export class GoHeader {
         this.xAxis = new XAxisButtons(idx);
         this.yAxis = new YAxisButtons(idx);
 
-        this.dom.appendChild(this.color.dom);
-        this.dom.appendChild(this.character.dom);
         this.dom.appendChild(this.cols.dom);
         this.dom.appendChild(this.rows.dom);
         this.dom.appendChild(this.xAxis.dom);
         this.dom.appendChild(this.yAxis.dom);
+        this.dom.appendChild(this.color.dom);
+        this.dom.appendChild(this.character.dom);
 
         this.#display(state);
     }
