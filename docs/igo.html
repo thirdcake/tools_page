@@ -51,33 +51,51 @@
             width: 100%;
             height: auto;
             max-width: min(600px, 100svh);
-            }
-        .text-area {
-            white-space: pre-line;
         }
         .p4 {
             padding: .7rem;
         }
-        .board-flex {
-            display: block;
-        }
-        .board-flex:has(board-controller[data-display="list"]) {
-            display: grid;
+        div.go-wrapper:has(div.go-board-list) {
+            display:grid;
             grid-template-columns: 1fr 1fr;
-            max-width: 800px;
-            gap: 1rem;
         }
-        board-controller[data-display="none"] {
-            display: none;
-        }
-        board-controller[data-display="list"] {
+        div.go-wrapper:has(div.go-board-detail) {
             display: block;
         }
-        board-controller[data-display="detail"] {
+        div.go-board-detail {
             display: block;
-            max-width: 800px;
+        }
+        div.go-board-list {
+            display: block;
+        }
+        div.go-board-list svg:hover {
+            background-color: gray;
+            cursor: pointer;
+        }
+        div.go-board-none {
+            display:none;
+        }
+
+        div.go-textarea {
+            padding: 1rem;
+        }
+        div.go-textarea > textarea {
+            line-height: 1.5;
+            padding: .5rem;
             width: 100%;
-            height: auto;
+            max-width: 800px;
+            height: 6rem;
+        }
+        div.go-textarea > p {
+            white-space: pre-wrap;
+        }
+        div.go-textarea-detail > textarea,
+        div.go-textarea-list > p {
+            display: block;
+        }
+        div.go-textarea-list > textarea,
+        div.go-textarea-detail > p {
+            display: none;
         }
     </style>
 </head>

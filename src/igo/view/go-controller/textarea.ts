@@ -17,11 +17,11 @@ export class Textarea {
             list: state.list,
             text: state.textarea,
         }
+        this.dom.classList.add('go-textarea');
 
         this.textarea.style.display = 'none';
         this.textarea.placeholder = 'ここに文字が入力できます。';
         this.dom.appendChild(this.textarea);
-        this.para.style.whiteSpace = 'pre-wrap';
         this.dom.appendChild(this.para);
         
         this.textarea.addEventListener('change', ()=>{
@@ -42,6 +42,9 @@ export class Textarea {
     render(state: GoWrapperState):void {
         if(this.state.list !== state.list) {
             this.state.list = state.list;
+            ['detail', 'list'].forEach(className => {
+                this.dom.classList.toggle(`go-textarea-${className}`, className===this.state.list);
+            });
             switch (state.list) {
                 case 'detail':
                     this.textarea.style.display = 'block';

@@ -18,10 +18,16 @@ export class GoBoard {
         this.dom.appendChild(createGoGrid());
         this.dom.appendChild(this.stones.dom);
         this.dom.appendChild(this.coordinates.dom);
+
+        this.#display(state);
+    }
+
+    #display(state: GoWrapperState):void {
+        this.dom.setAttribute('viewBox', state.viewBox);
     }
 
     render(state: GoWrapperState):void {
-        this.dom.setAttribute('viewBox', state.viewBox);
+        this.#display(state);
         this.stones.render(state.data);
         this.coordinates.render(state);
     }

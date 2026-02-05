@@ -3,32 +3,42 @@
   function clickPerPage(state, input) {
     const perPage = input === "4" ? 4 : 6;
     if (state.perPage === perPage) return state;
-    const oldList = state.goWrapper.map((gW) => gW.list);
-    let idealList = Array.from(
-      { length: 6 },
-      (_, i) => i < perPage ? "list" : "none"
-    );
-    if (oldList.includes("detail")) {
-      if (oldList.indexOf("detail") < perPage) {
-        idealList = oldList;
+    const listZoom = state.listZoom < perPage ? state.listZoom : -1;
+    const listMap = (gW, i) => {
+      if (i < perPage) {
+        if (gW.list === "list") return gW;
+        return {
+          ...gW,
+          list: "list"
+        };
+      } else {
+        if (gW.list === "none") return gW;
+        return {
+          ...gW,
+          list: "none"
+        };
       }
-    }
-    const goWrapper = state.goWrapper.map((gW, i) => {
-      if (gW.list === idealList[i]) return gW;
-      return {
-        ...gW,
-        list: idealList[i]
-      };
-    });
-    if (state.goWrapper.every((gW, i) => gW === goWrapper[i])) {
-      return {
-        ...state,
-        perPage
-      };
-    }
+    };
+    const detailMap = (gW, i) => {
+      if (i === listZoom) {
+        if (gW.list === "detail") return gW;
+        return {
+          ...gW,
+          list: "detail"
+        };
+      } else {
+        if (gW.list === "none") return gW;
+        return {
+          ...gW,
+          list: "none"
+        };
+      }
+    };
+    const goWrapper = listZoom === -1 ? state.goWrapper.map(listMap) : state.goWrapper.map(detailMap);
     return {
       ...state,
       perPage,
+      listZoom,
       goWrapper
     };
   }
@@ -36,8 +46,10 @@
   // src/igo/model/click-list-zoom.ts
   function clickListZoom(state, input) {
     const num = Number(input);
+    let listZoom;
     let idealList;
     if (0 <= num && num < 6) {
+      listZoom = num;
       idealList = Array.from(
         { length: 6 },
         (_, i) => num === i ? "detail" : "none"
@@ -46,6 +58,7 @@
       if (num !== -1) {
         console.error("listZoom.num => ", num);
       }
+      listZoom = -1;
       idealList = Array.from(
         { length: 6 },
         (_, i) => i < state.perPage ? "list" : "none"
@@ -61,6 +74,7 @@
     if (state.goWrapper.every((gW, i) => gW === goWrapper[i])) return state;
     return {
       ...state,
+      listZoom,
       goWrapper
     };
   }
@@ -326,7 +340,7 @@
 
   // src/igo/model/model.ts
   var Model = class {
-    update(state, detail) {
+    static update(state, detail) {
       switch (detail.type) {
         case "click-per-page":
           return clickPerPage(state, detail.input);
@@ -352,10 +366,10 @@
           return state;
       }
     }
-    save(state) {
+    static save(state) {
       save(state);
     }
-    load(state, input) {
+    static load(state, input) {
       return load(state, input);
     }
   };
@@ -409,7 +423,7 @@
 
   // src/igo/view/header/per-page-buttons.ts
   var PerPageButtons = class extends Buttons {
-    constructor() {
+    constructor(state) {
       super({
         title: "\uFF11\u30DA\u30FC\u30B8\u306B\u8868\u793A\u3059\u308B\u6570\uFF1A",
         type: "click-per-page",
@@ -419,7 +433,7 @@
         ]
       });
       this.dom.classList.add("no-print");
-      this.buttons[1].classList.add("active");
+      this.#activeClass(state);
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
           bubbles: true,
@@ -433,16 +447,19 @@
         }, false);
       });
     }
-    render(state) {
+    #activeClass(state) {
       this.buttons.forEach((button) => {
         button.classList.toggle("active", `${state.perPage}` === button.value);
       });
+    }
+    render(state) {
+      this.#activeClass(state);
     }
   };
 
   // src/igo/view/header/list-zoom-buttons.ts
   var ListZoomButtons = class extends Buttons {
-    constructor() {
+    constructor(state) {
       super({
         title: "\u8868\u793A\uFF1A",
         type: "click-list-zoom",
@@ -456,9 +473,8 @@
           { text: "6\u3064\u76EE\u3092\u62E1\u5927", value: "5" }
         ]
       });
-      this.dom.appendChild(document.createElement("hr"));
       this.dom.classList.add("no-print");
-      this.buttons[0].classList.add("active");
+      this.render(state);
       this.buttons.forEach((button) => {
         const event = new CustomEvent("go-event", {
           bubbles: true,
@@ -473,18 +489,13 @@
       });
     }
     render(state) {
-      const listZoom = state.goWrapper.map((gW) => gW.list);
-      let activeBtnIndex = listZoom.reduce((num, lZ, idx) => {
-        if (lZ === "detail") return idx;
-        return num;
-      }, -1);
       this.buttons.forEach((button, i) => {
         if (state.perPage < i) {
           button.style.display = "none";
         } else {
           button.style.display = "block";
         }
-        button.classList.toggle("active", `${activeBtnIndex}` === button.value);
+        button.classList.toggle("active", `${state.listZoom}` === button.value);
       });
     }
   };
@@ -553,16 +564,18 @@
     saveLoad;
     constructor(state) {
       this.dom.classList.add("no-print");
-      this.perPageButtons = new PerPageButtons();
+      this.perPageButtons = new PerPageButtons(state);
       this.dom.appendChild(this.perPageButtons.dom);
-      this.listZoomButtons = new ListZoomButtons();
+      this.listZoomButtons = new ListZoomButtons(state);
       this.dom.appendChild(this.listZoomButtons.dom);
+      this.dom.appendChild(document.createElement("hr"));
       this.saveLoad = new SaveLoad(state);
       this.dom.appendChild(this.saveLoad.dom);
     }
     render(state) {
       this.perPageButtons.render(state);
       this.listZoomButtons.render(state);
+      this.saveLoad.render(state);
     }
   };
 
@@ -661,6 +674,7 @@
     type;
     constructor(idx, title, type) {
       this.type = type;
+      this.dom.classList.add("go-form-range");
       this.title.textContent = title;
       this.dom.appendChild(this.title);
       this.input.type = "range";
@@ -776,7 +790,7 @@
     rows;
     xAxis;
     yAxis;
-    constructor(idx) {
+    constructor(idx, state) {
       this.color = new ColorButtons(idx);
       this.character = new CharacterButtons(idx);
       this.cols = new ColsRange(idx);
@@ -789,18 +803,20 @@
       this.dom.appendChild(this.rows.dom);
       this.dom.appendChild(this.xAxis.dom);
       this.dom.appendChild(this.yAxis.dom);
+      this.#display(state);
+    }
+    #display(state) {
+      this.dom.style.display = state.list === "detail" ? "block" : "none";
     }
     render(state) {
+      this.#display(state);
       if (state.list === "detail") {
-        this.dom.style.display = "block";
         this.color.render(state);
         this.character.render(state);
         this.cols.render(state);
         this.rows.render(state);
         this.xAxis.render(state);
         this.yAxis.render(state);
-      } else {
-        this.dom.style.display = "none";
       }
     }
   };
@@ -1084,7 +1100,10 @@
     constructor(idx, row) {
       this.idx = idx;
       this.row = row;
-      this.stones = Array.from({ length: 19 }, (_, c) => new Stone(idx, row, c));
+      this.stones = Array.from(
+        { length: 19 },
+        (_, c) => new Stone(idx, row, c)
+      );
     }
     appendChild(dom) {
       this.stones.forEach((stone) => {
@@ -1106,7 +1125,10 @@
     data = null;
     constructor(idx) {
       this.idx = idx;
-      this.rows = Array.from({ length: 19 }, (_, r) => new RowStones(idx, r));
+      this.rows = Array.from(
+        { length: 19 },
+        (_, r) => new RowStones(idx, r)
+      );
       this.rows.forEach((row) => {
         row.appendChild(this.dom);
       });
@@ -1132,9 +1154,13 @@
       this.dom.appendChild(createGoGrid());
       this.dom.appendChild(this.stones.dom);
       this.dom.appendChild(this.coordinates.dom);
+      this.#display(state);
+    }
+    #display(state) {
+      this.dom.setAttribute("viewBox", state.viewBox);
     }
     render(state) {
-      this.dom.setAttribute("viewBox", state.viewBox);
+      this.#display(state);
       this.stones.render(state.data);
       this.coordinates.render(state);
     }
@@ -1153,10 +1179,10 @@
         list: state.list,
         text: state.textarea
       };
+      this.dom.classList.add("go-textarea");
       this.textarea.style.display = "none";
       this.textarea.placeholder = "\u3053\u3053\u306B\u6587\u5B57\u304C\u5165\u529B\u3067\u304D\u307E\u3059\u3002";
       this.dom.appendChild(this.textarea);
-      this.para.style.whiteSpace = "pre-wrap";
       this.dom.appendChild(this.para);
       this.textarea.addEventListener("change", () => {
         const event = new CustomEvent("go-event", {
@@ -1175,6 +1201,9 @@
     render(state) {
       if (this.state.list !== state.list) {
         this.state.list = state.list;
+        ["detail", "list"].forEach((className) => {
+          this.dom.classList.toggle(`go-textarea-${className}`, className === this.state.list);
+        });
         switch (state.list) {
           case "detail":
             this.textarea.style.display = "block";
@@ -1203,31 +1232,31 @@
     textarea;
     constructor(idx, state) {
       this.idx = idx;
-      this.goHeader = new GoHeader(idx);
+      this.goHeader = new GoHeader(idx, state);
       this.goBoard = new GoBoard(idx, state);
       this.textarea = new Textarea(idx, state);
       this.dom.appendChild(this.goHeader.dom);
       this.dom.appendChild(this.goBoard.dom);
       this.dom.appendChild(this.textarea.dom);
+      this.#display(state);
+    }
+    #display(state) {
+      ["detail", "list", "none"].forEach((className) => {
+        this.dom.classList.toggle(`go-board-${className}`, className === state.list);
+      });
     }
     render(state) {
       if (this.state === state) return;
       this.state = state;
+      this.#display(state);
       switch (state.list) {
         case "detail":
-          this.dom.style.display = "block";
-          this.goHeader.render(state);
-          this.goBoard.render(state);
-          this.textarea.render(state);
-          break;
         case "list":
-          this.dom.style.display = "block";
           this.goHeader.render(state);
           this.goBoard.render(state);
           this.textarea.render(state);
           break;
         case "none":
-          this.dom.style.display = "none";
           break;
       }
     }
@@ -1235,15 +1264,21 @@
 
   // src/igo/view/view.ts
   var View = class {
-    dom = document.createElement("div");
+    dom = document.createDocumentFragment();
+    wrapper = document.createElement("div");
     globalHeader;
     goWrappers;
     constructor(state) {
       this.globalHeader = new GlobalHeader(state);
       this.dom.appendChild(this.globalHeader.dom);
-      this.goWrappers = Array.from({ length: 6 }, (_, i) => new GoWrapper(i, state.goWrapper[i]));
+      this.wrapper.classList.add("go-wrapper");
+      this.dom.appendChild(this.wrapper);
+      this.goWrappers = Array.from(
+        { length: 6 },
+        (_, i) => new GoWrapper(i, state.goWrapper[i])
+      );
       this.goWrappers.forEach((gW) => {
-        this.dom.appendChild(gW.dom);
+        this.wrapper.appendChild(gW.dom);
       });
     }
     render(state) {
@@ -1257,19 +1292,17 @@
     constructor() {
       super();
       let state = { ...initState };
-      const model = new Model();
       const view = new View(state);
       this.appendChild(view.dom);
-      view.render(state);
-      view.dom.addEventListener("go-event", (ev) => {
-        state = model.update(state, ev.detail);
+      this.addEventListener("go-event", (ev) => {
+        state = Model.update(state, ev.detail);
         view.render(state);
       }, false);
-      view.dom.addEventListener("go-save", () => {
-        model.save(state);
+      this.addEventListener("go-save", () => {
+        Model.save(state);
       }, false);
-      view.dom.addEventListener("go-load", (ev) => {
-        state = model.load(state, ev.detail);
+      this.addEventListener("go-load", (ev) => {
+        state = Model.load(state, ev.detail);
         view.render(state);
       }, false);
     }

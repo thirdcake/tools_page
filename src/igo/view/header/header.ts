@@ -14,11 +14,13 @@ export class GlobalHeader {
     constructor(state: State) {
         this.dom.classList.add('no-print');
 
-        this.perPageButtons = new PerPageButtons();
+        this.perPageButtons = new PerPageButtons(state);
         this.dom.appendChild(this.perPageButtons.dom);
 
-        this.listZoomButtons = new ListZoomButtons();
+        this.listZoomButtons = new ListZoomButtons(state);
         this.dom.appendChild(this.listZoomButtons.dom);
+
+        this.dom.appendChild(document.createElement('hr'));
 
         this.saveLoad = new SaveLoad(state);
         this.dom.appendChild(this.saveLoad.dom);
@@ -27,5 +29,6 @@ export class GlobalHeader {
     render(state: State):void {
         this.perPageButtons.render(state);
         this.listZoomButtons.render(state);
+        this.saveLoad.render(state);
     }
 }

@@ -1,35 +1,51 @@
-import { State } from "../state";
+import { GoWrapperState, State } from "../state";
 
 export function clickPerPage(state: State, input: string):State {
-    const perPage = input === '4' ? 4 : 6;
+    const perPage: 4|6 = input === '4' ? 4 : 6;
     if(state.perPage === perPage) return state;
-    const oldList = state.goWrapper.map(gW => gW.list);
-    let idealList:('detail'|'list'|'none')[] = Array.from(
-        {length: 6},
-        (_, i) => (i < perPage) ? 'list' : 'none');
+    const listZoom: number = (state.listZoom < perPage)
+        ? state.listZoom : -1;
 
-    if(oldList.includes('detail')) {
-        if(oldList.indexOf('detail') < perPage) {
-            idealList = oldList;
+    const listMap = (gW: GoWrapperState, i: number): GoWrapperState => {
+        if(i < perPage) {
+            if(gW.list === 'list') return gW;
+            return {
+                ...gW,
+                list: 'list',
+            }
+        }else{
+            if(gW.list === 'none') return gW;
+            return {
+                ...gW,
+                list: 'none',
+            }
         }
     }
 
-    const goWrapper = state.goWrapper.map((gW, i) => {
-        if(gW.list === idealList[i]) return gW;
-        return {
-            ...gW,
-            list: idealList[i],
-        }
-    });
-    if(state.goWrapper.every((gW,i)=>(gW===goWrapper[i]))) {
-        return {
-            ...state,
-            perPage,
+    const detailMap = (gW: GoWrapperState, i: number): GoWrapperState => {
+        if(i===listZoom) {
+            if(gW.list === 'detail') return gW;
+            return {
+                ...gW,
+                list: 'detail',
+            }
+        }else{
+            if(gW.list === 'none') return gW;
+            return {
+                ...gW,
+                list: 'none',
+            }
         }
     }
+
+    const goWrapper: GoWrapperState[] = (listZoom === -1)
+        ? state.goWrapper.map(listMap)
+        : state.goWrapper.map(detailMap);
+
     return {
         ...state,
         perPage,
+        listZoom,
         goWrapper,
     }
 } 

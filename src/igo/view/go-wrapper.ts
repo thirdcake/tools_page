@@ -13,34 +13,36 @@ export class GoWrapper {
 
     constructor(idx: number, state: GoWrapperState) {
         this.idx = idx;
-        this.goHeader = new GoHeader(idx);
+        this.goHeader = new GoHeader(idx, state);
         this.goBoard = new GoBoard(idx, state);
         this.textarea = new Textarea(idx, state);
 
         this.dom.appendChild(this.goHeader.dom);
         this.dom.appendChild(this.goBoard.dom);
         this.dom.appendChild(this.textarea.dom);
+
+        this.#display(state);
+    }
+
+    #display(state: GoWrapperState):void {
+        ['detail', 'list', 'none'].forEach(className => {
+            this.dom.classList.toggle(`go-board-${className}`, className===state.list);
+        });
     }
 
     render(state: GoWrapperState):void {
         if(this.state === state) return;
         this.state = state;
 
+        this.#display(state);
         switch(state.list) {
             case 'detail':
-                this.dom.style.display = 'block';
-                this.goHeader.render(state);
-                this.goBoard.render(state);
-                this.textarea.render(state);
-                break;
             case 'list':
-                this.dom.style.display = 'block';
                 this.goHeader.render(state);
                 this.goBoard.render(state);
                 this.textarea.render(state);
                 break;
             case 'none':
-                this.dom.style.display = 'none';
                 break;
         }
     }

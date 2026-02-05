@@ -12,6 +12,7 @@ class Range {
 
     constructor(idx: number, title: string, type: 'cols'|'rows') {
         this.type = type;
+        this.dom.classList.add('go-form-range');
 
         // title
         this.title.textContent = title;

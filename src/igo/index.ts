@@ -23,16 +23,16 @@ class Controller extends HTMLElement{
 
         this.appendChild(view.dom);
 
-        view.dom.addEventListener('go-event', (ev: CustomEvent)=>{
+        this.addEventListener('go-event', (ev: CustomEvent)=>{
             state = Model.update(state, ev.detail);
             view.render(state);
         }, false);
 
-        view.dom.addEventListener('go-save', () => {
+        this.addEventListener('go-save', () => {
             Model.save(state);
         }, false);
 
-        view.dom.addEventListener('go-load', (ev: CustomEvent) => {
+        this.addEventListener('go-load', (ev: CustomEvent) => {
             state = Model.load(state, ev.detail);
             view.render(state);
         }, false);

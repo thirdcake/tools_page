@@ -2,7 +2,7 @@ import { Buttons } from "../buttons";
 import { State } from "../../state";
 
 export class ListZoomButtons extends Buttons {
-    constructor() {
+    constructor(state: State) {
         super({
             title: '表示：',
             type: 'click-list-zoom',
@@ -17,10 +17,9 @@ export class ListZoomButtons extends Buttons {
             ],
         });
 
-        this.dom.appendChild(document.createElement('hr'));
         this.dom.classList.add('no-print');
 
-        this.buttons[0].classList.add('active');
+        this.render(state);
 
         this.buttons.forEach(button => {
             const event = new CustomEvent('go-event', {
@@ -38,18 +37,13 @@ export class ListZoomButtons extends Buttons {
     }
 
     render(state: State):void {
-        const listZoom = state.goWrapper.map(gW => gW.list);
-        let activeBtnIndex = listZoom.reduce((num, lZ, idx) => {
-            if(lZ==='detail') return idx;
-            return num;
-        }, -1);
         this.buttons.forEach((button, i) => {
             if(state.perPage < i) {
                 button.style.display = 'none';
             }else{
                 button.style.display = 'block';
             }
-            button.classList.toggle('active', `${activeBtnIndex}`===button.value);
+            button.classList.toggle('active', `${state.listZoom}`===button.value);
         });
     }
 }
