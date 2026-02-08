@@ -12,7 +12,7 @@ export class GlobalHeader {
     saveLoad: SaveLoad;
 
     constructor(state: State) {
-        this.dom.classList.add('no-print');
+        this.dom.classList.add('global-header');
 
         this.perPageButtons = new PerPageButtons(state);
         this.dom.appendChild(this.perPageButtons.dom);

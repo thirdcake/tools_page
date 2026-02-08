@@ -1,0 +1,161 @@
+/* 印刷用 */
+@page {
+    size: A4;
+    margin: 10mm;
+}
+* {
+    box-sizing: border-box;
+}
+@media print {
+    html, body {
+        margin:auto; padding:0;
+        width: 185mm;
+        height: 270mm;
+    }
+    h1 {
+        display: none;
+    }
+    div.global-header {
+        display: none;
+    }
+    div.go-wrapper {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+    }
+    div.go-board-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 5mm;
+    }
+    svg {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+    }
+    .go-textarea {
+        width: 100%;
+    }
+}
+
+/* 画面用 */
+@media screen {
+    body {
+        line-height: 1.5;
+    }
+    button {
+        color: #333;
+        background-color: #efefef;
+        padding: .37rem .75rem;
+        border: 1px solid #333;
+        border-radius: .37rem;
+        font-weight: 400;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #ddd;
+    }
+    hr {
+        margin:1rem;
+        border: 1px solid #ccc;
+    }
+    button.active {
+        color: #fff;
+        background-color: #185;
+        border-color: #185;
+        font-weight: bold;
+    }
+    button.active:hover {
+        background-color: #074;
+    }
+    ul.go-form-ul {
+        margin:0; padding:.7rem;
+        list-style-type: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: .5rem;
+    }
+    div.go-form-range {
+        margin:0;
+        padding: .7rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .go-form-range label {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0 1rem;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    div.go-save-load {
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    svg.board {
+        width: 100%;
+        height: auto;
+        max-width: min(600px, 100svh);
+    }
+    .p4 {
+        padding: .7rem;
+    }
+    div.go-wrapper:has(div.go-board-list) {
+        width: 100%;
+        max-width: 600px;
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    div.go-wrapper:has(div.go-board-detail) {
+        display: block;
+    }
+    div.go-board-detail {
+        display: block;
+    }
+    div.go-board-list {
+        display: block;
+    }
+    div.go-board-list svg:hover {
+        background-color: gray;
+        cursor: pointer;
+    }
+    div.go-board-none {
+        display:none;
+    }
+
+    div.go-textarea {
+        padding: 1rem;
+    }
+    div.go-textarea > textarea {
+        line-height: 1.5;
+        padding: .5rem;
+        width: 100%;
+        max-width: 800px;
+        height: 6rem;
+    }
+    div.go-textarea > p {
+        white-space: pre-wrap;
+    }
+    div.go-textarea-detail > textarea,
+    div.go-textarea-list > p {
+        display: block;
+    }
+    div.go-textarea-list > textarea,
+    div.go-textarea-detail > p {
+        display: none;
+    }
+}
