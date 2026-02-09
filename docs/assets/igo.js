@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   // src/igo/model/click-per-page.ts
   function clickPerPage(state, input) {
@@ -1298,8 +1297,13 @@
       this.goWrappers.forEach((gW) => {
         this.wrapper.appendChild(gW.dom);
       });
+      this.#display(state);
+    }
+    #display(state) {
+      this.wrapper.dataset.goPerPage = `${state.perPage}`;
     }
     render(state) {
+      this.#display(state);
       this.globalHeader.render(state);
       this.goWrappers.forEach((gW, i) => gW.render(state.goWrapper[i]));
     }

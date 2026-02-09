@@ -25,6 +25,9 @@
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr 1fr 1fr;
     }
+    div.go-wrapper[data-go-per-page="4"] {
+        grid-template-rows: 1fr 1fr;
+    }
     div.go-board-list {
         display: flex;
         flex-direction: column;
@@ -32,6 +35,9 @@
         justify-content: center;
         overflow: hidden;
         padding: 5mm;
+    }
+    div.go-board-none {
+        display:none;
     }
     svg {
         max-width: 100%;

@@ -23,9 +23,16 @@ export class View {
         this.goWrappers.forEach(gW => {
             this.wrapper.appendChild(gW.dom);
         });
+
+        this.#display(state);
+    }
+
+    #display (state: State): void {
+        this.wrapper.dataset.goPerPage = `${state.perPage}`;
     }
 
     render(state: State):void {
+        this.#display(state);
         this.globalHeader.render(state);
         this.goWrappers.forEach((gW, i) => gW.render(state.goWrapper[i]));
     }
