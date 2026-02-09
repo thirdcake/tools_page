@@ -48,6 +48,9 @@
     .go-textarea {
         width: 100%;
     }
+    .go-textarea > p {
+        white-space: pre-wrap;
+    }
 }
 
 /* 画面用 */
